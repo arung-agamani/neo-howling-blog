@@ -7,7 +7,7 @@ export default function PostLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="mx-auto max-w-screen-sm lg:max-w-screen-lg xl:max-w-screen-xl">
+        <div className="mx-auto max-w-screen-sm lg:max-w-screen-lg">
             {children}
         </div>
     );

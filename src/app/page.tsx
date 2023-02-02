@@ -1,4 +1,6 @@
 import Link from "next/link";
+import prisma from "@/utils/prisma";
+import Image from "next/image";
 
 interface PostResult {
     params: {
@@ -11,71 +13,84 @@ interface PostResult {
     };
 }
 
-async function getPosts(): Promise<[PostResult[] | null, null | string]> {
-    const res = await fetch(
-        "https://blog.howlingmoon.dev/api/postsHeader?page=1"
-    );
-    if (!res.ok) return [null, "Error happened"];
-    const jsonRes = (await res.json()) as PostResult[];
-    return [jsonRes, null];
+async function getPosts() {
+    try {
+        const result = await prisma.posts.findMany({
+            select: {
+                title: true,
+                link: true,
+                tags: true,
+                description: true,
+                bannerUrl: true,
+                isBannerDark: true,
+                id: true,
+            },
+            orderBy: {
+                datePosted: "desc",
+            },
+            take: 8,
+        });
+        return result;
+    } catch (error) {
+        return null;
+    }
 }
 
 export default async function Page() {
-    const [posts, err] = await getPosts();
+    const posts = await getPosts();
     return (
-        <div className="bg-gray-700 pt-2 flex flex-col lg:flex-row justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16">
-            <div className="flex flex-col">
-                <p className="text-5xl text-white px-2 mb-4 font-thin">
-                    Recent Posts
-                </p>
-                {posts &&
-                    posts.map((x) => (
-                        <Link
-                            href={`page/${x.params.id}`}
-                            key={x.params.id}
-                            className="w-full"
-                        >
-                            <div
-                                className="pb-4 mx-auto my-2 bg-white rounded-lg 
-                            shadow w-full flex flex-col"
+        <div className="bg-gray-700 pt-2 flex flex-col  justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16">
+            <p className="text-3xl lg:text-5xl text-white px-2 mb-4 font-thin lg:text-left text-center">
+                Recent Posts
+            </p>
+            <div className="flex">
+                <div className="flex flex-col">
+                    {posts &&
+                        posts.map((x) => (
+                            <Link
+                                href={`page/${x.id}`}
+                                key={x.id}
+                                className="w-full"
                             >
-                                <img
-                                    src={x.params.bannerUrl}
-                                    alt="This post's banner image"
-                                    className="rounded-t-lg w-full h-auto"
-                                />
-                                <p className="uppercase font-bold text-orange-500 px-8 pt-4">
-                                    {["javascript", "tech"].join(" ")}
-                                </p>
-                                <p className="text-black text-4xl font-bold px-8 mt-4">
-                                    {x.params.title}
-                                </p>
-                                <p className="text-gray-700 px-8 py-8 text-xl font-light">
-                                    {x.params.desc}
-                                </p>
-                            </div>
-                        </Link>
-                    ))}
-            </div>
-            <div
-                className="bg-white mt-12 ml-8 rounded-t-lg pb-8 w-full h-full lg:flex lg:flex-col justify-center align-top max-w-lg
+                                <div
+                                    className="pb-4 mx-auto mb-4 bg-white lg:rounded-lg 
+                            shadow w-full flex flex-col"
+                                >
+                                    <img
+                                        src={x.bannerUrl || ""}
+                                        alt="This post's banner image"
+                                        className="rounded-t-lg w-full h-auto"
+                                    />
+                                    <p className="uppercase font-bold text-orange-500 px-8 pt-4">
+                                        {["javascript", "tech"].join(" ")}
+                                    </p>
+                                    <p className="text-black text-2xl lg:text-4xl font-bold px-8 mt-4">
+                                        {x.title}
+                                    </p>
+                                    <p className="text-gray-700 px-8 py-4 lg:py-8 text-lg lg:text-xl font-light">
+                                        {x.description}
+                                    </p>
+                                </div>
+                            </Link>
+                        ))}
+                </div>
+                <div
+                    className="bg-white ml-8 rounded-t-lg pb-8 w-full h-full lg:flex lg:flex-col justify-center align-top max-w-lg
                 hidden 
             "
-            >
-                <p className="text-3xl font-semibold text-center mb-2">
-                    Good Stuff
-                </p>
-                {[1, 2, 3].map((x) => (
-                    <div
-                        key={x}
-                        className="mx-2 mb-2 px-2 py-2 border-2 border-dashed rounded-md border-black bg-slate-300"
-                    >
-                        <p className="text-2xl font-semibold">Item {x}</p>
-                        <p className="text-lg font-light">
-                            A neat description of item {x}
-                        </p>
-                    </div>
-                ))}
+                >
+                    <p className="text-3xl font-semibold text-center mb-2">
+                        Good Stuff
+                    </p>
+                    {[
+                        "https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/2/3/94001464_p0.png",
+                        "https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/2/3/100827958_p0.jpg",
+                        "https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/2/3/100597943_p0_master1200.jpg",
+                        "https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/2/3/100597943_p1_master1200.jpg",
+                    ].map((x) => (
+                        <img src={x} alt={"Some good stuffs"} key={x} />
+                    ))}
+                </div>
             </div>
         </div>
     );

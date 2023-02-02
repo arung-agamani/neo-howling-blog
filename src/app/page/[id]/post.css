@@ -1,13 +1,21 @@
+.post {
+    font-size: large;
+}
+
 .post p {
     margin-bottom: 1rem;
 }
 
 .post h2 {
-    font-size: x-large;
+    font-size: xx-large;
+    font-weight: 500;
+    border-bottom: solid 4px rgb(42, 52, 97);
 }
-.post h2::after {
-    border: 2px;
-    border-color: black;
+
+.post h3 {
+    font-size: x-large;
+    font-weight: 500;
+    border-bottom: solid 2px rgb(42, 52, 97);
 }
 
 .post pre {

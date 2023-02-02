@@ -36,12 +36,15 @@ export default async function Page({ params }: { params: Params }) {
         );
     return (
         <div className="post container mx-auto max-lg bg-white px-4 pt-4 overflow-hidden">
-            <h1 className=" text-3xl">{data.title}</h1>
-            <p>{data.description}</p>
+            <h1 className=" text-3xl mx-8 pt-4">{data.title}</h1>
+            <p className="mx-8 my-4">{data.description}</p>
             <hr />
             <img src={data.bannerUrl} alt="This post's banner image" />
-            <hr className=" my-4" />
-            <div dangerouslySetInnerHTML={{ __html: data.blogContent }} />
+            <hr className="my-4" />
+            <div
+                dangerouslySetInnerHTML={{ __html: data.blogContent }}
+                className="mx-10 mt-10 font-sans font-normal"
+            />
             {/* <link
                 href="
 https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css

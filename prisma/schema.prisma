@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+type PostsBlogContentDelta {
+  ops PostsBlogContentDeltaOps[]
+}
+
+type PostsBlogContentDeltaOps {
+  attributes PostsBlogContentDeltaOpsAttributes?
+  /// Multiple data types found: String: 83.2%, PostsBlogContentDeltaOpsInsert: 16.8% out of 298 sampled entries
+  insert     Json
+}
+
+type PostsBlogContentDeltaOpsAttributes {
+  bold       Boolean?
+  code_block Boolean? @map("code-block")
+  header     Int?
+  indent     Int?
+  italic     Boolean?
+  link       String?
+  list       String?
+  strike     Boolean?
+  underline  Boolean?
+}
+
+type PostsBlogContentDeltaOpsInsert {
+  image String?
+  video String?
+}
+
+model blogusers {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  v           Int      @map("__v")
+  dateCreated DateTime @db.Date
+  email       String
+  password    String
+  username    String
+}
+
+model posts {
+  id               String                 @id @default(auto()) @map("_id") @db.ObjectId
+  v                Int                    @map("__v")
+  author           String?
+  bannerUrl        String?
+  blogContent      String
+  blogContentDelta PostsBlogContentDelta?
+  datePosted       DateTime               @db.Date
+  description      String
+  imageheader      String?
+  isBannerDark     Boolean?
+  isFeatured       Boolean?
+  isPublished      Boolean?
+  link             String
+  tags             String[]
+  title            String
+}
+
+model sessions {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  /// Field referred in an index, but found no data to define the type.
+  expires Json?
+
+  @@index([expires], map: "expires_1")
+}
+
+model tags {
+  id    String   @id @default(auto()) @map("_id") @db.ObjectId
+  v     Int      @map("__v")
+  count Int
+  name  String
+  posts String[]
+}
+
+model userauths {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  v           Int      @map("__v")
+  accessToken String
+  lastAccess  DateTime @db.Date
+  userId      String
+}
+
+model users {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  v           Int      @map("__v")
+  dateCreated DateTime @db.Date
+  email       String
+  lastAccess  DateTime @db.Date
+  password    String
+  username    String
+}
