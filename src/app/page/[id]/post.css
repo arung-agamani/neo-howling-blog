@@ -1,0 +1,18 @@
+.post p {
+    margin-bottom: 1rem;
+}
+
+.post h2 {
+    font-size: x-large;
+}
+.post h2::after {
+    border: 2px;
+    border-color: black;
+}
+
+.post pre {
+    background-color: gray;
+    color: white;
+    overflow-x: scroll;
+    padding: 1rem;
+}
