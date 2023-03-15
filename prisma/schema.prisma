@@ -45,7 +45,7 @@ model blogusers {
 
 model posts {
   id               String                 @id @default(auto()) @map("_id") @db.ObjectId
-  v                Int                    @map("__v")
+  v                Int?                   @map("__v")
   author           String?
   bannerUrl        String?
   blogContent      String
@@ -56,7 +56,7 @@ model posts {
   isBannerDark     Boolean?
   isFeatured       Boolean?
   isPublished      Boolean?
-  link             String
+  link             String?
   tags             String[]
   title            String
 }
@@ -87,7 +87,7 @@ model userauths {
 
 model users {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  v           Int      @map("__v")
+  v           Int?      @map("__v")
   dateCreated DateTime @db.Date
   email       String
   lastAccess  DateTime @db.Date

@@ -57,7 +57,10 @@ export default async function Page() {
                             shadow w-full flex flex-col"
                                 >
                                     <img
-                                        src={x.bannerUrl || ""}
+                                        src={
+                                            x.bannerUrl ||
+                                            "https://files.howlingmoon.dev/blog/7-5/1596671970721-no-banner-card-compressed.jpg"
+                                        }
                                         alt="This post's banner image"
                                         className="rounded-t-lg w-full h-auto"
                                     />

@@ -37,7 +37,11 @@ const Header = () => {
                             </p>
                             <p className="text-center text-gray-200 font-thin text-sm sm:text-xl pt-2">
                                 <i>
-                                    Lingering echoes through the starry night...
+                                    Lingering echoes through the{" "}
+                                    <span>
+                                        <Link href={"/dashboard"}>starry</Link>
+                                    </span>{" "}
+                                    night...
                                 </i>
                             </p>
                         </div>

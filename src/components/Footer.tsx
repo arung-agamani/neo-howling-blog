@@ -16,7 +16,7 @@ const Footer = () => {
                     <p>Built with Nextjs 13</p>
                 </div>
             </div>
-            <div className="flex flex-col sm:flex-row  justify-center items-center align-top">
+            <div className="flex flex-col sm:flex-row justify-center items-center align-top">
                 <div className="mr-2 text-center ">
                     <p>For further inquiries</p>
                     <br />

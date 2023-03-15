@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-sync-scripts */
 import Image from "next/image";
 import Script from "next/script";
+import prisma from "@/utils/prisma";
 import "./post.css";
 
 interface Params {
@@ -19,14 +20,18 @@ interface PostResult {
     blogContent: string;
 }
 
-async function getPost(id: string) {
-    const res = await fetch(`https://blog.howlingmoon.dev/api/post/${id}`);
-    if (!res.ok) return null;
-    return res.json() as Promise<PostResult>;
+async function getPostFromDb(id: string) {
+    const post = await prisma.posts.findUnique({
+        where: {
+            id,
+        },
+    });
+    if (!post) return null;
+    return post;
 }
 
 export default async function Page({ params }: { params: Params }) {
-    const data = await getPost(params.id);
+    const data = await getPostFromDb(params.id);
     if (!data)
         return (
             <>
@@ -39,11 +44,17 @@ export default async function Page({ params }: { params: Params }) {
             <h1 className=" text-3xl mx-8 pt-4">{data.title}</h1>
             <p className="mx-8 my-4">{data.description}</p>
             <hr />
-            <img src={data.bannerUrl} alt="This post's banner image" />
+            <img
+                src={
+                    data.bannerUrl ||
+                    "https://files.howlingmoon.dev/blog/7-5/1596671970721-no-banner-card-compressed.jpg"
+                }
+                alt="This post's banner image"
+            />
             <hr className="my-4" />
             <div
                 dangerouslySetInnerHTML={{ __html: data.blogContent }}
-                className="mx-10 mt-10 font-sans font-normal"
+                className="mx-2 lg:mx-10 mt-10 font-sans font-normal"
             />
             {/* <link
                 href="
