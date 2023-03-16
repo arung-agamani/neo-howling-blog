@@ -1,7 +1,6 @@
-/* eslint-disable @next/next/no-sync-scripts */
-import Image from "next/image";
-import Script from "next/script";
-import prisma from "@/utils/prisma";
+"use client";
+import { useEffect, useState } from "react";
+import axios from "@/utils/axios";
 import "./post.css";
 
 interface Params {
@@ -20,18 +19,20 @@ interface PostResult {
     blogContent: string;
 }
 
-async function getPostFromDb(id: string) {
-    const post = await prisma.posts.findUnique({
-        where: {
-            id,
-        },
-    });
-    if (!post) return null;
-    return post;
-}
-
-export default async function Page({ params }: { params: Params }) {
-    const data = await getPostFromDb(params.id);
+export default function Page({ params }: { params: Params }) {
+    const [data, setData] = useState<any>(null);
+    useEffect(() => {
+        (async () => {
+            try {
+                const dataRes = await axios.get("/api/dashboard/post", {
+                    params: {
+                        id: params.id,
+                    },
+                });
+                setData(dataRes.data.data.page);
+            } catch (error) {}
+        })();
+    }, []);
     if (!data)
         return (
             <>

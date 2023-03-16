@@ -12,8 +12,11 @@ instance.interceptors.request.use((config) => {
 instance.interceptors.response.use(
     (res) => res,
     (err) => {
-        if (err.response.status == 401) {
-            window.location.assign("/dashboard/");
+        if (
+            err.response.status == 401 &&
+            !window.location.href.endsWith("/dashboard")
+        ) {
+            window.location.assign("/dashboard");
         } else {
             return Promise.reject(err);
         }

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "@/utils/axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 type MenuItem = {
     name: string;
     children: MenuItem[];
+    link?: string;
 };
 
 const hierarchy: MenuItem[] = [
@@ -18,6 +19,7 @@ const hierarchy: MenuItem[] = [
             {
                 name: "create",
                 children: [],
+                link: "edit",
             },
         ],
     },
@@ -52,8 +54,10 @@ const TreeView: React.FC<{
     depth: number;
 }> = ({ data, parentLink, depth }) => {
     return (
-        <>
-            <Link key={data.name} href={parentLink + "/" + data.name}>
+        <React.Fragment
+            key={`${parentLink}/${data.link ? data.link : data.name}`}
+        >
+            <Link href={`${parentLink}/${data.link ? data.link : data.name}`}>
                 <div
                     className={`mx-2 rounded-xl py-1 px-4 text-slate-800 font-bold ${
                         depth % 2 != 0 ? "bg-slate-50" : "bg-slate-400"
@@ -66,15 +70,21 @@ const TreeView: React.FC<{
                 <div className="ml-4 mt-2">
                     {data.children.map((child) => (
                         <TreeView
-                            key={parentLink + "/" + child.name}
+                            key={
+                                parentLink + "/" + child.link
+                                    ? child.link
+                                    : child.name
+                            }
                             data={child}
-                            parentLink={parentLink}
+                            parentLink={`${parentLink}/${
+                                data.link ? data.link : data.name
+                            }`}
                             depth={depth + 1}
                         />
                     ))}
                 </div>
             )}
-        </>
+        </React.Fragment>
     );
 };
 
@@ -102,19 +112,12 @@ export default function PostLayout({
         <>
             <ToastContainer autoClose={3000} />
             <div className="flex">
-                <aside className="sticky h-screen top-0 capitalize bg-gray-600 text-slate-100 w-full max-w-xs">
+                <aside className="sticky h-screen top-0 capitalize bg-gray-600 text-slate-100 w-full max-w-xs flex flex-col">
                     <div className="px-4 py-4 text-slate-50">
                         <Link href="/dashboard/main">
                             <p className="text-3xl font-semibold">Dashboard</p>
                         </Link>
                     </div>
-                    {/* {["posts", "configs", "about"].map((menu) => (
-                        <Link key={menu} href={"/dashboard/main/" + menu}>
-                            <div className="my-4 mx-2 rounded-xl py-1 px-4 text-slate-800 font-bold bg-slate-50">
-                                {menu}
-                            </div>
-                        </Link>
-                    ))} */}
                     {hierarchy.map((menu) => (
                         <div className="my-4" key={menu.name}>
                             <TreeView
@@ -124,6 +127,12 @@ export default function PostLayout({
                             />
                         </div>
                     ))}
+                    <div className="flex-grow"></div>
+                    <div className="px-4 py-4 text-slate-50">
+                        <Link href="/">
+                            <p className="text-3xl font-semibold">Home</p>
+                        </Link>
+                    </div>
                 </aside>
                 <div className="bg-zinc-900 w-full text-white">{children}</div>
             </div>

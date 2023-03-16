@@ -7,7 +7,30 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 router.use(verifyToken);
 
 router.get(async (req, res) => {
-    const { id } = req.query;
+    const { id, op } = req.query;
+    if (op && op === "list") {
+        const pages = await prisma.posts.findMany({
+            select: {
+                title: true,
+                link: true,
+                tags: true,
+                description: true,
+                bannerUrl: true,
+                isBannerDark: true,
+                isPublished: true,
+                datePosted: true,
+                id: true,
+            },
+            orderBy: {
+                datePosted: "desc",
+            },
+        });
+        return res.json({
+            message: "success",
+            data: pages,
+            length: pages.length,
+        });
+    }
     if (!id) {
         return res.status(400).json({
             message: "Missing id",

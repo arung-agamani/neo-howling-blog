@@ -1,29 +1,28 @@
-import prisma from "@/utils/prisma";
+"use client";
 import Link from "next/link";
 import PostItem from "@/components/Dashboard/PostItem";
+import axios from "@/utils/axios";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-async function getPosts() {
-    const result = await prisma.posts.findMany({
-        select: {
-            title: true,
-            link: true,
-            tags: true,
-            description: true,
-            bannerUrl: true,
-            isBannerDark: true,
-            isPublished: true,
-            datePosted: true,
-            id: true,
-        },
-        orderBy: {
-            datePosted: "desc",
-        },
-    });
-    return result;
-}
-
-export default async function Page() {
-    const posts = await getPosts();
+export default function Page() {
+    const [posts, setPosts] = useState<any>(null);
+    useEffect(() => {
+        (async () => {
+            try {
+                const postsRes = await axios.get("/api/dashboard/post", {
+                    params: {
+                        op: "list",
+                    },
+                });
+                setPosts(postsRes.data.data);
+            } catch (error) {
+                console.log("Error on fetching posts");
+                toast.error("Error on fetching posts");
+            }
+        })();
+    }, []);
+    if (!posts) return null;
     return (
         <>
             <div className="px-2 py-2">
@@ -34,7 +33,9 @@ export default async function Page() {
                 </Link>
             </div>
             {posts &&
-                posts.map((post) => <PostItem key={post.id} post={post} />)}
+                posts.map((post: any) => (
+                    <PostItem key={post.id} post={post} />
+                ))}
         </>
     );
 }

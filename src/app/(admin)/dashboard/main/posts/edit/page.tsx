@@ -13,6 +13,7 @@ interface PostMetadata {
     author?: string;
     title?: string;
     description?: string;
+    bannerUrl?: string;
 }
 
 export default function Page() {
@@ -24,7 +25,6 @@ export default function Page() {
     const descInputRef = useRef<HTMLTextAreaElement>(null);
     const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
     const searchParams = useSearchParams();
-    const router = useRouter();
     useEffect(() => {
         (async () => {
             const id = searchParams.get("id");
@@ -179,6 +179,7 @@ export default function Page() {
                             className="border border-slate-400 rounded-lg px-2 py-1 w-full"
                             ref={bannerUrlRef}
                             wrap="soft"
+                            defaultValue={page.bannerUrl}
                             onChange={previewBannerUrl}
                         />
                         <img
