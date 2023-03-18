@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import axios from "@/utils/axios";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function Page() {
     const router = useRouter();
@@ -19,6 +20,7 @@ export default function Page() {
             })
             .catch((err) => {
                 console.log("Unsuccessful login");
+                toast.error(err.response.data.message);
             });
     };
 
@@ -26,6 +28,7 @@ export default function Page() {
         axios
             .get("/api/dashboard")
             .then((res) => {
+                toast.success("Login token found. Redirecting to dashboard");
                 router.push("/dashboard/main");
             })
             .catch(() => {});
@@ -37,7 +40,7 @@ export default function Page() {
             className="flex flex-col w-screen h-screen justify-center align-middle items-center"
             style={{
                 backgroundImage:
-                    "url('https://files.howlingmoon.dev/blog/4-31/1622420582680-__mare_s_ephemeral_hoshizora_no_memoria_drawn_by_shida_kazuhiro__0cf250230855799003be11b46aa4570d.jpg')",
+                    "url('https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/3/19/1622420582680-__mare_s_ephemeral_hoshizora_no_memoria_drawn_by_shida_kazuhiro__0cf250230855799003be11b46aa4570d.jpg')",
                 backgroundSize: "cover",
                 backgroundPosition: "center center",
             }}

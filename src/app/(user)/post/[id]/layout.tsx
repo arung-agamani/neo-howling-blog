@@ -1,6 +1,7 @@
+// "use client";
 import Link from "next/link";
-import Script from "next/script";
 
+export const dynamic = "force-dynamic";
 export default function PostLayout({
     children,
 }: {

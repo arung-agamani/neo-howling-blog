@@ -6,34 +6,6 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
-
-type PostsBlogContentDelta {
-  ops PostsBlogContentDeltaOps[]
-}
-
-type PostsBlogContentDeltaOps {
-  attributes PostsBlogContentDeltaOpsAttributes?
-  /// Multiple data types found: String: 83.2%, PostsBlogContentDeltaOpsInsert: 16.8% out of 298 sampled entries
-  insert     Json
-}
-
-type PostsBlogContentDeltaOpsAttributes {
-  bold       Boolean?
-  code_block Boolean? @map("code-block")
-  header     Int?
-  indent     Int?
-  italic     Boolean?
-  link       String?
-  list       String?
-  strike     Boolean?
-  underline  Boolean?
-}
-
-type PostsBlogContentDeltaOpsInsert {
-  image String?
-  video String?
-}
-
 model blogusers {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   v           Int      @map("__v")
@@ -49,7 +21,7 @@ model posts {
   author           String?
   bannerUrl        String?
   blogContent      String
-  blogContentDelta PostsBlogContentDelta?
+  blogContentDelta String?
   datePosted       DateTime               @db.Date
   description      String
   imageheader      String?

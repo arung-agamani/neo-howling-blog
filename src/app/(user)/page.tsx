@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import prisma from "@/utils/prisma";
 import Image from "next/image";
@@ -25,6 +26,9 @@ async function getPosts() {
                 isBannerDark: true,
                 id: true,
             },
+            where: {
+                isPublished: true,
+            },
             orderBy: {
                 datePosted: "desc",
             },
@@ -48,7 +52,7 @@ export default async function Page() {
                     {posts &&
                         posts.map((x) => (
                             <Link
-                                href={`page/${x.id}`}
+                                href={`post/${x.id}`}
                                 key={x.id}
                                 className="w-full"
                             >

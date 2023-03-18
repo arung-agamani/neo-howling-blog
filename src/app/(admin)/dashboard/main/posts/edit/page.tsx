@@ -27,6 +27,7 @@ export default function Page() {
     const searchParams = useSearchParams();
     useEffect(() => {
         (async () => {
+            if (!searchParams) return;
             const id = searchParams.get("id");
             if (!id) return;
 
@@ -75,7 +76,7 @@ export default function Page() {
     };
 
     const saveHandler = async () => {
-        const id = searchParams.get("id");
+        const id = searchParams!.get("id");
         let op: "update" | "create" = "update";
         if (!id) op = "create";
 
@@ -141,12 +142,12 @@ export default function Page() {
                 <div className="flex-grow">
                     <ReactQuill
                         className="bg-white post h-full overflow-y-hidden"
-                        value={content}
+                        defaultValue={content}
                         onBlur={(p, s, e) => {
                             setContent(e.getHTML());
                             setIsSynced(true);
                         }}
-                        onChange={() => {
+                        onChange={(c, d, s, e) => {
                             setIsSynced(false);
                             setIsModified(true);
                         }}
@@ -208,15 +209,12 @@ export default function Page() {
                             Not synced
                         </span>
                     )}
-                    {["Save"].map((x) => (
-                        <button
-                            className="px-2 py-2 bg-blue-400 hover:bg-blue-200 w-full text-white"
-                            key={x}
-                            onClick={saveHandler}
-                        >
-                            {x}
-                        </button>
-                    ))}
+                    <button
+                        className="px-2 py-2 bg-blue-400 hover:bg-blue-200 w-full text-white"
+                        onClick={saveHandler}
+                    >
+                        Save
+                    </button>
                 </div>
             </div>
         </>

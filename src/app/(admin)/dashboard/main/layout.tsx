@@ -3,8 +3,6 @@ import React, { useEffect, useState } from "react";
 import axios from "@/utils/axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 type MenuItem = {
     name: string;
@@ -23,29 +21,29 @@ const hierarchy: MenuItem[] = [
             },
         ],
     },
-    {
-        name: "config",
-        children: [
-            {
-                name: "user",
-                children: [
-                    {
-                        name: "profile",
-                        children: [],
-                    },
-                ],
-            },
-            {
-                name: "global",
-                children: [
-                    {
-                        name: "profile",
-                        children: [],
-                    },
-                ],
-            },
-        ],
-    },
+    // {
+    //     name: "config",
+    //     children: [
+    //         {
+    //             name: "user",
+    //             children: [
+    //                 {
+    //                     name: "profile",
+    //                     children: [],
+    //                 },
+    //             ],
+    //         },
+    //         {
+    //             name: "global",
+    //             children: [
+    //                 {
+    //                     name: "profile",
+    //                     children: [],
+    //                 },
+    //             ],
+    //         },
+    //     ],
+    // },
 ];
 
 const TreeView: React.FC<{
@@ -66,24 +64,23 @@ const TreeView: React.FC<{
                     <span>{data.name}</span>
                 </div>
             </Link>
-            {data.children && (
-                <div className="ml-4 mt-2">
-                    {data.children.map((child) => (
+            {data.children &&
+                data.children.map((child, index) => (
+                    <div
+                        className="ml-4 mt-2"
+                        key={`${parentLink}/${
+                            data.link ? data.link : data.name
+                        }/${child.link ? child.link : child.name}`}
+                    >
                         <TreeView
-                            key={
-                                parentLink + "/" + child.link
-                                    ? child.link
-                                    : child.name
-                            }
                             data={child}
                             parentLink={`${parentLink}/${
                                 data.link ? data.link : data.name
                             }`}
                             depth={depth + 1}
                         />
-                    ))}
-                </div>
-            )}
+                    </div>
+                ))}
         </React.Fragment>
     );
 };
@@ -110,7 +107,6 @@ export default function PostLayout({
     if (!auth) return null;
     return (
         <>
-            <ToastContainer autoClose={3000} />
             <div className="flex">
                 <aside className="sticky h-screen top-0 capitalize bg-gray-600 text-slate-100 w-full max-w-xs flex flex-col">
                     <div className="px-4 py-4 text-slate-50">
@@ -119,7 +115,10 @@ export default function PostLayout({
                         </Link>
                     </div>
                     {hierarchy.map((menu) => (
-                        <div className="my-4" key={menu.name}>
+                        <div
+                            className="my-4"
+                            key={"/dashboard/main/" + menu.name}
+                        >
                             <TreeView
                                 data={menu}
                                 parentLink={"/dashboard/main"}
