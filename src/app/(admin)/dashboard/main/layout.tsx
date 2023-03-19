@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import axios from "@/utils/axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 type MenuItem = {
     name: string;
@@ -105,6 +106,17 @@ export default function PostLayout({
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const signout = () => {
+        axios
+            .get("/api/signout")
+            .then(() => {
+                toast.info("Signing out...");
+            })
+            .catch(() => {
+                toast.error("Failed signing out");
+            });
+    };
     if (!auth) return null;
     return (
         <>
@@ -134,9 +146,9 @@ export default function PostLayout({
                         </Link>
                     </div>
                     <div className="px-4 py-4 text-slate-50">
-                        <Link href="/api/signout">
-                            <p className="text-3xl font-semibold">Logout</p>
-                        </Link>
+                        <p className="text-3xl font-semibold" onClick={signout}>
+                            Logout
+                        </p>
                     </div>
                 </aside>
                 <div className="bg-zinc-900 w-full text-white">{children}</div>

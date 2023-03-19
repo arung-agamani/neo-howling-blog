@@ -21,12 +21,12 @@ interface PostResult {
     blogContent: string;
 }
 
-// const baseUrl =
-//     process.env.NODE_ENV === "development"
-//         ? "http://localhost:3000"
-//         : "https://blog.howlingmoon.dev";
+const baseUrl =
+    process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : "https://blog.howlingmoon.dev";
 
-const baseUrl = "http://localhost:3000";
+// const baseUrl = "http://localhost:3000";
 
 export async function generateMetadata({ params }: { params: Params }) {
     // const { data } = await fetch("/api/post", {
