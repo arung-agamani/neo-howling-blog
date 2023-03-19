@@ -129,8 +129,13 @@ export default function PostLayout({
                     <div className="flex-grow"></div>
                     <div className="px-4 py-4 text-slate-50">
                         <Link href="/">
-                            <p className="text-3xl font-semibold">Home</p>
+                            <p className="text-3xl font-semibold">Go To Home</p>
                         </Link>
+                    </div>
+                    <div className="px-4 py-4 text-slate-50">
+                        <a href="/api/signout">
+                            <p className="text-3xl font-semibold">Logout</p>
+                        </a>
                     </div>
                 </aside>
                 <div className="bg-zinc-900 w-full text-white">{children}</div>

@@ -2,6 +2,13 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import "./globals.css";
 
+export const metadata = {
+    title: "Howling Blog",
+    icons: {
+        icon: "/favicon.png",
+    },
+};
+
 export default function RootLayout({
     children,
 }: {

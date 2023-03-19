@@ -1,47 +1,36 @@
 /* eslint-disable @next/next/no-img-element */
+"use client";
 import Link from "next/link";
-import prisma from "@/utils/prisma";
-import Image from "next/image";
+import axios from "@/utils/axios";
+import { useEffect, useState } from "react";
 
-interface PostResult {
-    params: {
-        id: string;
-        title: string;
-        desc: string;
-        datePosted: string;
-        bannerUrl: string;
-        link: string;
+export default function Page() {
+    const [posts, setPosts] = useState<any>([]);
+    const [page, setPage] = useState(1);
+    useEffect(() => {
+        (async () => {
+            try {
+                const { data } = await axios.get("/api/posts", {
+                    params: { p: page },
+                });
+                setPosts(data.data);
+            } catch (error) {}
+        })();
+    }, []);
+
+    const loadPost = () => {
+        (async () => {
+            try {
+                const { data } = await axios.get("/api/posts", {
+                    params: { p: page + 1 },
+                });
+                setPosts([...posts, ...data.data]);
+                setPage(page + 1);
+            } catch (error) {}
+        })();
     };
-}
 
-async function getPosts() {
-    try {
-        const result = await prisma.posts.findMany({
-            select: {
-                title: true,
-                link: true,
-                tags: true,
-                description: true,
-                bannerUrl: true,
-                isBannerDark: true,
-                id: true,
-            },
-            where: {
-                isPublished: true,
-            },
-            orderBy: {
-                datePosted: "desc",
-            },
-            take: 8,
-        });
-        return result;
-    } catch (error) {
-        return null;
-    }
-}
-
-export default async function Page() {
-    const posts = await getPosts();
+    if (!posts) return null;
     return (
         <div className="bg-gray-700 pt-2 flex flex-col  justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16">
             <p className="text-3xl lg:text-5xl text-white px-2 mb-4 font-thin lg:text-left text-center">
@@ -50,7 +39,7 @@ export default async function Page() {
             <div className="flex">
                 <div className="flex flex-col">
                     {posts &&
-                        posts.map((x) => (
+                        posts.map((x: any) => (
                             <Link
                                 href={`post/${x.id}`}
                                 key={x.id}
@@ -80,6 +69,14 @@ export default async function Page() {
                                 </div>
                             </Link>
                         ))}
+                    <div
+                        className="justify-center hover:cursor-pointer"
+                        onClick={loadPost}
+                    >
+                        <p className="text-2xl text-slate-800 px-2 py-2 bg-slate-50 hover:bg-slate-300 self-center text-center">
+                            Load More
+                        </p>
+                    </div>
                 </div>
                 <div
                     className="bg-white ml-8 rounded-t-lg pb-8 w-full h-full lg:flex lg:flex-col justify-center align-top max-w-lg

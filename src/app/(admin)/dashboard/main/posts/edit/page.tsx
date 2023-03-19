@@ -14,6 +14,7 @@ interface PostMetadata {
     title?: string;
     description?: string;
     bannerUrl?: string;
+    tags?: string[];
 }
 
 export default function Page() {
@@ -24,6 +25,7 @@ export default function Page() {
     const titleInputRef = useRef<HTMLTextAreaElement>(null);
     const descInputRef = useRef<HTMLTextAreaElement>(null);
     const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
+    const quillRef = useRef();
     const searchParams = useSearchParams();
     useEffect(() => {
         (async () => {
@@ -142,7 +144,7 @@ export default function Page() {
                 <div className="flex-grow">
                     <ReactQuill
                         className="bg-white post h-full overflow-y-hidden"
-                        defaultValue={content}
+                        value={content}
                         onBlur={(p, s, e) => {
                             setContent(e.getHTML());
                             setIsSynced(true);
@@ -182,6 +184,16 @@ export default function Page() {
                             wrap="soft"
                             defaultValue={page.bannerUrl}
                             onChange={previewBannerUrl}
+                        />
+                        <label htmlFor="" className="text-xl">
+                            Tags
+                        </label>
+                        <textarea
+                            name="tags"
+                            className="border border-slate-400 rounded-lg px-2 py-1 w-full"
+                            // ref={bannerUrlRef}
+                            wrap="soft"
+                            defaultValue={page.tags?.join(",")}
                         />
                         <img
                             src=""

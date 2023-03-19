@@ -1,35 +1,9 @@
-import passport from "passport";
-import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import prisma from "@/utils/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 const router = createRouter<NextApiRequest, NextApiResponse>();
-
-/* passport.use(
-    new JwtStrategy(
-        {
-            secretOrKey: "awoo",
-            jwtFromRequest: ExtractJwt.fromBodyField(),
-        },
-        async function verify(jwt_payload, callback) {
-            const user = await prisma.users.findFirst({
-                where: {
-                    password: jwt_payload,
-                },
-            });
-            if (!user) return callback(null, false);
-            return callback(null, user);
-        }
-    )
-);
-
-router.get((req, res) => {
-    res.json({
-        message: "What are you getting?",
-    });
-}); */
 
 router.post(async (req, res) => {
     const { username, password } = req.body;
