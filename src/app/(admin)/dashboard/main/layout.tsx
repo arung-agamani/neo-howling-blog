@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
 import React, { useEffect, useState } from "react";
 import axios from "@/utils/axios";
@@ -133,9 +134,9 @@ export default function PostLayout({
                         </Link>
                     </div>
                     <div className="px-4 py-4 text-slate-50">
-                        <a href="/api/signout">
+                        <Link href="/api/signout">
                             <p className="text-3xl font-semibold">Logout</p>
-                        </a>
+                        </Link>
                     </div>
                 </aside>
                 <div className="bg-zinc-900 w-full text-white">{children}</div>
