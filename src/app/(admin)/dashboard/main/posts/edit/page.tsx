@@ -17,6 +17,24 @@ interface PostMetadata {
     tags?: string[];
 }
 
+const quillModule = {
+    toolbar: [
+        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        ["bold", "italic", "underline", "strike"],
+        ["blockquote", "code-block"],
+        [{ size: ["small", false, "large", "huge"] }],
+        [
+            { list: "ordered" },
+            { list: "bullet" },
+            { indent: "-1" },
+            { indent: "+1" },
+        ],
+        ["link", "image"],
+        ["clean"],
+    ],
+    syntax: true,
+};
+
 export default function Page() {
     const [content, setContent] = useState("");
     const [page, setPage] = useState<PostMetadata>({});
@@ -145,14 +163,15 @@ export default function Page() {
                     <ReactQuill
                         className="bg-white post h-full overflow-y-hidden"
                         value={content}
-                        onBlur={(p, s, e) => {
-                            setContent(e.getHTML());
-                            setIsSynced(true);
-                        }}
-                        onChange={(c, d, s, e) => {
+                        onChange={(c) => {
                             setIsSynced(false);
                             setIsModified(true);
+                            setContent(c);
                         }}
+                        onBlur={(p, s, e) => {
+                            setIsSynced(true);
+                        }}
+                        modules={quillModule}
                     />
                 </div>
                 <div className="py-2 bg-white text-black sticky h-screen top-0 flex flex-col w-full max-w-xs">

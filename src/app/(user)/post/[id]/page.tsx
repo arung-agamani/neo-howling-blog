@@ -29,13 +29,6 @@ const baseUrl =
 // const baseUrl = "http://localhost:3000";
 
 export async function generateMetadata({ params }: { params: Params }) {
-    // const { data } = await fetch("/api/post", {
-    //     params: {
-    //         id: params.id,
-    //         h: 1,
-    //     },
-    // });
-
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}&h=1`).then(
         (res) => res.json()
     );
@@ -49,21 +42,6 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function Page({ params }: { params: Params }) {
-    // const [data, setData] = useState<any>(null);
-    // useEffect(() => {
-    //     (async () => {
-    //         try {
-    //             const dataRes = await axios.get("/api/post", {
-    //                 params: {
-    //                     id: params.id,
-    //                 },
-    //             });
-    //             setData(dataRes.data);
-    //         } catch (error) {}
-    //     })();
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, []);
-
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}`).then(
         (res) => res.json()
     );
