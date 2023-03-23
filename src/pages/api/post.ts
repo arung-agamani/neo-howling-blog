@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/utils/prisma";
 import { Prisma } from "@prisma/client";
+import highlight from "highlight.js/lib/common";
 
 export default async function handle(
     req: NextApiRequest,
@@ -38,6 +39,9 @@ export default async function handle(
                     id: id as string,
                 },
             });
+            // result.blogContent = highlight.highlightAuto(
+            //     result.blogContent
+            // ).value;
         }
         return res.status(200).json(result);
     } catch (error) {

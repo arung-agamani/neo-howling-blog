@@ -23,10 +23,10 @@ interface PostResult {
 
 const baseUrl =
     process.env.NODE_ENV === "development"
-        ? "http://localhost:3000"
+        ? "http://localhost:3001"
         : "https://blog.howlingmoon.dev";
 
-// const baseUrl = "http://localhost:3000";
+// const baseUrl = "http://localhost:3001";
 
 export async function generateMetadata({ params }: { params: Params }) {
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}&h=1`).then(
@@ -41,10 +41,13 @@ export async function generateMetadata({ params }: { params: Params }) {
     return metadata;
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({ params }: { params: Params }) {
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}`).then(
         (res) => res.json()
     );
+    // console.log(data.blogContent);
 
     if (!data)
         return (
