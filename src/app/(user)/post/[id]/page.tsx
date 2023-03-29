@@ -49,8 +49,7 @@ export async function generateMetadata({ params }: { params: Params }) {
                     url: data.bannerUrl,
                 },
             ],
-            locale: "en-US",
-            type: "article",
+            type: "website",
         },
     };
 
