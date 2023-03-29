@@ -30,8 +30,11 @@ const baseUrl =
 
 export async function generateMetadata({ params }: { params: Params }) {
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}&h=1`).then(
-        (res) => res.json()
+        (res) => {
+            return res.json();
+        }
     );
+    console.log(data);
 
     const metadata: Metadata = {
         title: data.title,
@@ -39,7 +42,7 @@ export async function generateMetadata({ params }: { params: Params }) {
         openGraph: {
             title: data.title,
             description: data.description,
-            url: `https://blog.howlingmoon.dev/${data.id}`,
+            url: `https://blog.howlingmoon.dev/${params.id}`,
             siteName: "Howling Blog",
             images: [
                 {
