@@ -58,7 +58,7 @@ export default function Page() {
                                         className="rounded-t-lg w-full h-auto"
                                     />
                                     <p className="uppercase font-bold text-orange-500 px-8 pt-4">
-                                        {["javascript", "tech"].join(" ")}
+                                        {x.tags.join(" ")}
                                     </p>
                                     <p className="text-black text-2xl lg:text-4xl font-bold px-8 mt-4">
                                         {x.title}

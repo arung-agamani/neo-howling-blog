@@ -9,6 +9,8 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.300.0",
+        "@aws-sdk/s3-request-presigner": "^3.300.0",
         "@next/font": "13.1.6",
         "@prisma/client": "^4.9.0",
         "@types/node": "18.11.18",
@@ -27,10 +29,13 @@
         "prismjs": "^1.29.0",
         "react": "18.2.0",
         "react-dom": "18.2.0",
+        "react-dropzone": "^14.2.3",
         "react-loading-skeleton": "^3.1.0",
         "react-quill": "^2.0.0",
+        "react-resizable-panels": "^0.0.37",
         "react-toastify": "^9.1.1",
-        "typescript": "4.9.4"
+        "typescript": "4.9.4",
+        "zod": "^3.21.4"
     },
     "devDependencies": {
         "@types/bcrypt": "^5.0.0",

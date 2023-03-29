@@ -23,6 +23,10 @@ const hierarchy: MenuItem[] = [
             },
         ],
     },
+    {
+        name: "assets",
+        children: [],
+    },
     // {
     //     name: "config",
     //     children: [

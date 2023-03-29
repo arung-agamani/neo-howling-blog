@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import { toast } from "react-toastify";
 import axios from "@/utils/axios";
@@ -17,24 +17,6 @@ interface PostMetadata {
     tags?: string[];
 }
 
-const quillModule = {
-    toolbar: [
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        ["bold", "italic", "underline", "strike"],
-        ["blockquote", "code-block"],
-        [{ size: ["small", false, "large", "huge"] }],
-        [
-            { list: "ordered" },
-            { list: "bullet" },
-            { indent: "-1" },
-            { indent: "+1" },
-        ],
-        ["link", "image"],
-        ["clean"],
-    ],
-    syntax: true,
-};
-
 export default function Page() {
     const [content, setContent] = useState("");
     const [page, setPage] = useState<PostMetadata>({});
@@ -43,7 +25,7 @@ export default function Page() {
     const titleInputRef = useRef<HTMLTextAreaElement>(null);
     const descInputRef = useRef<HTMLTextAreaElement>(null);
     const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
-    const quillRef = useRef();
+    const quillRef = useRef<ReactQuill>(null);
     const searchParams = useSearchParams();
     useEffect(() => {
         (async () => {
@@ -156,6 +138,43 @@ export default function Page() {
             }
         }
     };
+
+    function imageHandler() {
+        if (!quillRef.current) return;
+
+        const editor = quillRef.current.getEditor();
+        const range = editor.getSelection();
+        const value = prompt("Please enter image url");
+        if (value && range) {
+            editor.insertEmbed(range.index, "image", value, "user");
+        }
+    }
+
+    const quillModule = useMemo(
+        () => ({
+            toolbar: {
+                container: [
+                    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                    ["bold", "italic", "underline", "strike"],
+                    ["blockquote", "code-block"],
+                    [{ size: ["small", false, "large", "huge"] }],
+                    [
+                        { list: "ordered" },
+                        { list: "bullet" },
+                        { indent: "-1" },
+                        { indent: "+1" },
+                    ],
+                    ["link", "image"],
+                    ["clean"],
+                ],
+                handlers: {
+                    image: imageHandler,
+                },
+            },
+            syntax: true,
+        }),
+        []
+    );
     return (
         <>
             <div className="flex">
@@ -172,6 +191,7 @@ export default function Page() {
                             setIsSynced(true);
                         }}
                         modules={quillModule}
+                        ref={quillRef}
                     />
                 </div>
                 <div className="py-2 bg-white text-black sticky h-screen top-0 flex flex-col w-full max-w-xs">
