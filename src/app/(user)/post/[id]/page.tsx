@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Params }) {
         openGraph: {
             title: data.title,
             description: data.description,
-            url: `https://blog.howlingmoon.dev/${params.id}`,
+            url: `https://blog.howlingmoon.dev/post/${params.id}`,
             images: [
                 {
                     url: data.bannerUrl,
