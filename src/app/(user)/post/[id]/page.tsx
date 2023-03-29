@@ -43,7 +43,6 @@ export async function generateMetadata({ params }: { params: Params }) {
             title: data.title,
             description: data.description,
             url: `https://blog.howlingmoon.dev/${params.id}`,
-            siteName: "Howling Blog",
             images: [
                 {
                     url: data.bannerUrl,
