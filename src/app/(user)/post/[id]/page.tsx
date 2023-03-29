@@ -36,6 +36,19 @@ export async function generateMetadata({ params }: { params: Params }) {
     const metadata: Metadata = {
         title: data.title,
         description: data.description,
+        openGraph: {
+            title: data.title,
+            description: data.description,
+            url: `https://blog.howlingmoon.dev/${data.id}`,
+            siteName: "Howling Blog",
+            images: [
+                {
+                    url: data.bannerUrl,
+                },
+            ],
+            locale: "en-US",
+            type: "article",
+        },
     };
 
     return metadata;
