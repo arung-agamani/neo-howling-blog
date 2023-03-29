@@ -34,7 +34,6 @@ export async function generateMetadata({ params }: { params: Params }) {
             return res.json();
         }
     );
-    console.log(data);
 
     const metadata: Metadata = {
         title: data.title,
