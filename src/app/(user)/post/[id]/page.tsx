@@ -2,6 +2,7 @@
 // "use client";
 // import { useEffect, useState } from "react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import "./post.css";
 
@@ -57,6 +58,7 @@ export async function generateMetadata({ params }: { params: Params }) {
 export const dynamic = "force-dynamic";
 
 export default async function Page({ params }: { params: Params }) {
+    const headerLists = headers();
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}`).then(
         (res) => res.json()
     );
