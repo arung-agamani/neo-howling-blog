@@ -52,3 +52,13 @@
     transition: all 0.5s;
     cursor: pointer;
 }
+
+.post code {
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    border-radius: 4px;
+    background-color: slategray;
+    color: white;
+}

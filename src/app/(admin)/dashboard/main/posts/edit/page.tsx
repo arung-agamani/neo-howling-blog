@@ -3,9 +3,12 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import ReactQuill from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
 import { toast } from "react-toastify";
 import axios from "@/utils/axios";
+import ImageUploader from "quill-image-uploader";
+import QuillMarkdown from "quilljs-markdown";
+import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
 import "react-quill/dist/quill.snow.css";
 import "./editor.css";
 
@@ -16,6 +19,9 @@ interface PostMetadata {
     bannerUrl?: string;
     tags?: string[];
 }
+
+Quill.register("modules/imageUploader", ImageUploader);
+Quill.register("modules/QuillMarkdown", QuillMarkdown, true);
 
 export default function Page() {
     const [content, setContent] = useState("");
@@ -169,6 +175,92 @@ export default function Page() {
                 ],
                 handlers: {
                     image: imageHandler,
+                },
+            },
+            QuillMarkdown: {},
+            imageUploader: {
+                upload: (file: File) => {
+                    return new Promise((resolve, reject) => {
+                        (async () => {
+                            const loadedFile = file;
+                            const date = new Date();
+                            const buf = new Uint8Array(4);
+                            const randPrefix = Buffer.from(
+                                crypto.getRandomValues(buf)
+                            ).toString("hex");
+
+                            try {
+                                const head = await fetch(
+                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
+                                        date.getMonth() + 1
+                                    }/${date.getDate()}/${randPrefix}_${
+                                        loadedFile?.name
+                                    }`,
+                                    {
+                                        method: "HEAD",
+                                    }
+                                );
+                                if (head.ok) {
+                                    toast.info(
+                                        `File ${randPrefix}_${loadedFile?.name} has already been uploaded.`
+                                    );
+                                    return;
+                                }
+                            } catch (error) {}
+                            try {
+                                toast.info(`Uploading ${loadedFile?.name}...`);
+                                const presignedUrl = await fetch(
+                                    `${window.location.origin}/api/dashboard/upload`,
+                                    {
+                                        method: "POST",
+                                        headers: {
+                                            "content-type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                            name: `${randPrefix}_${loadedFile?.name}`,
+                                            size: loadedFile?.size,
+                                            mime: loadedFile?.type,
+                                            date: {
+                                                year: date.getFullYear(),
+                                                month: date.getMonth() + 1,
+                                                day: date.getDate(),
+                                            },
+                                        }),
+                                    }
+                                ).then((res) => res.json());
+                                const upload = await fetch(presignedUrl.data, {
+                                    method: "PUT",
+                                    headers: {
+                                        "Content-Length": String(
+                                            loadedFile!.size
+                                        ),
+                                    },
+                                    body: loadedFile,
+                                }).then((res) => res.ok);
+                                if (!upload) {
+                                    toast.error(
+                                        `Error when uploading ${loadedFile?.name}`
+                                    );
+                                }
+                                toast.success(
+                                    `File ${loadedFile?.name} has been successfully uploaded`
+                                );
+                                resolve(
+                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
+                                        date.getMonth() + 1
+                                    }/${date.getDate()}/${randPrefix}_${
+                                        loadedFile?.name
+                                    }`
+                                );
+                            } catch (error) {
+                                toast.error(
+                                    `Error when uploading ${loadedFile?.name}`
+                                );
+                                console.error(error);
+                                reject("Upload failed. Check logs");
+                            }
+                        })();
+                    });
                 },
             },
             syntax: true,

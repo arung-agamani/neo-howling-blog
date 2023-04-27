@@ -4,6 +4,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
+import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
 import "./post.css";
 
 interface Params {
@@ -56,9 +57,10 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export const dynamic = "force-dynamic";
-
+export const revalidate = 2;
 export default async function Page({ params }: { params: Params }) {
     const headerLists = headers();
+    headerLists.get("a");
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}`).then(
         (res) => res.json()
     );
@@ -77,13 +79,10 @@ export default async function Page({ params }: { params: Params }) {
             <h1 className=" text-3xl mx-8 pt-4">{data.title}</h1>
             <p className="mx-8 my-4">{data.description}</p>
             <hr />
-            <img
-                src={
-                    data.bannerUrl ||
-                    "https://files.howlingmoon.dev/blog/7-5/1596671970721-no-banner-card-compressed.jpg"
-                }
-                alt="This post's banner image"
-            />
+            {data.bannerUrl && (
+                <img src={data.bannerUrl} alt="This post's banner image" />
+            )}
+
             <hr className="my-4" />
             <div
                 dangerouslySetInnerHTML={{ __html: data.blogContent }}
