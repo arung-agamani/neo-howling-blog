@@ -170,6 +170,7 @@ export default function Page() {
                         { indent: "-1" },
                         { indent: "+1" },
                     ],
+                    [{ align: [] }],
                     ["link", "image"],
                     ["clean"],
                 ],

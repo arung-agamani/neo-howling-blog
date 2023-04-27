@@ -118,9 +118,15 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
                     {post.description}
                 </p>
                 <p>
-                    <span className="mr-4 font-bold bg-blue-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer">
-                        Open
-                    </span>
+                    <Link
+                        href={`/post/${post.id}`}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                    >
+                        <span className="mr-4 font-bold bg-blue-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer">
+                            Open
+                        </span>
+                    </Link>
                     <Link
                         href={{
                             pathname: "/dashboard/main/posts/edit",

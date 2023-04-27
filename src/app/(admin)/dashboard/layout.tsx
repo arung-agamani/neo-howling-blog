@@ -25,7 +25,7 @@ export default function PostLayout({
                 ></Script>
             </head>
             <body className="">
-                <ToastContainer autoClose={3000} />
+                <ToastContainer autoClose={3000} pauseOnFocusLoss={false} />
                 {children}
             </body>
         </html>
