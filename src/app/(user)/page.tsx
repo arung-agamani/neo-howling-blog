@@ -35,11 +35,11 @@ export default function Page() {
     if (!posts) return null;
     return (
         <div className="bg-gray-700 pt-2 flex flex-col  justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16">
-            <p className="text-3xl lg:text-5xl text-white px-2 mb-4 font-thin lg:text-left text-center">
+            <p className="text-3xl lg:text-5xl text-white px-2 mb-4 font-thin lg:text-left text-center self-center">
                 Recent Posts
             </p>
             <div className="flex">
-                <div className="flex flex-col flex-grow max-w-4xl">
+                <div className="flex flex-col flex-grow max-w-5xl mx-auto">
                     {posts.length > 0 ? (
                         posts.map((x: any) => (
                             <Link
@@ -106,7 +106,7 @@ export default function Page() {
                         </p>
                     </div>
                 </div>
-                <div className="bg-white ml-8 rounded-t-lg pb-8 w-full h-full lg:flex lg:flex-col justify-center align-top max-w-lg hidden">
+                {/* <div className="bg-white ml-8 rounded-t-lg pb-8 w-full h-full lg:flex lg:flex-col justify-center align-top max-w-lg hidden">
                     <p className="text-3xl font-semibold text-center mb-2">
                         Good Stuff
                     </p>
@@ -118,7 +118,7 @@ export default function Page() {
                     ].map((x) => (
                         <img src={x} alt={"Some good stuffs"} key={x} />
                     ))}
-                </div>
+                </div> */}
             </div>
         </div>
     );
