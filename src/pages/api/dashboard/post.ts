@@ -55,7 +55,7 @@ router.get(async (req, res) => {
 });
 
 router.post(async (req, res) => {
-    const { id, op, content } = req.body;
+    const { id, op, content, tags } = req.body;
 
     if (!op) {
         return res.status(400).json({
@@ -79,6 +79,7 @@ router.post(async (req, res) => {
                     title,
                     description,
                     bannerUrl,
+                    tags,
                 },
             });
         } catch (error) {

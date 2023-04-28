@@ -3,6 +3,8 @@
 import Link from "next/link";
 import axios from "@/utils/axios";
 import { useEffect, useState } from "react";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 export default function Page() {
     const [posts, setPosts] = useState<any>([]);
@@ -37,13 +39,13 @@ export default function Page() {
                 Recent Posts
             </p>
             <div className="flex">
-                <div className="flex flex-col">
-                    {posts &&
+                <div className="flex flex-col flex-grow max-w-4xl">
+                    {posts.length > 0 ? (
                         posts.map((x: any) => (
                             <Link
                                 href={`post/${x.id}`}
                                 key={x.id}
-                                className="w-full"
+                                // className="w-full"
                             >
                                 <div
                                     className="pb-4 mx-auto mb-4 bg-white lg:rounded-lg 
@@ -68,7 +70,33 @@ export default function Page() {
                                     </p>
                                 </div>
                             </Link>
-                        ))}
+                        ))
+                    ) : (
+                        <div
+                            className="pb-4 mx-auto mb-4 bg-white lg:rounded-lg 
+                            shadow w-full flex flex-col"
+                        >
+                            <Skeleton
+                                height={300}
+                                className="rounded-t-lg w-full "
+                                containerClassName=""
+                            />
+                            {/* <img
+                                alt="This post's banner image"
+                                className="rounded-t-lg w-full h-auto"
+                            >
+                            </img> */}
+                            <p className="uppercase font-bold text-orange-500 px-8 pt-4">
+                                <Skeleton count={0.5} />
+                            </p>
+                            <p className="text-black text-2xl lg:text-4xl font-bold px-8 mt-4">
+                                <Skeleton />
+                            </p>
+                            <p className="text-gray-700 px-8 py-4 lg:py-8 text-lg lg:text-xl font-light">
+                                <Skeleton count={3.5} />
+                            </p>
+                        </div>
+                    )}
                     <div
                         className="justify-center hover:cursor-pointer"
                         onClick={loadPost}
@@ -78,11 +106,7 @@ export default function Page() {
                         </p>
                     </div>
                 </div>
-                <div
-                    className="bg-white ml-8 rounded-t-lg pb-8 w-full h-full lg:flex lg:flex-col justify-center align-top max-w-lg
-                hidden 
-            "
-                >
+                <div className="bg-white ml-8 rounded-t-lg pb-8 w-full h-full lg:flex lg:flex-col justify-center align-top max-w-lg hidden">
                     <p className="text-3xl font-semibold text-center mb-2">
                         Good Stuff
                     </p>

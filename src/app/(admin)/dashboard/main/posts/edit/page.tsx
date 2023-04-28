@@ -31,6 +31,7 @@ export default function Page() {
     const titleInputRef = useRef<HTMLTextAreaElement>(null);
     const descInputRef = useRef<HTMLTextAreaElement>(null);
     const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
+    const tagsRef = useRef<HTMLTextAreaElement>(null);
     const quillRef = useRef<ReactQuill>(null);
     const searchParams = useSearchParams();
     useEffect(() => {
@@ -97,6 +98,7 @@ export default function Page() {
                     title: titleInputRef.current?.value,
                     description: descInputRef.current?.value,
                     bannerUrl: bannerUrlRef.current?.value,
+                    tags: tagsRef.current?.value.split(","),
                 });
                 if (res.status == 200) {
                     setIsSynced(true);
@@ -323,7 +325,7 @@ export default function Page() {
                         <textarea
                             name="tags"
                             className="border border-slate-400 rounded-lg px-2 py-1 w-full"
-                            // ref={bannerUrlRef}
+                            ref={tagsRef}
                             wrap="soft"
                             defaultValue={page.tags?.join(",")}
                         />
