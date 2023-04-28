@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import { toast } from "react-toastify";
@@ -31,6 +31,7 @@ export default function Page() {
     const titleInputRef = useRef<HTMLTextAreaElement>(null);
     const descInputRef = useRef<HTMLTextAreaElement>(null);
     const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
+    const imagePrevRef = useRef<HTMLImageElement>(null);
     const tagsRef = useRef<HTMLTextAreaElement>(null);
     const quillRef = useRef<ReactQuill>(null);
     const searchParams = useSearchParams();
@@ -52,112 +53,21 @@ export default function Page() {
                 setIsSynced(true);
             } catch (error) {
                 setContent("<h1>Failed to fetch content</h1>");
+            } finally {
+                const toolbarHeight =
+                    document.getElementsByClassName("ql-toolbar")[0]
+                        .clientHeight;
+                const qlContainer = document.getElementsByClassName(
+                    "ql-container"
+                )[0] as HTMLDivElement;
+                qlContainer.style.maxHeight = `${
+                    window.innerHeight - toolbarHeight
+                }px`;
             }
         })();
 
-        const toolbarHeight =
-            document.getElementsByClassName("ql-toolbar")[0].clientHeight;
-        const qlContainer = document.getElementsByClassName(
-            "ql-container"
-        )[0] as HTMLDivElement;
-        qlContainer.style.maxHeight = `${window.innerHeight - toolbarHeight}px`;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    const previewBannerUrl = () => {
-        if (!bannerUrlRef.current) return;
-
-        fetch(bannerUrlRef.current.value, { method: "HEAD" })
-            .then((res) => res.headers.get("content-type")?.startsWith("image"))
-            .then(() => {
-                const img = document.getElementById(
-                    "bannerPreview"
-                ) as HTMLImageElement;
-                img.src = bannerUrlRef.current!.value;
-                img.className = "w-full h-auto";
-            })
-            .catch(() => {
-                const img = document.getElementById(
-                    "bannerPreview"
-                ) as HTMLImageElement;
-                img.className = "hidden";
-            });
-    };
-
-    const saveHandler = async () => {
-        const id = searchParams!.get("id");
-        let op: "update" | "create" = "update";
-        if (!id) op = "create";
-
-        if (op === "update") {
-            try {
-                const res = await axios.post("/api/dashboard/post", {
-                    id,
-                    op: "update",
-                    content,
-                    title: titleInputRef.current?.value,
-                    description: descInputRef.current?.value,
-                    bannerUrl: bannerUrlRef.current?.value,
-                    tags: tagsRef.current?.value.split(","),
-                });
-                if (res.status == 200) {
-                    setIsSynced(true);
-                    setIsModified(false);
-                    toast.success("Post updated!", {
-                        position: toast.POSITION.TOP_CENTER,
-                        autoClose: 3000,
-                        closeOnClick: true,
-                        theme: "light",
-                    });
-                    return;
-                }
-            } catch (e) {
-                console.error(e);
-                toast.error("Post updating failed");
-                return;
-            }
-        } else if (op === "create") {
-            try {
-                const res = await axios.post("/api/dashboard/post", {
-                    author: "Shirayuki Haruka",
-                    op,
-                    content,
-                    datePosted: new Date(),
-                    description: descInputRef.current?.value,
-                    link: "",
-                    tags: [],
-                    title: titleInputRef.current?.value,
-                });
-
-                if (res.status == 200) {
-                    setIsSynced(true);
-                    setIsModified(false);
-                    toast.success("Post created!");
-                    // setTimeout(() => {
-                    //     router.push(`/dashboard/main/posts/edit?id=${res.data.}`)
-                    // }, 3000);
-                    console.log(res.data);
-                    return;
-                }
-            } catch (e) {
-                console.error(e);
-                toast.error("Post creation failed");
-                return;
-            }
-        }
-    };
-
-    function imageHandler() {
-        if (!quillRef.current) return;
-
-        const editor = quillRef.current.getEditor();
-        const range = editor.getSelection();
-        const value = prompt("Please enter image url");
-        if (value && range) {
-            editor.insertEmbed(range.index, "image", value, "user");
-        }
-    }
-
     const quillModule = useMemo(
         () => ({
             toolbar: {
@@ -270,6 +180,99 @@ export default function Page() {
         }),
         []
     );
+    // if (typeof window == "undefined") return null;
+    const previewBannerUrl = () => {
+        if (!bannerUrlRef.current) return;
+
+        fetch(bannerUrlRef.current.value, { method: "HEAD" })
+            .then((res) => res.headers.get("content-type")?.startsWith("image"))
+            .then(() => {
+                const img = imagePrevRef.current;
+                if (!img) return;
+                img.src = bannerUrlRef.current!.value;
+                img.className = "w-full h-auto";
+            })
+            .catch(() => {
+                const img = imagePrevRef.current;
+                if (!img) return;
+                img.className = "hidden";
+            });
+    };
+
+    const saveHandler = async () => {
+        const id = searchParams!.get("id");
+        let op: "update" | "create" = "update";
+        if (!id) op = "create";
+
+        if (op === "update") {
+            try {
+                const res = await axios.post("/api/dashboard/post", {
+                    id,
+                    op: "update",
+                    content,
+                    title: titleInputRef.current?.value,
+                    description: descInputRef.current?.value,
+                    bannerUrl: bannerUrlRef.current?.value,
+                    tags: tagsRef.current?.value.split(","),
+                });
+                if (res.status == 200) {
+                    setIsSynced(true);
+                    setIsModified(false);
+                    toast.success("Post updated!", {
+                        position: toast.POSITION.TOP_CENTER,
+                        autoClose: 3000,
+                        closeOnClick: true,
+                        theme: "light",
+                    });
+                    return;
+                }
+            } catch (e) {
+                console.error(e);
+                toast.error("Post updating failed");
+                return;
+            }
+        } else if (op === "create") {
+            try {
+                const res = await axios.post("/api/dashboard/post", {
+                    author: "Shirayuki Haruka",
+                    op,
+                    content,
+                    datePosted: new Date(),
+                    description: descInputRef.current?.value,
+                    link: "",
+                    tags: [],
+                    title: titleInputRef.current?.value,
+                });
+
+                if (res.status == 200) {
+                    setIsSynced(true);
+                    setIsModified(false);
+                    toast.success("Post created!");
+                    // setTimeout(() => {
+                    //     router.push(`/dashboard/main/posts/edit?id=${res.data.}`)
+                    // }, 3000);
+                    console.log(res.data);
+                    return;
+                }
+            } catch (e) {
+                console.error(e);
+                toast.error("Post creation failed");
+                return;
+            }
+        }
+    };
+
+    function imageHandler() {
+        if (!quillRef.current) return;
+
+        const editor = quillRef.current.getEditor();
+        const range = editor.getSelection();
+        const value = prompt("Please enter image url");
+        if (value && range) {
+            editor.insertEmbed(range.index, "image", value, "user");
+        }
+    }
+
     return (
         <>
             <div className="flex">
@@ -333,6 +336,7 @@ export default function Page() {
                             src=""
                             alt=""
                             id="bannerPreview"
+                            ref={imagePrevRef}
                             className="hidden"
                         />
                     </div>
