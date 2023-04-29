@@ -65,4 +65,5 @@ model users {
   lastAccess  DateTime @db.Date
   password    String
   username    String
+  role        String?
 }

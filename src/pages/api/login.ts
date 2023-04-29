@@ -41,12 +41,22 @@ router.post(async (req, res) => {
     const token = jwt.sign(
         {
             username: username,
+            role: user.role,
         },
         process.env["JWT_SECRET"],
         {
             expiresIn: "2h",
         }
     );
+
+    await prisma.users.update({
+        where: {
+            id: user.id,
+        },
+        data: {
+            lastAccess: new Date(),
+        },
+    });
 
     return res
         .setHeader("set-cookie", `token=${token}; path=/; samesite=lax;`)

@@ -115,7 +115,8 @@ export default function PostLayout({
         axios
             .get("/api/signout")
             .then(() => {
-                toast.info("Signing out...");
+                // toast.info("Signing out...");
+                window.location.assign("/");
             })
             .catch(() => {
                 toast.error("Failed signing out");
@@ -144,12 +145,12 @@ export default function PostLayout({
                         </div>
                     ))}
                     <div className="flex-grow"></div>
-                    <div className="px-4 py-4 text-slate-50">
+                    <div className="px-4 py-4 text-slate-50 hover:cursor-pointer hover:bg-slate-400">
                         <Link href="/">
                             <p className="text-3xl font-semibold">Go To Home</p>
                         </Link>
                     </div>
-                    <div className="px-4 py-4 text-slate-50">
+                    <div className="px-4 py-4 text-slate-50 hover:cursor-pointer hover:bg-slate-400">
                         <p className="text-3xl font-semibold" onClick={signout}>
                             Logout
                         </p>

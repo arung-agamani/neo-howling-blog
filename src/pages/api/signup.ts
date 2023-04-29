@@ -39,12 +39,14 @@ router.post(async (req, res) => {
             dateCreated: new Date(),
             email: username,
             lastAccess: new Date(),
+            role: "user",
         },
     });
 
     const token = jwt.sign(
         {
             username: username,
+            role: "user",
         },
         process.env["JWT_SECRET"],
         {

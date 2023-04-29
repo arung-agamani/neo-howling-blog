@@ -1,15 +1,15 @@
-import axios, { AxiosError } from "axios";
+import a, { AxiosError } from "axios";
 
-const instance = axios.create();
+const axios = a.create();
 
-instance.interceptors.request.use((config) => {
+axios.interceptors.request.use((config) => {
     if (process.env.NODE_ENV === "development") {
         console.log(config);
     }
     return config;
 });
 
-instance.interceptors.response.use(
+axios.interceptors.response.use(
     (res) => res,
     (err) => {
         if (
@@ -23,4 +23,4 @@ instance.interceptors.response.use(
     }
 );
 
-export default instance;
+export default axios;

@@ -1,13 +1,46 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import type { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from "next";
+import jwt from "jsonwebtoken";
 
-type Data = {
-  name: string
-}
+// type Data = {
+//   name: string
+// }
 
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>
-) {
-  res.status(200).json({ name: 'John Doe' })
+type JwtCred = {
+    username: string;
+    role?: string;
+};
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+    const token = req.cookies["token"];
+    if (!token) {
+        return res.status(200).json({
+            message: "こんにちは！",
+        });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtCred;
+        return res
+            .status(200)
+            .setHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+            .setHeader("Pragma", "no-cache")
+            .setHeader("Expires", 0)
+            .json({
+                user: {
+                    username: decoded.username,
+                    role: decoded.role || "user",
+                },
+            });
+    } catch (error) {
+        return res
+            .status(401)
+            .setHeader(
+                "set-cookie",
+                `token=asdf; path=/; samesite=lax; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+            )
+            .json({
+                message: "Invalid token. Cookie will be invalidated",
+            });
+    }
 }

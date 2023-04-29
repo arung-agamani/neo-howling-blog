@@ -114,9 +114,8 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
             </div>
             <div className="py-4 px-2 pl-4 border-l border-slate-600 bg-slate-700 w-full">
                 <p className="text-2xl">{post.title}</p>
-                <p className="text-md mb-3 text-slate-300">
-                    {post.description}
-                </p>
+                <p className="text-md  text-slate-300">{post.description}</p>
+                <p className="mb-3">Tags: {post.tags.join(", ")}</p>
                 <p>
                     <Link
                         href={`/post/${post.id}`}
@@ -139,12 +138,12 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
                             Edit
                         </span>
                     </Link>
-                    <span
+                    {/* <span
                         className="mr-4 font-bold bg-red-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer"
                         // onClick={() => deleteHandler(post.id)}
                     >
                         Delete
-                    </span>
+                    </span> */}
                     {post.isPublished ? (
                         <span
                             className="mr-4 font-semibold text-slate-100 px-2 text py-0.5 rounded-lg bg-green-500 hover:cursor-pointer"
