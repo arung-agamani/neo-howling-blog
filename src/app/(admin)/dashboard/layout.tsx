@@ -19,6 +19,11 @@ export default function PostLayout({
                     rel="stylesheet"
                     href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/a11y-dark.min.css"
                 />
+                <link
+                    rel="shortcut icon"
+                    href="/favicon.png"
+                    type="image/png"
+                />
                 <Script
                     strategy="beforeInteractive"
                     src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"

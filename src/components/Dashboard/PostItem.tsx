@@ -15,6 +15,9 @@ interface PostData {
     isPublished: boolean | null;
     datePosted: Date;
     id: string;
+    updatedAt?: Date;
+    deleted?: Boolean;
+    deletedAt?: Date;
 }
 
 const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
@@ -113,8 +116,21 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
                 </svg>
             </div>
             <div className="py-4 px-2 pl-4 border-l border-slate-600 bg-slate-700 w-full">
-                <p className="text-2xl">{post.title}</p>
+                <p className="text-2xl">
+                    {post.title}
+                    {post.deleted && (
+                        <span className="ml-4 mr-4 font-bold bg-red-600 px-2 text py-0.5 rounded-lg text-slate-100">
+                            Deleted
+                        </span>
+                    )}
+                </p>
                 <p className="text-md  text-slate-300">{post.description}</p>
+                <p className="text-md text-slate-300">
+                    Last Updated:{" "}
+                    {post.updatedAt
+                        ? new Date(post.updatedAt).toLocaleString()
+                        : "No update record"}
+                </p>
                 <p className="mb-3">Tags: {post.tags.join(", ")}</p>
                 <p>
                     <Link
@@ -138,12 +154,12 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
                             Edit
                         </span>
                     </Link>
-                    {/* <span
+                    <span
                         className="mr-4 font-bold bg-red-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer"
-                        // onClick={() => deleteHandler(post.id)}
+                        onClick={() => deleteHandler(post.id)}
                     >
                         Delete
-                    </span> */}
+                    </span>
                     {post.isPublished ? (
                         <span
                             className="mr-4 font-semibold text-slate-100 px-2 text py-0.5 rounded-lg bg-green-500 hover:cursor-pointer"

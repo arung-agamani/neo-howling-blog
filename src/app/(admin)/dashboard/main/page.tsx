@@ -12,9 +12,36 @@ interface UserCred {
     };
 }
 
+interface RecentPost {
+    id: string;
+    title: string;
+    description: string;
+}
+
+interface Tag {
+    name: string;
+    _sum: {
+        count: number;
+    };
+}
+
+interface Stats {
+    total: number;
+    unpublished: number;
+    recentPosts: RecentPost[];
+    untaggedPosts: RecentPost[];
+    tags: Tag[];
+}
+
 export default function Page() {
     const [user, setUser] = useState<UserCred | null>(null);
-    const [stats, setStats] = useState<any>({ total: -1, unpublished: -1 });
+    const [stats, setStats] = useState<Stats>({
+        total: -1,
+        unpublished: -1,
+        recentPosts: [],
+        untaggedPosts: [],
+        tags: [],
+    });
     useEffect(() => {
         (async () => {
             try {
@@ -66,12 +93,85 @@ export default function Page() {
             </p>
 
             <br />
-            <h2 className="text-2xl">Analytics</h2>
-            <p className="mb-8">No data</p>
-            <h2 className="text-2xl">Users</h2>
-            <p className="mb-8">No data</p>
-            <h2 className="text-2xl">Comments</h2>
-            <p className="mb-8">No data</p>
+            <div className="flex">
+                <div
+                    id="col1"
+                    className="bg-blue-900 px-2 py-2 mr-4 text-slate-300"
+                >
+                    <h2 className="text-2xl font-bold mb-2 text-slate-100">
+                        Recent Posts
+                    </h2>
+                    {stats.recentPosts.map((post) => {
+                        return (
+                            <div
+                                key={post.id}
+                                className="shadow-md border border-slate-900 hover:border-slate-800 hover:bg-blue-700 px-2 py-2 mb-2"
+                            >
+                                <p className="text-xl">{post.title}</p>
+                                <p className="text-md">{post.description}</p>
+                                <p>
+                                    <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
+                                        Open
+                                    </span>{" "}
+                                    <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
+                                        Edit
+                                    </span>
+                                </p>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div
+                    id="col2"
+                    className="bg-blue-900 px-2 py-2 mr-4 text-slate-300"
+                >
+                    <h2 className="text-2xl font-bold mb-2 text-slate-100">
+                        Tags
+                    </h2>
+                    <div className="flex flex-wrap">
+                        {stats.tags.slice(0, 10).map((tag) => {
+                            return (
+                                <div
+                                    key={tag.name}
+                                    className="mr-2 border border-slate-900 hover:border-slate-800 hover:bg-blue-700 px-2 py-2 mb-2"
+                                >
+                                    <p className="text-xl">{tag.name}</p>
+                                    <p className="text-md">
+                                        Total: {tag._sum.count}
+                                    </p>
+                                    <p>
+                                        <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
+                                            Open
+                                        </span>
+                                    </p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2 text-slate-100">
+                        Untagged Posts
+                    </h2>
+                    {stats.untaggedPosts.map((post) => {
+                        return (
+                            <div
+                                key={post.id}
+                                className="border border-slate-900 hover:border-slate-800 hover:bg-blue-700 px-2 py-2 mb-2"
+                            >
+                                <p className="text-xl">{post.title}</p>
+                                <p className="text-md">{post.description}</p>
+                                <p>
+                                    <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
+                                        Open
+                                    </span>{" "}
+                                    <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
+                                        Edit
+                                    </span>
+                                </p>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
         </div>
     );
 }

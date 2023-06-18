@@ -20,6 +20,9 @@ router.get(async (req, res) => {
                 isPublished: true,
                 datePosted: true,
                 id: true,
+                updatedAt: true,
+                deleted: true,
+                deletedAt: true,
             },
             orderBy: {
                 datePosted: "desc",
@@ -80,6 +83,7 @@ router.post(async (req, res) => {
                     description,
                     bannerUrl,
                     tags,
+                    updatedAt: new Date(),
                 },
             });
         } catch (error) {
@@ -144,7 +148,12 @@ router.post(async (req, res) => {
                 bannerUrl: req.body.bannerUrl,
             };
             createRes = await prisma.posts.create({
-                data: createData,
+                data: {
+                    ...createData,
+                    deleted: false,
+                    updatedAt: new Date(),
+                    deletedAt: new Date(),
+                },
             });
         } catch (error) {
             console.log("Error when creating post");
@@ -178,9 +187,12 @@ router.delete(async (req, res) => {
     let pageDelete;
     let err;
     try {
-        pageDelete = await prisma.posts.delete({
+        pageDelete = await prisma.posts.update({
             where: {
                 id: Array.isArray(id) ? id[0] : id,
+            },
+            data: {
+                deleted: true,
             },
         });
     } catch (error) {

@@ -21,7 +21,22 @@ const hierarchy: MenuItem[] = [
                 children: [],
                 link: "edit",
             },
+            {
+                name: "draft",
+                children: [],
+                link: "draft",
+            },
+            {
+                name: "trash",
+                children: [],
+                link: "trash",
+            },
         ],
+    },
+    {
+        name: "tags",
+        children: [],
+        link: "tags",
     },
     {
         name: "assets",
@@ -156,7 +171,7 @@ export default function PostLayout({
                         </p>
                     </div>
                 </aside>
-                <div className="bg-zinc-900 w-full text-white">{children}</div>
+                <div className="bg-zinc-800 w-full text-white">{children}</div>
             </div>
         </>
     );

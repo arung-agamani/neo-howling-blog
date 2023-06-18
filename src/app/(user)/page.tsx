@@ -9,6 +9,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 export default function Page() {
     const [posts, setPosts] = useState<any>([]);
     const [page, setPage] = useState(1);
+    const [postView, setPostView] = useState(0);
     useEffect(() => {
         (async () => {
             try {
@@ -18,6 +19,7 @@ export default function Page() {
                 setPosts(data.data);
             } catch (error) {}
         })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadPost = () => {
@@ -40,6 +42,24 @@ export default function Page() {
             </p>
             <div className="flex">
                 <div className="flex flex-col flex-grow max-w-5xl mx-auto">
+                    <div className="flex">
+                        <div
+                            className={`${
+                                postView === 1 ? "bg-white" : "bg-orange-400"
+                            } px-2 py-2 my-2 mr-2 rounded-lg hover:cursor-pointer hover:bg-slate-400 hover:text-slate-50 transition-colors duration-75`}
+                            onClick={() => setPostView(0)}
+                        >
+                            CTB
+                        </div>
+                        <div
+                            className={`${
+                                postView === 0 ? "bg-white" : "bg-orange-400"
+                            } px-2 py-2 my-2 mr-2 rounded-lg hover:cursor-pointer hover:bg-slate-400 hover:text-slate-50 transition-colors duration-75`}
+                            onClick={() => setPostView(1)}
+                        >
+                            TMB
+                        </div>
+                    </div>
                     {posts.length > 0 ? (
                         posts.map((x: any) => (
                             <Link
@@ -51,14 +71,16 @@ export default function Page() {
                                     className="pb-4 mx-auto mb-4 bg-white lg:rounded-lg 
                             shadow w-full flex flex-col"
                                 >
-                                    <img
-                                        src={
-                                            x.bannerUrl ||
-                                            "https://files.howlingmoon.dev/blog/7-5/1596671970721-no-banner-card-compressed.jpg"
-                                        }
-                                        alt="This post's banner image"
-                                        className="rounded-t-lg w-full h-auto"
-                                    />
+                                    {postView === 1 && (
+                                        <img
+                                            src={
+                                                x.bannerUrl ||
+                                                "https://files.howlingmoon.dev/blog/7-5/1596671970721-no-banner-card-compressed.jpg"
+                                            }
+                                            alt="This post's banner image"
+                                            className="rounded-t-lg w-full h-auto"
+                                        />
+                                    )}
                                     <p className="uppercase font-bold text-orange-500 px-8 pt-4">
                                         {x.tags.join(" ")}
                                     </p>

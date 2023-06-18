@@ -34,7 +34,10 @@ export default function Page() {
             </div>
             {posts &&
                 posts
-                    .filter((x: any) => x.deleted !== true)
+                    .filter(
+                        (x: any) =>
+                            x.deleted !== true && x.isPublished === false
+                    )
                     .map((post: any) => <PostItem key={post.id} post={post} />)}
         </>
     );
