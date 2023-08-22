@@ -123,12 +123,32 @@ export default function Page() {
                 </div>
                 <div
                     id="col2"
-                    className="bg-blue-900 px-2 py-2 mr-4 text-slate-300"
+                    className="bg-blue-900 px-2 py-2 mr-4 text-slate-300 flex-grow"
                 >
                     <h2 className="text-2xl font-bold mb-2 text-slate-100">
                         Tags
                     </h2>
-                    <div className="flex flex-wrap">
+                    {/* <div className="flex flex-wrap justify-between">
+                        {stats.tags.slice(0, 10).map((tag) => {
+                            return (
+                                <div
+                                    key={tag.name}
+                                    className="mr-2 border border-slate-900 hover:border-slate-800 hover:bg-blue-700 px-2 py-2 mb-2"
+                                >
+                                    <p className="text-xl">{tag.name}</p>
+                                    <p className="text-md">
+                                        Total: {tag._sum.count}
+                                    </p>
+                                    <p>
+                                        <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
+                                            Open
+                                        </span>
+                                    </p>
+                                </div>
+                            );
+                        })}
+                    </div> */}
+                    <div className="grid grid-cols-5">
                         {stats.tags.slice(0, 10).map((tag) => {
                             return (
                                 <div

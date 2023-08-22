@@ -2,15 +2,17 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import ReactQuill, { Quill } from "react-quill";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "@/utils/axios";
-import ImageUploader from "quill-image-uploader";
-import QuillMarkdown from "quilljs-markdown";
-import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
-import "react-quill/dist/quill.snow.css";
+
 import "./editor.css";
+import dynamic from "next/dynamic";
+
+const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
+    ssr: false,
+    loading: () => <p>Loading...</p>,
+});
 
 interface PostMetadata {
     author?: string;
@@ -19,9 +21,6 @@ interface PostMetadata {
     bannerUrl?: string;
     tags?: string[];
 }
-
-Quill.register("modules/imageUploader", ImageUploader);
-Quill.register("modules/QuillMarkdown", QuillMarkdown, true);
 
 export default function Page() {
     const [content, setContent] = useState("");
@@ -33,7 +32,7 @@ export default function Page() {
     const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
     const imagePrevRef = useRef<HTMLImageElement>(null);
     const tagsRef = useRef<HTMLTextAreaElement>(null);
-    const quillRef = useRef<ReactQuill>(null);
+
     const searchParams = useSearchParams();
     useEffect(() => {
         (async () => {
@@ -53,134 +52,11 @@ export default function Page() {
                 setIsSynced(true);
             } catch (error) {
                 setContent("<h1>Failed to fetch content</h1>");
-            } finally {
-                const toolbarHeight =
-                    document.getElementsByClassName("ql-toolbar")[0]
-                        .clientHeight;
-                const qlContainer = document.getElementsByClassName(
-                    "ql-container"
-                )[0] as HTMLDivElement;
-                qlContainer.style.maxHeight = `${
-                    window.innerHeight - toolbarHeight
-                }px`;
             }
         })();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    const quillModule = useMemo(
-        () => ({
-            toolbar: {
-                container: [
-                    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-                    ["bold", "italic", "underline", "strike"],
-                    ["blockquote", "code-block"],
-                    [{ size: ["small", false, "large", "huge"] }],
-                    [
-                        { list: "ordered" },
-                        { list: "bullet" },
-                        { indent: "-1" },
-                        { indent: "+1" },
-                    ],
-                    [{ align: [] }],
-                    ["link", "image"],
-                    ["clean"],
-                ],
-                handlers: {
-                    image: imageHandler,
-                },
-            },
-            QuillMarkdown: {},
-            imageUploader: {
-                upload: (file: File) => {
-                    return new Promise((resolve, reject) => {
-                        (async () => {
-                            const loadedFile = file;
-                            const date = new Date();
-                            const buf = new Uint8Array(4);
-                            const randPrefix = Buffer.from(
-                                crypto.getRandomValues(buf)
-                            ).toString("hex");
-
-                            try {
-                                const head = await fetch(
-                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
-                                        date.getMonth() + 1
-                                    }/${date.getDate()}/${randPrefix}_${
-                                        loadedFile?.name
-                                    }`,
-                                    {
-                                        method: "HEAD",
-                                    }
-                                );
-                                if (head.ok) {
-                                    toast.info(
-                                        `File ${randPrefix}_${loadedFile?.name} has already been uploaded.`
-                                    );
-                                    return;
-                                }
-                            } catch (error) {}
-                            try {
-                                toast.info(`Uploading ${loadedFile?.name}...`);
-                                const presignedUrl = await fetch(
-                                    `${window.location.origin}/api/dashboard/upload`,
-                                    {
-                                        method: "POST",
-                                        headers: {
-                                            "content-type": "application/json",
-                                        },
-                                        body: JSON.stringify({
-                                            name: `${randPrefix}_${loadedFile?.name}`,
-                                            size: loadedFile?.size,
-                                            mime: loadedFile?.type,
-                                            date: {
-                                                year: date.getFullYear(),
-                                                month: date.getMonth() + 1,
-                                                day: date.getDate(),
-                                            },
-                                        }),
-                                    }
-                                ).then((res) => res.json());
-                                const upload = await fetch(presignedUrl.data, {
-                                    method: "PUT",
-                                    headers: {
-                                        "Content-Length": String(
-                                            loadedFile!.size
-                                        ),
-                                    },
-                                    body: loadedFile,
-                                }).then((res) => res.ok);
-                                if (!upload) {
-                                    toast.error(
-                                        `Error when uploading ${loadedFile?.name}`
-                                    );
-                                }
-                                toast.success(
-                                    `File ${loadedFile?.name} has been successfully uploaded`
-                                );
-                                resolve(
-                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
-                                        date.getMonth() + 1
-                                    }/${date.getDate()}/${randPrefix}_${
-                                        loadedFile?.name
-                                    }`
-                                );
-                            } catch (error) {
-                                toast.error(
-                                    `Error when uploading ${loadedFile?.name}`
-                                );
-                                console.error(error);
-                                reject("Upload failed. Check logs");
-                            }
-                        })();
-                    });
-                },
-            },
-            syntax: true,
-        }),
-        []
-    );
-    // if (typeof window == "undefined") return null;
     const previewBannerUrl = () => {
         if (!bannerUrlRef.current) return;
 
@@ -262,34 +138,21 @@ export default function Page() {
         }
     };
 
-    function imageHandler() {
-        if (!quillRef.current) return;
-
-        const editor = quillRef.current.getEditor();
-        const range = editor.getSelection();
-        const value = prompt("Please enter image url");
-        if (value && range) {
-            editor.insertEmbed(range.index, "image", value, "user");
-        }
-    }
-
     return (
         <>
             <div className="flex">
                 <div className="flex-grow">
-                    <ReactQuill
-                        className="bg-white post h-full overflow-y-hidden"
-                        value={content}
-                        onChange={(c) => {
-                            setIsSynced(false);
-                            setIsModified(true);
-                            setContent(c);
+                    <Editor
+                        {...{
+                            page,
+                            setPage,
+                            content,
+                            setContent,
+                            isModified,
+                            setIsModified,
+                            isSynced,
+                            setIsSynced,
                         }}
-                        onBlur={(p, s, e) => {
-                            setIsSynced(true);
-                        }}
-                        modules={quillModule}
-                        ref={quillRef}
                     />
                 </div>
                 <div className="py-2 bg-white text-black sticky h-screen top-0 flex flex-col w-full max-w-xs">
