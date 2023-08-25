@@ -2,9 +2,10 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "@/utils/axios";
+import debounce from "lodash.debounce";
 
 import "./editor.css";
 import dynamic from "next/dynamic";
@@ -57,6 +58,7 @@ export default function Page() {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
     const previewBannerUrl = () => {
         if (!bannerUrlRef.current) return;
 
@@ -75,69 +77,77 @@ export default function Page() {
             });
     };
 
-    const saveHandler = async () => {
-        const id = searchParams!.get("id");
-        let op: "update" | "create" = "update";
-        if (!id) op = "create";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const saveHandler = useCallback(
+        debounce(async (content) => {
+            const id = searchParams!.get("id");
+            let op: "update" | "create" = "update";
+            if (!id) op = "create";
 
-        if (op === "update") {
-            try {
-                const res = await axios.post("/api/dashboard/post", {
-                    id,
-                    op: "update",
-                    content,
-                    title: titleInputRef.current?.value,
-                    description: descInputRef.current?.value,
-                    bannerUrl: bannerUrlRef.current?.value,
-                    tags: tagsRef.current?.value.split(","),
-                });
-                if (res.status == 200) {
-                    setIsSynced(true);
-                    setIsModified(false);
-                    toast.success("Post updated!", {
-                        position: toast.POSITION.TOP_CENTER,
-                        autoClose: 3000,
-                        closeOnClick: true,
-                        theme: "light",
+            if (op === "update") {
+                try {
+                    const res = await axios.post("/api/dashboard/post", {
+                        id,
+                        op: "update",
+                        content,
+                        title: titleInputRef.current?.value,
+                        description: descInputRef.current?.value,
+                        bannerUrl: bannerUrlRef.current?.value,
+                        tags: tagsRef.current?.value.split(","),
                     });
+                    if (res.status == 200) {
+                        setIsSynced(true);
+                        setIsModified(false);
+                        toast.success("Post updated!", {
+                            position: toast.POSITION.TOP_CENTER,
+                            autoClose: 3000,
+                            closeOnClick: true,
+                            theme: "light",
+                        });
+                        return;
+                    }
+                } catch (e) {
+                    console.error(e);
+                    toast.error("Post updating failed");
                     return;
                 }
-            } catch (e) {
-                console.error(e);
-                toast.error("Post updating failed");
-                return;
-            }
-        } else if (op === "create") {
-            try {
-                const res = await axios.post("/api/dashboard/post", {
-                    author: "Shirayuki Haruka",
-                    op,
-                    content,
-                    datePosted: new Date(),
-                    description: descInputRef.current?.value,
-                    link: "",
-                    tags: [],
-                    title: titleInputRef.current?.value,
-                });
+            } else if (op === "create") {
+                try {
+                    const res = await axios.post("/api/dashboard/post", {
+                        author: "Shirayuki Haruka",
+                        op,
+                        content,
+                        datePosted: new Date(),
+                        description: descInputRef.current?.value,
+                        link: "",
+                        tags: [],
+                        title: titleInputRef.current?.value,
+                    });
 
-                if (res.status == 200) {
-                    setIsSynced(true);
-                    setIsModified(false);
-                    toast.success("Post created!");
-                    // setTimeout(() => {
-                    //     router.push(`/dashboard/main/posts/edit?id=${res.data.}`)
-                    // }, 3000);
-                    console.log(res.data);
+                    if (res.status == 200) {
+                        setIsSynced(true);
+                        setIsModified(false);
+                        toast.success("Post created!");
+                        // setTimeout(() => {
+                        //     router.push(`/dashboard/main/posts/edit?id=${res.data.}`)
+                        // }, 3000);
+                        console.log(res.data);
+                        return;
+                    }
+                } catch (e) {
+                    console.error(e);
+                    toast.error("Post creation failed");
                     return;
                 }
-            } catch (e) {
-                console.error(e);
-                toast.error("Post creation failed");
-                return;
             }
-        }
-    };
+        }, 30000),
+        []
+    );
 
+    useEffect(() => {
+        saveHandler(content);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [content]);
     return (
         <>
             <div className="flex">

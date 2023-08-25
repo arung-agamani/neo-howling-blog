@@ -1,38 +1,54 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Howling Blog
+
+A custom made personal blog framework with it's renderer and it's own CMS.
+
+## Why?
+
+Of course as a way to learn through project-based approach. I aim to build the components by myself as much as I can so that I can understand the pain of building a web application.
 
 ## Getting Started
 
-First, run the development server:
+This repository contains the base application for a blog with it's own CMS. You can see the running app, which is my own blog, over [Howling Blog](https://blog.howlingmoon.dev)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+It's based on `Next.js` with currently used version is version **13**. This application uses the App Router directory structure.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+There are 2 external components that this application relies on: MongoDB and AWS S3.  
+The former holds everything that it needs to store the pages, users, basically every data-related resources, while the latter stores the assets. All the posts are stored as documents inside MongoDb in the form of rendered HTML, so the public-facing part will just need to render the fetched HTML.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+-   Fully functional blog platform with just the features required to create blog posts.
+-   SSR powered by Next.js. As such, all other features offered by Next.js are also available, making this base application very extensible.
+-   Create blog posts using WYSIWYG Editor, powered by Quill.js
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+### Prepare dependencies
 
-## Learn More
+1. MongoDb
 
-To learn more about Next.js, take a look at the following resources:
+    You can self-host your mongodb instance or use MongoDb Atlas or have other cloud provider provision them for you. As this app uses `Prisma.js`, the requirement for any self-hosted mongodb instance is that it should have replica set enabled. MongoDb Atlas on free tier will give you enough starting point for usable mongodb server, but you can also provision by yourself.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. AWS S3 Bucket
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+    This app is able to host it's assets in AWS S3, which is accessible through the dashboard, on asset manager and also on image uploader function attached to Quill.js. Uploaded files on S3 should be accessible publicly, which you can set through bucket policy.
 
-## Deploy on Vercel
+    To manage files, you are required to create credential to access AWS S3, which should be through IAM user. The access key and secret key will be used as environment variables, which described below.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Prepare environment variables and configs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+The following table describes the environment variables used by the app.
+
+| Variable Name    | Description                           | Type   | Required | Default        |
+| ---------------- | ------------------------------------- | ------ | -------- | -------------- |
+| `DATABASE_URL`   | The Database access URL to MongoDb    | String | Yes      | ''             |
+| `JWT_SECRET`     | The secret used to encrypt JWT tokens | String | Yes      | ''             |
+| `AWS_ACCESS_KEY` | Access Key for AWS User               | String | Yes      | ''             |
+| `AWS_SECRET_KEY` | Secret Key for AWS User               | String | Yes      | ''             |
+| `SITE_NAME`      | The name of the website               | String | No       | 'Howling Blog' |
+
+Put the required variables in `.env` file in the project root directory (next to `package.json` and others)
+
+### Development and Deployment
+
+As this is a standard Next.js project, development can be started by using the `dev` script defined in `package.json`, as well as creating deployment builds with `build` script. This repo mainly uses `npm`, but you can also use `yarn` or `pnpm`. Just make sure to adjust the lock files as needed.
