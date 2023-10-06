@@ -68,7 +68,11 @@ model users {
   lastAccess  DateTime @db.Date
   password    String
   username    String
-  role        String?
+  role        String  
+  name        String  @default("")
+  birthday    DateTime? @db.Date @default(now())
+  gender      Gender? @default(male)
+  phone       String? @default("")
 }
 
 model config {
@@ -76,4 +80,9 @@ model config {
   siteName  String
   tagline String
   headerImage String
+}
+
+enum Gender {
+  male
+  female
 }

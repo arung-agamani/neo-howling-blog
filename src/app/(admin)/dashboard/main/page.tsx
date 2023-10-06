@@ -12,7 +12,9 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import PostItem from "@/components/Dashboard/PostItem";
+import PostItemSkeleton from "@/components/Dashboard/PostItemSkeleton";
 import Divider from "@mui/material/Divider";
+import Skeleton from "@mui/material/Skeleton";
 import { useAppSelector } from "@/stores/hooks";
 
 interface UserCred {
@@ -106,11 +108,18 @@ export default function Page() {
                     <Typography variant="h5">Recent Post</Typography>
                     <Divider />
                     <div className="grid grid-cols-5 gap-4 py-2">
-                        {stats.recentPosts.map((post) => {
-                            return (
-                                <PostItem key={post.id} post={post as any} />
-                            );
-                        })}
+                        {stats.total === -1
+                            ? [0, 1, 2, 3, 4].map((i) => {
+                                  return <PostItemSkeleton key={i} />;
+                              })
+                            : stats.recentPosts.map((post) => {
+                                  return (
+                                      <PostItem
+                                          key={post.id}
+                                          post={post as any}
+                                      />
+                                  );
+                              })}
                     </div>
                 </Paper>
                 <Paper elevation={2} className="px-4 py-4">
@@ -138,11 +147,18 @@ export default function Page() {
                     <Typography variant="h5">Untagged Post</Typography>
                     <Divider />
                     <div className="grid grid-cols-5 gap-4 py-2">
-                        {stats.untaggedPosts.map((post) => {
-                            return (
-                                <PostItem key={post.id} post={post as any} />
-                            );
-                        })}
+                        {stats.total === -1
+                            ? [0, 1, 2, 3, 4].map((i) => {
+                                  return <PostItemSkeleton key={i} />;
+                              })
+                            : stats.untaggedPosts.map((post) => {
+                                  return (
+                                      <PostItem
+                                          key={post.id}
+                                          post={post as any}
+                                      />
+                                  );
+                              })}
                     </div>
                 </Paper>
             </Stack>

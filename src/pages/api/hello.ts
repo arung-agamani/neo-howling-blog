@@ -1,15 +1,16 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
+import { Prisma } from "@prisma/client";
 import jwt from "jsonwebtoken";
 
 // type Data = {
 //   name: string
 // }
 
-type JwtCred = {
-    username: string;
-    role?: string;
-};
+type UserCred = Omit<
+    Prisma.usersSelect,
+    "id" | "v" | "dateCreated" | "lastAccess"
+>;
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const token = req.cookies["token"];
@@ -20,7 +21,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtCred;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET) as UserCred;
         return res
             .status(200)
             .setHeader("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -29,7 +30,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             .json({
                 user: {
                     username: decoded.username,
-                    role: decoded.role || "user",
+                    role: decoded.role,
+                    name: decoded.name,
+                    birthday: decoded.birthday,
+                    gender: decoded.gender,
+                    phone: decoded.phone,
                 },
             });
     } catch (error) {

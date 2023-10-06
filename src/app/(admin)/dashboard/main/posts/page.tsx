@@ -12,6 +12,7 @@ import Box from "@mui/material/Box";
 import Pagination from "@mui/material/Pagination";
 import Grid from "@mui/material/Grid";
 import CircularProgress from "@mui/material/CircularProgress";
+import PostItemSkeleton from "@/components/Dashboard/PostItemSkeleton";
 
 const PAGE_SIZE = 12;
 
@@ -98,12 +99,15 @@ export default function Page() {
                 />
             </Box>
             <div className="grid grid-cols-4 gap-2 px-2">
-                {paginatedPost &&
-                    paginatedPost
-                        .filter((x: any) => x.deleted !== true)
-                        .map((post: any) => (
-                            <PostItem key={post.id} post={post} />
-                        ))}
+                {paginatedPost
+                    ? paginatedPost
+                          .filter((x: any) => x.deleted !== true)
+                          .map((post: any) => (
+                              <PostItem key={post.id} post={post} />
+                          ))
+                    : [0, 1, 2, 3, 4].map((i) => {
+                          return <PostItemSkeleton key={i} />;
+                      })}
             </div>
         </>
     );

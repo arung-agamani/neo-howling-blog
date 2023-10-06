@@ -32,6 +32,8 @@ import Avatar from "@mui/material/Avatar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 
 import Home from "@mui/icons-material/Home";
 import Article from "@mui/icons-material/Article";
@@ -42,6 +44,9 @@ import Tag from "@mui/icons-material/Tag";
 import PermMedia from "@mui/icons-material/PermMedia";
 import MenuIcon from "@mui/icons-material/Menu";
 import UserIcon from "@mui/icons-material/AccountBox";
+import LogoutIcon from "@mui/icons-material/Logout";
+import FeedbackIcon from "@mui/icons-material/Feedback";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 // function FrozenRouter(props: PropsWithChildren<{}>) {
 //     const context = useContext(LayoutRouterContext);
@@ -196,6 +201,8 @@ export default function PostLayout({
 }) {
     const [auth, setAuth] = useState(false);
     const [open, isOpen] = useState(true);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const openProfileMenu = Boolean(anchorEl);
     const dispatch = useAppDispatch();
     const user = useAppSelector(UserState);
     const router = useRouter();
@@ -234,10 +241,10 @@ export default function PostLayout({
 
     const signout = () => {
         axios
-            .get("/api/signout")
+            .post("/api/signout")
             .then(() => {
                 // toast.info("Signing out...");
-                window.location.assign("/");
+                window.location.assign("/dashboard");
             })
             .catch(() => {
                 toast.error("Failed signing out");
@@ -278,10 +285,78 @@ export default function PostLayout({
                         }}
                     >
                         <Typography variant="body1">{user.username}</Typography>
-                        <Avatar sx={{ ml: 2 }} />
+                        <IconButton
+                            onClick={(e: React.MouseEvent<HTMLElement>) => {
+                                setAnchorEl(e.currentTarget);
+                            }}
+                        >
+                            <Avatar sx={{ ml: 2 }} />
+                        </IconButton>
                     </Box>
                 </Toolbar>
             </AppBar>
+            <Menu
+                anchorEl={anchorEl}
+                open={openProfileMenu}
+                onClose={() => {
+                    setAnchorEl(null);
+                }}
+                onClick={() => {
+                    setAnchorEl(null);
+                }}
+                transformOrigin={{ horizontal: "right", vertical: "top" }}
+                anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                disableScrollLock={true}
+                PaperProps={{
+                    elevation: 0,
+                    sx: {
+                        overflow: "visible",
+                        filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+                        mt: 1.5,
+                        "& .MuiAvatar-root": {
+                            width: 32,
+                            height: 32,
+                            ml: -0.5,
+                            mr: 1,
+                        },
+                        "&:before": {
+                            content: '""',
+                            display: "block",
+                            position: "absolute",
+                            top: 0,
+                            right: 14,
+                            width: 10,
+                            height: 10,
+                            bgcolor: "background.paper",
+                            transform: "translateY(-50%) rotate(45deg)",
+                            zIndex: 0,
+                        },
+                    },
+                }}
+            >
+                <MenuItem
+                    onClick={() => {
+                        setAnchorEl(null);
+                    }}
+                >
+                    <AccountCircleIcon sx={{ mr: 2 }} /> Profile
+                </MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        setAnchorEl(null);
+                    }}
+                >
+                    <FeedbackIcon sx={{ mr: 2 }} /> Report Feedback
+                </MenuItem>
+                <Divider />
+                <MenuItem
+                    onClick={() => {
+                        signout();
+                    }}
+                >
+                    <LogoutIcon sx={{ mr: 2 }} /> Log Out
+                </MenuItem>
+            </Menu>
             <Toolbar />
             <div className="flex">
                 <Drawer

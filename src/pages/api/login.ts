@@ -42,6 +42,10 @@ router.post(async (req, res) => {
         {
             username: username,
             role: user.role,
+            name: user.name,
+            birthday: user.birthday,
+            gender: user.gender,
+            phone: user.phone,
         },
         process.env["JWT_SECRET"],
         {
