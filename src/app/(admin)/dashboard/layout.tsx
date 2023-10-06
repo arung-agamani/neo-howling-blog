@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-css-tags */
 "use client";
 
+import ReduxProvider from "@/stores/ReduxProvider";
 import Script from "next/script";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -33,7 +34,7 @@ export default function PostLayout({
             <body className="">
                 <ToastContainer autoClose={3000} pauseOnFocusLoss={false} />
                 <ThemeRegistry options={{ key: "mui" }}>
-                    {children}
+                    <ReduxProvider>{children}</ReduxProvider>
                 </ThemeRegistry>
             </body>
         </html>

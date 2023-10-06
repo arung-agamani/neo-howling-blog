@@ -55,7 +55,9 @@ import UserIcon from "@mui/icons-material/AccountBox";
 // }
 
 import Loading from "./loading";
-import zIndex from "@mui/material/styles/zIndex";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import { setUser, UserState } from "@/stores/slice/user";
+import { AxiosError } from "axios";
 
 type MenuItem = {
     name: string;
@@ -185,7 +187,7 @@ const TreeView: React.FC<{
     );
 };
 
-const DRAWER_WIDTH = 320;
+const DRAWER_WIDTH = 240;
 
 export default function PostLayout({
     children,
@@ -194,6 +196,8 @@ export default function PostLayout({
 }) {
     const [auth, setAuth] = useState(false);
     const [open, isOpen] = useState(true);
+    const dispatch = useAppDispatch();
+    const user = useAppSelector(UserState);
     const router = useRouter();
     // const pathname = usePathname();
     useEffect(() => {
@@ -206,6 +210,23 @@ export default function PostLayout({
                 router.push("/dashboard");
                 // alert(err.response.data.message);
             });
+        (async () => {
+            try {
+                const { data } = await axios.get("/api/hello", {
+                    withCredentials: true,
+                });
+                console.log(data);
+                dispatch(setUser(data.user));
+            } catch (error) {
+                if (error instanceof AxiosError) {
+                    const e = error as AxiosError<{ message: string }>;
+                    toast.error(
+                        e.response?.data.message ||
+                            "Error when fetching user credentials"
+                    );
+                }
+            }
+        })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -249,8 +270,15 @@ export default function PostLayout({
                             Admin Dashboard
                         </Typography>
                     </Box>
-                    <Box sx={{ flexGrow: 0 }}>
-                        <Avatar />
+                    <Box
+                        sx={{
+                            flexGrow: 0,
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Typography variant="body1">{user.username}</Typography>
+                        <Avatar sx={{ ml: 2 }} />
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -294,7 +322,7 @@ export default function PostLayout({
                             </ListItem>
                         </Link>
 
-                        <Link href={"/dashboard/profile"}>
+                        <Link href={"/dashboard/main/profile"}>
                             <ListItem disablePadding>
                                 <ListItemButton
                                     sx={{

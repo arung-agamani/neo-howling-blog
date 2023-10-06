@@ -97,7 +97,7 @@ export default function Page() {
                     onChange={handlePageChange}
                 />
             </Box>
-            <div className="grid grid-cols-4">
+            <div className="grid grid-cols-4 gap-2 px-2">
                 {paginatedPost &&
                     paginatedPost
                         .filter((x: any) => x.deleted !== true)

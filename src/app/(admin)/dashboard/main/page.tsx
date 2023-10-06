@@ -13,6 +13,7 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import PostItem from "@/components/Dashboard/PostItem";
 import Divider from "@mui/material/Divider";
+import { useAppSelector } from "@/stores/hooks";
 
 interface UserCred {
     user: {
@@ -43,7 +44,7 @@ interface Stats {
 }
 
 export default function Page() {
-    const [user, setUser] = useState<UserCred | null>(null);
+    const user = useAppSelector((state) => state.user);
     const [stats, setStats] = useState<Stats>({
         total: -1,
         unpublished: -1,
@@ -52,23 +53,6 @@ export default function Page() {
         tags: [],
     });
     useEffect(() => {
-        (async () => {
-            try {
-                const { data } = await axios.get("/api/hello", {
-                    withCredentials: true,
-                });
-                console.log(data);
-                setUser(data);
-            } catch (error) {
-                if (error instanceof AxiosError) {
-                    const e = error as AxiosError<{ message: string }>;
-                    toast.error(
-                        e.response?.data.message ||
-                            "Error when fetching user credentials"
-                    );
-                }
-            }
-        })();
         (async () => {
             try {
                 const { data } = await axios.get("/api/dashboard", {
@@ -85,10 +69,6 @@ export default function Page() {
                 }
             }
         })();
-
-        return () => {
-            setUser(null);
-        };
     }, []);
     if (!user)
         return (
@@ -109,9 +89,7 @@ export default function Page() {
     return (
         <div className="px-4 py-4">
             <Paper elevation={2} className="px-4 py-4">
-                <Typography variant="h4">
-                    Hello, {user.user.username}!
-                </Typography>
+                <Typography variant="h4">Hello, {user.username}!</Typography>
                 <Typography variant="body1">
                     Last Login: {new Date().toLocaleString()}
                 </Typography>
