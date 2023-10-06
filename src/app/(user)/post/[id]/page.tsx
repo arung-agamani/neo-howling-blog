@@ -32,7 +32,7 @@ const baseUrl =
 
 export async function generateMetadata({ params }: { params: Params }) {
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}&h=1`, {
-        next: { revalidate: 10 },
+        // next: { revalidate: 10 },
         cache: "no-cache",
     }).then((res) => {
         return res.json();

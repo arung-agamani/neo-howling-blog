@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev",
+        "dev": "explorer http://localhost:3000 & next dev",
         "build": "next build",
         "start": "next start",
         "lint": "next lint"
@@ -11,6 +11,10 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.300.0",
         "@aws-sdk/s3-request-presigner": "^3.300.0",
+        "@emotion/react": "^11.11.1",
+        "@emotion/styled": "^11.11.0",
+        "@mui/icons-material": "^5.14.6",
+        "@mui/material": "^5.14.6",
         "@next/font": "13.1.6",
         "@prisma/client": "^4.9.0",
         "@types/node": "18.11.18",
@@ -20,6 +24,7 @@
         "bcrypt": "^5.1.0",
         "eslint": "8.33.0",
         "eslint-config-next": "^13.3.1",
+        "framer-motion": "^10.16.2",
         "highlight.js": "^11.7.0",
         "jsonwebtoken": "^9.0.0",
         "lodash.debounce": "^4.0.8",

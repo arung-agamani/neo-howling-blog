@@ -32,13 +32,17 @@ export default function Page() {
                     </p>
                 </Link>
             </div>
-            {posts &&
-                posts
-                    .filter(
-                        (x: any) =>
-                            x.deleted !== true && x.isPublished === false
-                    )
-                    .map((post: any) => <PostItem key={post.id} post={post} />)}
+            <div className="grid grid-cols-4">
+                {posts &&
+                    posts
+                        .filter(
+                            (x: any) =>
+                                x.deleted !== true && x.isPublished === false
+                        )
+                        .map((post: any) => (
+                            <PostItem key={post.id} post={post} />
+                        ))}
+            </div>
         </>
     );
 }

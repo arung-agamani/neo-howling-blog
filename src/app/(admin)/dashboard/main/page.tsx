@@ -5,6 +5,15 @@ import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
+import Container from "@mui/material/Container";
+import CircularProgress from "@mui/material/CircularProgress";
+import Grid from "@mui/material/Grid";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import PostItem from "@/components/Dashboard/PostItem";
+import Divider from "@mui/material/Divider";
+
 interface UserCred {
     user: {
         role?: string;
@@ -81,73 +90,53 @@ export default function Page() {
             setUser(null);
         };
     }, []);
-    if (!user) return <p>Fetching data...</p>;
+    if (!user)
+        return (
+            <Grid
+                container
+                spacing={0}
+                direction="column"
+                alignItems="center"
+                justifyContent="center"
+                sx={{
+                    minHeight: "100vh",
+                    backgroundColor: "white",
+                }}
+            >
+                <CircularProgress color="primary" />
+            </Grid>
+        );
     return (
-        <div className="px-2 py-2">
-            <h1 className="text-4xl">Hello, {user.user.username}!</h1>
-            <p>Role: {user.user.role}</p>
-            <p className="text-xl">Last Login: {new Date().toLocaleString()}</p>
-            <p className="text-xl">
-                You have {stats.total} posts, {stats.total - stats.unpublished}{" "}
-                published, {stats.unpublished} draft
-            </p>
+        <div className="px-4 py-4">
+            <Paper elevation={2} className="px-4 py-4">
+                <Typography variant="h4">
+                    Hello, {user.user.username}!
+                </Typography>
+                <Typography variant="body1">
+                    Last Login: {new Date().toLocaleString()}
+                </Typography>
+                <Typography variant="body1">
+                    You have {stats.total} posts,{" "}
+                    {stats.total - stats.unpublished} published,{" "}
+                    {stats.unpublished} draft
+                </Typography>
+            </Paper>
 
             <br />
-            <div className="flex">
-                <div
-                    id="col1"
-                    className="bg-blue-900 px-2 py-2 mr-4 text-slate-300"
-                >
-                    <h2 className="text-2xl font-bold mb-2 text-slate-100">
-                        Recent Posts
-                    </h2>
-                    {stats.recentPosts.map((post) => {
-                        return (
-                            <div
-                                key={post.id}
-                                className="shadow-md border border-slate-900 hover:border-slate-800 hover:bg-blue-700 px-2 py-2 mb-2"
-                            >
-                                <p className="text-xl">{post.title}</p>
-                                <p className="text-md">{post.description}</p>
-                                <p>
-                                    <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
-                                        Open
-                                    </span>{" "}
-                                    <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
-                                        Edit
-                                    </span>
-                                </p>
-                            </div>
-                        );
-                    })}
-                </div>
-                <div
-                    id="col2"
-                    className="bg-blue-900 px-2 py-2 mr-4 text-slate-300 flex-grow"
-                >
-                    <h2 className="text-2xl font-bold mb-2 text-slate-100">
-                        Tags
-                    </h2>
-                    {/* <div className="flex flex-wrap justify-between">
-                        {stats.tags.slice(0, 10).map((tag) => {
+            <Stack spacing={2}>
+                <Paper elevation={2} className="px-4 py-4">
+                    <Typography variant="h5">Recent Post</Typography>
+                    <Divider />
+                    <div className="grid grid-cols-5 gap-4 py-2">
+                        {stats.recentPosts.map((post) => {
                             return (
-                                <div
-                                    key={tag.name}
-                                    className="mr-2 border border-slate-900 hover:border-slate-800 hover:bg-blue-700 px-2 py-2 mb-2"
-                                >
-                                    <p className="text-xl">{tag.name}</p>
-                                    <p className="text-md">
-                                        Total: {tag._sum.count}
-                                    </p>
-                                    <p>
-                                        <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
-                                            Open
-                                        </span>
-                                    </p>
-                                </div>
+                                <PostItem key={post.id} post={post as any} />
                             );
                         })}
-                    </div> */}
+                    </div>
+                </Paper>
+                <Paper elevation={2} className="px-4 py-4">
+                    {/* <Typography variant="h4">Tags</Typography>
                     <div className="grid grid-cols-5">
                         {stats.tags.slice(0, 10).map((tag) => {
                             return (
@@ -167,31 +156,18 @@ export default function Page() {
                                 </div>
                             );
                         })}
+                    </div> */}
+                    <Typography variant="h5">Untagged Post</Typography>
+                    <Divider />
+                    <div className="grid grid-cols-5 gap-4 py-2">
+                        {stats.untaggedPosts.map((post) => {
+                            return (
+                                <PostItem key={post.id} post={post as any} />
+                            );
+                        })}
                     </div>
-                    <h2 className="text-2xl font-bold mb-2 text-slate-100">
-                        Untagged Posts
-                    </h2>
-                    {stats.untaggedPosts.map((post) => {
-                        return (
-                            <div
-                                key={post.id}
-                                className="border border-slate-900 hover:border-slate-800 hover:bg-blue-700 px-2 py-2 mb-2"
-                            >
-                                <p className="text-xl">{post.title}</p>
-                                <p className="text-md">{post.description}</p>
-                                <p>
-                                    <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
-                                        Open
-                                    </span>{" "}
-                                    <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
-                                        Edit
-                                    </span>
-                                </p>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+                </Paper>
+            </Stack>
         </div>
     );
 }

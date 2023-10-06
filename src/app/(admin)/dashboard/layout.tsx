@@ -6,6 +6,7 @@ import Script from "next/script";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
+import ThemeRegistry from "./main/ThemeRegistry";
 
 export default function PostLayout({
     children,
@@ -31,7 +32,9 @@ export default function PostLayout({
             </head>
             <body className="">
                 <ToastContainer autoClose={3000} pauseOnFocusLoss={false} />
-                {children}
+                <ThemeRegistry options={{ key: "mui" }}>
+                    {children}
+                </ThemeRegistry>
             </body>
         </html>
     );

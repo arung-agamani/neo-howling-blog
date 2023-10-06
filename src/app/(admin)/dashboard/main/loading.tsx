@@ -1,5 +1,7 @@
 "use client";
 
+import LinearProgress from "@mui/material/LinearProgress";
+
 export default function Loading() {
-    return <p className="text-4xl">Awooloading...</p>;
+    return <LinearProgress />;
 }

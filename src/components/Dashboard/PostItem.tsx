@@ -4,7 +4,17 @@ import axios from "@/utils/axios";
 import Link from "next/link";
 import React, { useRef, useState } from "react";
 import { toast } from "react-toastify";
-
+import Card from "@mui/material/Card";
+import CardActions from "@mui/material/CardActions";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
+import OpenInNew from "@mui/icons-material/OpenInNew";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import PublishIcon from "@mui/icons-material/Publish";
+import Tooltip from "@mui/material/Tooltip";
 interface PostData {
     title: string;
     link: string | null;
@@ -89,96 +99,172 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
         }
     };
     return (
-        <div
-            className="bg-slate-600 text-slate-100 mb-2 flex mx-2"
-            key={post.title}
+        <Card
+            className="flex flex-col bg-gray-100"
+            sx={{
+                // color: "#0B132B",
+                "& .MuiSvgIcon-root": {
+                    color: "#947EB0",
+                },
+                backgroundColor: "rgb(243 244 246)",
+            }}
         >
-            <div
-                className="h-full px-2 self-center hover:cursor-pointer"
-                // onClick={openOption}
-                ref={ref}
-            >
-                <svg
-                    style={{
-                        verticalAlign: "-0.125em",
-                    }}
-                    fill="currentColor"
-                    height="1em"
-                    width="1em"
-                    viewBox="0 0 192 512"
-                    aria-hidden="true"
-                    role="img"
-                >
-                    <path
-                        d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
-                        transform=""
-                    ></path>
-                </svg>
-            </div>
-            <div className="py-4 px-2 pl-4 border-l border-slate-600 bg-slate-700 w-full">
-                <p className="text-2xl">
-                    {post.title}
-                    {post.deleted && (
-                        <span className="ml-4 mr-4 font-bold bg-red-600 px-2 text py-0.5 rounded-lg text-slate-100">
-                            Deleted
-                        </span>
-                    )}
-                </p>
-                <p className="text-md  text-slate-300">{post.description}</p>
-                <p className="text-md text-slate-300">
-                    Last Updated:{" "}
+            <CardContent className="flex-grow">
+                <Typography color="text.secondary" gutterBottom>
                     {post.updatedAt
                         ? new Date(post.updatedAt).toLocaleString()
                         : "No update record"}
-                </p>
-                <p className="mb-3">Tags: {post.tags.join(", ")}</p>
-                <p>
-                    <Link
-                        href={`/post/${post.id}`}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                    >
-                        <span className="mr-4 font-bold bg-blue-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer">
-                            Open
-                        </span>
-                    </Link>
-                    <Link
-                        href={{
-                            pathname: "/dashboard/main/posts/edit",
-                            query: {
-                                id: post.id,
-                            },
-                        }}
-                    >
-                        <span className="mr-4 font-bold bg-orange-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer">
-                            Edit
-                        </span>
-                    </Link>
-                    <span
-                        className="mr-4 font-bold bg-red-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer"
-                        onClick={() => deleteHandler(post.id)}
-                    >
-                        Delete
-                    </span>
-                    {post.isPublished ? (
-                        <span
-                            className="mr-4 font-semibold text-slate-100 px-2 text py-0.5 rounded-lg bg-green-500 hover:cursor-pointer"
-                            onClick={publishHandler}
-                        >
-                            Published
-                        </span>
-                    ) : (
-                        <span
-                            className="mr-4 font-semibold text-slate-100 px-2 text py-0.5 rounded-lg bg-gray-500 hover:cursor-pointer"
-                            onClick={publishHandler}
-                        >
-                            Not Published
-                        </span>
-                    )}
-                </p>
-            </div>
-        </div>
+                </Typography>
+                <Typography variant="h5" component="div" color="text.primary">
+                    {post.title}
+                </Typography>
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ marginTop: "1rem" }}
+                >
+                    {post.description}
+                </Typography>
+                {/* <div className="mt-6">
+                    {post.tags.map((tag) => (
+                        <Chip
+                            key={tag}
+                            className="mx-1 first:ml-0"
+                            label={tag}
+                        />
+                    ))}
+                </div> */}
+            </CardContent>
+            <CardActions disableSpacing className="align-bottom">
+                <Link
+                    href={`/post/${post.id}`}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                >
+                    <Tooltip title="Open">
+                        <IconButton>
+                            <OpenInNew />
+                        </IconButton>
+                    </Tooltip>
+                </Link>
+                <Link
+                    href={{
+                        pathname: "/dashboard/main/posts/edit",
+                        query: {
+                            id: post.id,
+                        },
+                    }}
+                >
+                    <Tooltip title="Edit">
+                        <IconButton>
+                            <EditIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Link>
+                <Tooltip title="Delete">
+                    <IconButton>
+                        <DeleteIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Publish">
+                    <IconButton>
+                        <PublishIcon />
+                    </IconButton>
+                </Tooltip>
+            </CardActions>
+        </Card>
     );
+    {
+        /* <div
+    className="bg-slate-600 text-slate-100 mb-2 flex mx-2"
+    key={post.title}
+>
+    <div
+        className="h-full px-2 self-center hover:cursor-pointer"
+        // onClick={openOption}
+        ref={ref}
+    >
+        <svg
+            style={{
+                verticalAlign: "-0.125em",
+            }}
+            fill="currentColor"
+            height="1em"
+            width="1em"
+            viewBox="0 0 192 512"
+            aria-hidden="true"
+            role="img"
+        >
+            <path
+                d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
+                transform=""
+            ></path>
+        </svg>
+    </div>
+    <div className="py-4 px-2 pl-4 border-l border-slate-600 bg-slate-700 w-full">
+        <p className="text-2xl">
+            {post.title}
+            {post.deleted && (
+                <span className="ml-4 mr-4 font-bold bg-red-600 px-2 text py-0.5 rounded-lg text-slate-100">
+                    Deleted
+                </span>
+            )}
+        </p>
+        <p className="text-md  text-slate-300">{post.description}</p>
+        <p className="text-md text-slate-300">
+            Last Updated:{" "}
+            {post.updatedAt
+                ? new Date(post.updatedAt).toLocaleString()
+                : "No update record"}
+        </p>
+        <p className="mb-3">Tags: {post.tags.join(", ")}</p>
+        <p>
+            <Link
+                href={`/post/${post.id}`}
+                rel="noopener noreferrer"
+                target="_blank"
+            >
+                <span className="mr-4 font-bold bg-blue-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer">
+                    Open
+                </span>
+            </Link>
+            <Link
+                href={{
+                    pathname: "/dashboard/main/posts/edit",
+                    query: {
+                        id: post.id,
+                    },
+                }}
+            >
+                <span className="mr-4 font-bold bg-orange-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer">
+                    Edit
+                </span>
+            </Link>
+            <span
+                className="mr-4 font-bold bg-red-600 px-2 text py-0.5 rounded-lg text-slate-100 hover:bg-white hover:cursor-pointer"
+                onClick={() => deleteHandler(post.id)}
+            >
+                Delete
+            </span>
+            {post.isPublished ? (
+                <span
+                    className="mr-4 font-semibold text-slate-100 px-2 text py-0.5 rounded-lg bg-green-500 hover:cursor-pointer"
+                    onClick={publishHandler}
+                >
+                    Published
+                </span>
+            ) : (
+                <span
+                    className="mr-4 font-semibold text-slate-100 px-2 text py-0.5 rounded-lg bg-gray-500 hover:cursor-pointer"
+                    onClick={publishHandler}
+                >
+                    Not Published
+                </span>
+            )}
+        </p>
+    </div>
+</div> */
+    }
 };
 
 export default PostItem;
