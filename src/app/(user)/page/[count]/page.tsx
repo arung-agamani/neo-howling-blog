@@ -4,6 +4,7 @@ import HomeButton from "@/components/HomeButton";
 import ScrollTop from "@/components/ScrollTop";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import prisma from "@/utils/prisma";
 import "../../post/[id]/post.css";
 
 interface Params {
