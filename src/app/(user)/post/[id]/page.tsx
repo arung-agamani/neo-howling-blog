@@ -1,6 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 // "use client";
 // import { useEffect, useState } from "react";
+import HomeButton from "@/components/HomeButton";
+import ScrollTop from "@/components/ScrollTop";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -41,6 +43,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     const metadata: Metadata = {
         title: data.title,
         description: data.description,
+        metadataBase: new URL("https://blog.howlingmoon.dev"),
         openGraph: {
             title: data.title,
             description: data.description,
@@ -89,21 +92,10 @@ export default async function Page({ params }: { params: Params }) {
                 dangerouslySetInnerHTML={{ __html: data.blogContent }}
                 className="mx-2 lg:mx-10 mt-10 font-sans font-normal"
             />
-            <Link href="/">
-                <div className="home-button">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            fill="white"
-                            d="M21 13v10h-6v-6h-6v6h-6v-10h-3l12-12 12 12h-3zm-1-5.907v-5.093h-3v2.093l3 3z"
-                        />
-                    </svg>
-                </div>
-            </Link>
+            <div className="floating-container flex gap-3">
+                <HomeButton />
+                <ScrollTop />
+            </div>
         </div>
     );
 }

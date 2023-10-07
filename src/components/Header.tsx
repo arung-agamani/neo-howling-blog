@@ -27,12 +27,12 @@ const Header = () => {
                 >
                     <div className="flex flex-col justify-center items-center">
                         <p
-                            className="text-center text-white text-2xl sm:text-6xl pt-0 sm:pt-20 font-semibold"
+                            className="text-center text-white text-2xl sm:text-6xl pt-0 sm:pt-20 font-extralight"
                             // style={{
                             //     letterSpacing: "0.5rem",
                             // }}
                         >
-                            Howling Blog
+                            星空ノ響き
                         </p>
                         <p className="text-center text-gray-200 font-thin text-sm sm:text-xl pt-2">
                             <i>

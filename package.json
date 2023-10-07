@@ -15,7 +15,6 @@
         "@emotion/styled": "^11.11.0",
         "@mui/icons-material": "^5.14.6",
         "@mui/material": "^5.14.6",
-        "@next/font": "13.1.6",
         "@prisma/client": "^4.9.0",
         "@reduxjs/toolkit": "^1.9.7",
         "@types/node": "18.11.18",
