@@ -59,6 +59,13 @@ export default async function Page() {
 
     return (
         <div className="bg-gray-700 pt-2 flex flex-col  justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16">
+            <p className="max-w-5xl text-white text-xl text-center mx-auto my-2 py-8 px-4 border border-gray-600 rounded">
+                Welcome to Howling Blog! Here you can see some of my thoughts,
+                materialized in the form of blog post.
+                <br />
+                Use the navigation bar above and floating buttons on bottom left
+                of the screen for navigation
+            </p>
             <p className="text-3xl lg:text-5xl text-white px-2 mb-4 font-thin lg:text-left text-center self-center">
                 Recent Posts
             </p>
