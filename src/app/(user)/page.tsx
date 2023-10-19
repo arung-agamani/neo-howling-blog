@@ -1,43 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 // "use client";
 import Link from "next/link";
-import axios from "@/utils/axios";
-// import { useEffect, useState } from "react";
 
 import prisma from "@/utils/prisma";
 import ScrollTop from "@/components/ScrollTop";
 import FloatingContainer from "@/components/FloatingContainer";
 
 export default async function Page() {
-    // const [posts, setPosts] = useState<any>([]);
-    // const [page, setPage] = useState(1);
-    // const [postView, setPostView] = useState(0);
-    // useEffect(() => {
-    //     (async () => {
-    //         try {
-    //             const { data } = await axios.get("/api/posts", {
-    //                 params: { p: page },
-    //             });
-    //             setPosts(data.data);
-    //         } catch (error) {}
-    //     })();
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, []);
-
-    // const loadPost = () => {
-    //     (async () => {
-    //         try {
-    //             const { data } = await axios.get("/api/posts", {
-    //                 params: { p: page + 1 },
-    //             });
-    //             setPosts([...posts, ...data.data]);
-    //             setPage(page + 1);
-    //         } catch (error) {}
-    //     })();
-    // };
-
-    // if (!posts) return null;
-
     const posts = await await prisma.posts.findMany({
         select: {
             id: true,
@@ -71,31 +40,9 @@ export default async function Page() {
             </p>
             <div className="flex">
                 <div className="flex flex-col flex-grow max-w-5xl mx-auto">
-                    {/* <div className="flex">
-                        <div
-                            className={`${
-                                postView === 1 ? "bg-white" : "bg-orange-400"
-                            } px-2 py-2 my-2 mr-2 rounded-lg hover:cursor-pointer hover:bg-slate-400 hover:text-slate-50 transition-colors duration-75`}
-                            onClick={() => setPostView(0)}
-                        >
-                            CTB
-                        </div>
-                        <div
-                            className={`${
-                                postView === 0 ? "bg-white" : "bg-orange-400"
-                            } px-2 py-2 my-2 mr-2 rounded-lg hover:cursor-pointer hover:bg-slate-400 hover:text-slate-50 transition-colors duration-75`}
-                            onClick={() => setPostView(1)}
-                        >
-                            TMB
-                        </div>
-                    </div> */}
                     {posts.length > 0 &&
                         posts.map((x: any) => (
-                            <Link
-                                href={`post/${x.id}`}
-                                key={x.id}
-                                // className="w-full"
-                            >
+                            <Link href={`post/${x.id}`} key={x.id}>
                                 <div
                                     className="pb-4 mx-auto mb-4 bg-white lg:rounded-lg 
                             shadow w-full flex flex-col"

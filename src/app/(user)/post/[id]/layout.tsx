@@ -1,6 +1,7 @@
 // "use client";
+import { Suspense } from "react";
 import Link from "next/link";
-
+import Loading from "./loading";
 export default function PostLayout({
     children,
 }: {
@@ -12,7 +13,7 @@ export default function PostLayout({
                 rel="stylesheet"
                 href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/a11y-dark.min.css"
             />
-            {children}
+            <Suspense fallback={<Loading />}>{children}</Suspense>
             <Link href={"/"}>
                 <div className="bg-blue-700 text-slate-200 py-4">
                     <p className="text-4xl text-center">Back to Home</p>

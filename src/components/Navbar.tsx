@@ -14,9 +14,9 @@ function TabLink({ label, target }: { label: string; target: string }) {
 export default function Navbar() {
     return (
         <header className="sticky top-0 bg-[#000B] text-white py-2 w-full">
-            <div className="container mx-auto w-full max-w-5xl">
+            <div className="container mx-auto w-full max-w-sm lg:max-w-4xl">
                 <ul className="flex w-full align-text-bottom leading-loose">
-                    <li className="text-2xl">
+                    <li className="text-2xl hidden lg:block">
                         <TabLink target="/" label="Howling Blog" />
                     </li>
                     {/* <span className="flex-grow"></span> */}
@@ -32,7 +32,7 @@ export default function Navbar() {
                         </li>
                     </ul>
                     {/* <span className="flex-grow"></span> */}
-                    <li className="ml-auto">
+                    <li className="ml-auto hidden lg:block">
                         <TabLink target="/dashboard" label="Login" />
                     </li>
                 </ul>

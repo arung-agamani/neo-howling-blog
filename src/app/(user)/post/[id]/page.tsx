@@ -70,14 +70,6 @@ export default async function Page({ params }: { params: Params }) {
     );
     // console.log(data.blogContent);
 
-    if (!data)
-        return (
-            <>
-                <p className="text-4xl text-white font-bold">
-                    Loading awesome content
-                </p>
-            </>
-        );
     return (
         <div className="post container mx-auto max-lg bg-white px-4 pt-4 overflow-hidden">
             <h1 className=" text-3xl mx-8 pt-4">{data.title}</h1>
