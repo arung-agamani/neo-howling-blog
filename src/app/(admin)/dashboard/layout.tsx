@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-css-tags */
 "use client";
 
+import { SessionProvider } from "next-auth/react";
 import ReduxProvider from "@/stores/ReduxProvider";
 import Script from "next/script";
 import { ToastContainer } from "react-toastify";
@@ -33,9 +34,11 @@ export default function PostLayout({
             </head>
             <body className="">
                 <ToastContainer autoClose={3000} pauseOnFocusLoss={false} />
-                <ThemeRegistry options={{ key: "mui" }}>
-                    <ReduxProvider>{children}</ReduxProvider>
-                </ThemeRegistry>
+                <SessionProvider>
+                    <ThemeRegistry options={{ key: "mui" }}>
+                        <ReduxProvider>{children}</ReduxProvider>
+                    </ThemeRegistry>
+                </SessionProvider>
             </body>
         </html>
     );

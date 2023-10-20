@@ -8,7 +8,6 @@ import React, {
     // useContext,
     // useRef,
 } from "react";
-import axios from "@/utils/axios";
 import { useRouter /* , usePathname */ } from "next/navigation";
 import Link from "next/link";
 
@@ -63,6 +62,8 @@ import Loading from "./loading";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import { setUser, UserState } from "@/stores/slice/user";
 import { AxiosError } from "axios";
+import { useSession, signOut as nextSignout } from "next-auth/react";
+import axios from "@/utils/axios";
 
 type MenuItem = {
     name: string;
@@ -199,58 +200,29 @@ export default function PostLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const [auth, setAuth] = useState(false);
     const [open, isOpen] = useState(true);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const openProfileMenu = Boolean(anchorEl);
     const dispatch = useAppDispatch();
     const user = useAppSelector(UserState);
     const router = useRouter();
-    // const pathname = usePathname();
+    const { data: session, status } = useSession();
     useEffect(() => {
-        axios
-            .get("/api/dashboard")
-            .then(() => {
-                setAuth(true);
-            })
-            .catch((err) => {
-                router.push("/dashboard");
-                // alert(err.response.data.message);
+        if (status === "unauthenticated") {
+            router.push("/dashboard");
+        } else if (status === "authenticated") {
+            axios.get("/api/hellov2", { withCredentials: true }).then((res) => {
+                const user = res.data.user;
+                dispatch(setUser(user));
             });
-        (async () => {
-            try {
-                const { data } = await axios.get("/api/hello", {
-                    withCredentials: true,
-                });
-                console.log(data);
-                dispatch(setUser(data.user));
-            } catch (error) {
-                if (error instanceof AxiosError) {
-                    const e = error as AxiosError<{ message: string }>;
-                    toast.error(
-                        e.response?.data.message ||
-                            "Error when fetching user credentials"
-                    );
-                }
-            }
-        })();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [status]);
 
-    useEffect(() => {}, [children, router]);
-
-    const signout = () => {
-        axios
-            .post("/api/signout")
-            .then(() => {
-                // toast.info("Signing out...");
-                window.location.assign("/dashboard");
-            })
-            .catch(() => {
-                toast.error("Failed signing out");
-            });
+    const signout = async () => {
+        await nextSignout({ redirect: false });
+        router.push("/dashboard");
     };
-    if (!auth) return null;
     return (
         <>
             <AppBar

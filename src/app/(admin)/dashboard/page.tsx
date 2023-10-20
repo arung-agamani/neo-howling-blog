@@ -3,38 +3,26 @@
 import React, { useEffect } from "react";
 import axios from "@/utils/axios";
 import { useRouter } from "next/navigation";
+import { signIn, useSession, getSession } from "next-auth/react";
 import { toast } from "react-toastify";
 
 export default function Page() {
     const router = useRouter();
-    const handleSubmit = (event: React.SyntheticEvent) => {
+    const { data: session, status } = useSession();
+    const handleSubmit = async (event: React.SyntheticEvent) => {
         event.preventDefault();
-        axios
-            .post("/api/login", {
-                username: (event.target as any).username.value,
-                password: (event.target as any).password.value,
-            })
-            .then((res) => {
-                console.log(res.data.data.token);
-                router.push("/dashboard/main");
-            })
-            .catch((err) => {
-                console.log("Unsuccessful login");
-                toast.error(err.response.data.message);
-            });
+        const res = await signIn("credentials", {
+            username: (event.target as any).username.value,
+            password: (event.target as any).password.value,
+            redirect: false,
+        });
+        if (res && res.ok) router.push("/dashboard/main");
+        else toast.error("Unsuccessful login");
     };
 
-    useEffect(() => {
-        axios
-            .get("/api/dashboard")
-            .then((res) => {
-                toast.success("Login token found. Redirecting to dashboard");
-                router.push("/dashboard/main");
-            })
-            .catch(() => {});
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
+    if (status === "authenticated") {
+        router.push("/dashboard/main");
+    }
     return (
         <div
             className="flex flex-col w-screen h-screen justify-center align-middle items-center"
