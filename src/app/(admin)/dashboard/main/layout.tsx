@@ -223,6 +223,9 @@ export default function PostLayout({
         await nextSignout({ redirect: false });
         router.push("/dashboard");
     };
+
+    if (status === "loading") return null;
+    if (status === "unauthenticated") return null;
     return (
         <>
             <AppBar

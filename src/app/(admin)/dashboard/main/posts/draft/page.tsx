@@ -28,13 +28,9 @@ export default function Page() {
     useEffect(() => {
         (async () => {
             try {
-                const postsRes = await axios.get("/api/dashboard/post", {
-                    params: {
-                        op: "list",
-                    },
-                });
+                const postsRes = await axios.get("/api/dashboardv2/post/list");
                 setPosts(
-                    postsRes.data.data.filter(
+                    postsRes.data.filter(
                         (x: any) =>
                             x.deleted !== true && x.isPublished === false
                     )

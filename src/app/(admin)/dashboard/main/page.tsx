@@ -57,7 +57,7 @@ export default function Page() {
     useEffect(() => {
         (async () => {
             try {
-                const { data } = await axios.get("/api/dashboard", {
+                const { data } = await axios.get("/api/dashboardv2", {
                     withCredentials: true,
                 });
                 setStats(data.stats);

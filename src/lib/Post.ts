@@ -1,4 +1,16 @@
 import prisma from "@/utils/prisma";
+import { Prisma } from "@prisma/client";
+
+export class DeleteError extends Error {
+    public msg: string = "Error when deleting post";
+    public err: Error = new Error();
+    constructor(error: Error, msg: string = "Error when deleting post") {
+        super(msg);
+        this.msg = msg;
+        this.message = msg;
+        this.err = error;
+    }
+}
 
 export async function ListPosts() {
     const posts = await prisma.posts.findMany({
@@ -38,7 +50,7 @@ export interface CreatePostPayload {
     title: string;
     description: string;
     tags: string[];
-    bannerUrl: string;
+    bannerUrl?: string;
     blogContent: string;
 }
 
@@ -54,7 +66,19 @@ export async function CreatePost(data: CreatePostPayload) {
     return createRes;
 }
 
-export async function UpdatePost(id: string, ...data: any[]) {
+export interface UpdatePostSchema {
+    title?: string;
+    author?: string;
+    bannerUrl?: string;
+    blogContent?: string;
+    description?: string;
+    isFeatured?: boolean;
+    isPublished?: boolean;
+    tags?: string[];
+    deleted?: boolean;
+}
+
+export async function UpdatePost(id: string, data: UpdatePostSchema) {
     const res = await prisma.posts.update({
         where: {
             id,
@@ -71,8 +95,40 @@ export async function UpdatePost(id: string, ...data: any[]) {
 export async function PublishPost(id: string, publish: boolean) {
     const res = await prisma.posts.update({
         where: { id },
-        data: { isPublished: publish },
+        data: { isPublished: publish, updatedAt: new Date() },
     });
 
     return res;
+}
+
+export async function DeletePost(id: string) {
+    try {
+        const res = await prisma.posts.update({
+            where: { id },
+            data: {
+                deleted: true,
+                deletedAt: new Date(),
+                updatedAt: new Date(),
+            },
+        });
+        return res;
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            throw new DeleteError(error, error.code);
+        } else {
+            throw new DeleteError(error as Error);
+        }
+    }
+}
+
+export async function ErrorBoundary(fn: any) {
+    try {
+        return await fn();
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            throw new DeleteError(error, error.code);
+        } else {
+            throw new DeleteError(error as Error);
+        }
+    }
 }

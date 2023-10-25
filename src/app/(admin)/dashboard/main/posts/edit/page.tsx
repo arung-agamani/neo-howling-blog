@@ -42,14 +42,14 @@ export default function Page() {
             if (!id) return;
 
             try {
-                const res = await axios.get("/api/dashboard/post", {
+                const res = await axios.get("/api/dashboardv2/post/get", {
                     params: {
                         id,
                     },
                 });
-                setContent(res.data.data.page.blogContent);
-                console.log(res.data.data.page);
-                setPage(res.data.data.page);
+                setContent(res.data.blogContent);
+                console.log(res.data);
+                setPage(res.data);
                 setIsSynced(true);
             } catch (error) {
                 setContent("<h1>Failed to fetch content</h1>");
@@ -86,15 +86,18 @@ export default function Page() {
 
             if (op === "update") {
                 try {
-                    const res = await axios.post("/api/dashboard/post", {
-                        id,
-                        op: "update",
-                        content,
-                        title: titleInputRef.current?.value,
-                        description: descInputRef.current?.value,
-                        bannerUrl: bannerUrlRef.current?.value,
-                        tags: tagsRef.current?.value.split(","),
-                    });
+                    const res = await axios.post(
+                        "/api/dashboardv2/post/update",
+                        {
+                            id,
+                            op: "update",
+                            blogContent: content,
+                            title: titleInputRef.current?.value,
+                            description: descInputRef.current?.value,
+                            bannerUrl: bannerUrlRef.current?.value,
+                            tags: tagsRef.current?.value.split(","),
+                        }
+                    );
                     if (res.status == 200) {
                         setIsSynced(true);
                         setIsModified(false);
@@ -113,16 +116,19 @@ export default function Page() {
                 }
             } else if (op === "create") {
                 try {
-                    const res = await axios.post("/api/dashboard/post", {
-                        author: "Shirayuki Haruka",
-                        op,
-                        content,
-                        datePosted: new Date(),
-                        description: descInputRef.current?.value,
-                        link: "",
-                        tags: [],
-                        title: titleInputRef.current?.value,
-                    });
+                    const res = await axios.post(
+                        "/api/dashboardv2/post/create",
+                        {
+                            author: "Shirayuki Haruka",
+                            op,
+                            blogContent: content,
+                            datePosted: new Date(),
+                            description: descInputRef.current?.value,
+                            link: "",
+                            tags: [],
+                            title: titleInputRef.current?.value,
+                        }
+                    );
 
                     if (res.status == 200) {
                         setIsSynced(true);

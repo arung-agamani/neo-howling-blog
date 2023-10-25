@@ -63,7 +63,7 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
     const deleteHandler = async (id: string) => {
         try {
             const deleteRes = await axios.delete(
-                `/api/dashboard/post?id=${id}`
+                `/api/dashboardv2/post/delete?id=${id}`
             );
             toast.success("Post deleted!", {
                 position: toast.POSITION.TOP_LEFT,
@@ -80,11 +80,14 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
 
     const publishHandler = async () => {
         try {
-            const publishRes = await axios.post(`/api/dashboard/post`, {
-                id: post.id,
-                publish: !post.isPublished,
-                op: "publish",
-            });
+            const publishRes = await axios.post(
+                `/api/dashboardv2/post/update`,
+                {
+                    id: post.id,
+                    isPublished: !post.isPublished,
+                    op: "publish",
+                }
+            );
             let msg = post.isPublished ? "Post unpublished" : "Post published";
             toast.success(msg, {
                 position: toast.POSITION.TOP_LEFT,
@@ -162,15 +165,26 @@ const PostItem: React.FC<{ post: PostData }> = ({ post }) => {
                     </Tooltip>
                 </Link>
                 <Tooltip title="Delete">
-                    <IconButton>
+                    <IconButton
+                        onClick={() => {
+                            deleteHandler(post.id);
+                        }}
+                    >
                         <DeleteIcon />
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="Publish">
-                    <IconButton>
+                    <IconButton
+                        onClick={() => {
+                            publishHandler();
+                        }}
+                    >
                         <PublishIcon />
                     </IconButton>
                 </Tooltip>
+                <Typography>
+                    {post.isPublished ? "Published" : "Not Published"}
+                </Typography>
             </CardActions>
         </Card>
     );

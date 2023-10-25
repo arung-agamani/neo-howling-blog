@@ -28,14 +28,8 @@ export default function Page() {
     useEffect(() => {
         (async () => {
             try {
-                const postsRes = await axios.get("/api/dashboard/post", {
-                    params: {
-                        op: "list",
-                    },
-                });
-                setPosts(
-                    postsRes.data.data.filter((x: any) => x.deleted !== true)
-                );
+                const postsRes = await axios.get("/api/dashboardv2/post/list");
+                setPosts(postsRes.data.filter((x: any) => x.deleted !== true));
             } catch (error) {
                 console.log("Error on fetching posts");
                 toast.error("Error on fetching posts");

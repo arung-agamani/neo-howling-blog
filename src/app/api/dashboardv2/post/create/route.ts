@@ -9,7 +9,7 @@ const CreatePostSchema = z.object({
     title: z.string(),
     description: z.string(),
     tags: z.array(z.string()),
-    bannerUrl: z.string(),
+    bannerUrl: z.string().optional(),
     blogContent: z.string(),
 }) satisfies z.ZodType<CreatePostPayload>;
 
