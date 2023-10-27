@@ -13,6 +13,8 @@ const CreatePostSchema = z.object({
     blogContent: z.string(),
 }) satisfies z.ZodType<CreatePostPayload>;
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
     const body = await req.json();
     const validate = CreatePostSchema.safeParse(body);

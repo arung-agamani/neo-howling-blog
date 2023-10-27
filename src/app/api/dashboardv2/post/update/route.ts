@@ -19,6 +19,8 @@ const UpdatePostSchema = z.object({
     op: z.enum(["update", "publish", "feature"]),
 }) satisfies z.ZodType<UpdatePostSchema>;
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
     const body = await req.json();
     const validate = UpdatePostSchema.safeParse(body);

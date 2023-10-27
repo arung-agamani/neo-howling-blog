@@ -2,6 +2,8 @@ import { BadRequest, InternalServerError } from "@/app/api/responses";
 import { DeletePost } from "@/lib/Post";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function DELETE(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const id = searchParams.get("id");

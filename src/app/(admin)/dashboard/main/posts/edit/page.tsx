@@ -9,6 +9,7 @@ import debounce from "lodash.debounce";
 
 import "./editor.css";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 
 const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
     ssr: false,
@@ -33,6 +34,8 @@ export default function Page() {
     const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
     const imagePrevRef = useRef<HTMLImageElement>(null);
     const tagsRef = useRef<HTMLTextAreaElement>(null);
+
+    const router = useRouter();
 
     const searchParams = useSearchParams();
     useEffect(() => {
@@ -80,10 +83,10 @@ export default function Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const saveHandler = useCallback(
         debounce(async (content) => {
-            const id = searchParams!.get("id");
+            const url = new URL(window.location.href);
+            const id = url.searchParams!.get("id");
             let op: "update" | "create" = "update";
             if (!id) op = "create";
-
             if (op === "update") {
                 try {
                     const res = await axios.post(
@@ -134,9 +137,11 @@ export default function Page() {
                         setIsSynced(true);
                         setIsModified(false);
                         toast.success("Post created!");
-                        // setTimeout(() => {
-                        //     router.push(`/dashboard/main/posts/edit?id=${res.data.}`)
-                        // }, 3000);
+                        setTimeout(() => {
+                            router.push(
+                                `/dashboard/main/posts/edit?id=${res.data.data.id}`
+                            );
+                        }, 3000);
                         console.log(res.data);
                         return;
                     }
