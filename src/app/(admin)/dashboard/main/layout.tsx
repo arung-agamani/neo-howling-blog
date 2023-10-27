@@ -405,6 +405,25 @@ export default function PostLayout({
                             </div>
                         ))}
                     </List>
+                    <Divider />
+                    <List>
+                        <Link href={"/"}>
+                            <ListItem disablePadding>
+                                <ListItemButton
+                                    sx={{
+                                        "& .MuiListItemIcon-root": {
+                                            color: "#947EB0",
+                                        },
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <Home />
+                                    </ListItemIcon>
+                                    <ListItemText>Home Page</ListItemText>
+                                </ListItemButton>
+                            </ListItem>
+                        </Link>
+                    </List>
                 </Drawer>
 
                 <Suspense fallback={<Loading />}>

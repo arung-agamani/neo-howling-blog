@@ -5,8 +5,10 @@ import Link from "next/link";
 import prisma from "@/utils/prisma";
 import ScrollTop from "@/components/ScrollTop";
 import FloatingContainer from "@/components/FloatingContainer";
+import { headers } from "next/headers";
 
 export default async function Page() {
+    const header = headers(); // trigger dynamic
     const posts = await await prisma.posts.findMany({
         select: {
             id: true,
