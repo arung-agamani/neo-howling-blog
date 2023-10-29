@@ -77,9 +77,9 @@ model users {
 
 model config {
   id String @id @default(auto()) @map("_id") @db.ObjectId
-  siteName  String
-  tagline String
-  headerImage String
+  key String @unique
+  value String
+  description String
 }
 
 enum Gender {
