@@ -20,10 +20,10 @@ const UpdateConfigSchema = z.object({
 type UpdateConfigSchema = z.infer<typeof UpdateConfigSchema>;
 
 export async function POST(req: NextRequest) {
-    const body = req.json();
+    const body = await req.json();
     const validate = UpdateConfigSchema.safeParse(body);
 
-    if (!validate.success) return BadRequest();
+    if (!validate.success) return BadRequest({ error: validate.error });
     const { key, value, description } = validate.data;
 
     const upsert = await prisma.config.upsert({
