@@ -2,7 +2,7 @@ import prisma from "@/utils/prisma";
 import Login from "./Login";
 
 export default async function Page() {
-    const config = await prisma.config.findUnique({
+    const config = await prisma.config.findFirst({
         where: {
             key: "LOGIN_BACKGROUND_IMAGE",
         },
