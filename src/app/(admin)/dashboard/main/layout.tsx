@@ -407,6 +407,22 @@ export default function PostLayout({
                     </List>
                     <Divider />
                     <List>
+                        <Link href={"/dashboard/main/config"}>
+                            <ListItem disablePadding>
+                                <ListItemButton
+                                    sx={{
+                                        "& .MuiListItemIcon-root": {
+                                            color: "#947EB0",
+                                        },
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <Home />
+                                    </ListItemIcon>
+                                    <ListItemText>Configurations</ListItemText>
+                                </ListItemButton>
+                            </ListItem>
+                        </Link>
                         <Link href={"/"}>
                             <ListItem disablePadding>
                                 <ListItemButton
