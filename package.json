@@ -6,7 +6,8 @@
         "dev": "explorer http://localhost:3000 & next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "postinstall": "prisma generate"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.300.0",
