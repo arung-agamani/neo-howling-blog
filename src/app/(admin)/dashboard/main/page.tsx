@@ -86,10 +86,12 @@ export default function Page() {
                 }}
             >
                 <CircularProgress color="primary" />
+                <title>Dashboard - Loading...</title>
             </Grid>
         );
     return (
         <div className="px-4 py-4">
+            <title>Dashboard - Howling Blog</title>
             <Paper elevation={2} className="px-4 py-4">
                 <Typography variant="h4">Hello, {user.username}!</Typography>
                 <Typography variant="body1">

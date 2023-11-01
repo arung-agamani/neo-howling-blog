@@ -1,22 +1,34 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { toast } from "react-toastify";
+import { useForm, Controller } from "react-hook-form";
+
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+
+import "./shadow.css";
 
 export default function Login() {
     const router = useRouter();
     const { status } = useSession();
-    const handleSubmit = async (event: React.SyntheticEvent) => {
-        event.preventDefault();
+    const { handleSubmit, control } = useForm();
+    const [loading, isLoading] = useState(false);
+    const submit = async (data: any) => {
+        isLoading(true);
         const res = await signIn("credentials", {
-            username: (event.target as any).username.value,
-            password: (event.target as any).password.value,
+            username: data.username,
+            password: data.password,
             redirect: false,
         });
         if (res && res.ok) router.push("/dashboard/main");
         else toast.error("Unsuccessful login");
+        isLoading(false);
     };
 
     if (status === "authenticated") {
@@ -24,32 +36,81 @@ export default function Login() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div className="px-4 py-4 bg-slate-50 rounded-xl flex flex-col">
-                <p className="text-2xl font-light text-center mb-4">Login</p>
-                <label htmlFor="input-username" className="text-lg">
-                    Your Dignity
-                </label>
-                <input
-                    type="text"
-                    name="username"
-                    id="input-username"
-                    className="border border-gray-400 rounded-lg py-1 pl-4 mb-2"
-                />
-                <label htmlFor="input-password" className="text-lg">
-                    Your Soul
-                </label>
-                <input
-                    type="password"
-                    name="password"
-                    id="input-password"
-                    className="border border-gray-400 rounded-lg py-1 pl-4 mb-2"
-                />
-                <input
-                    type="submit"
-                    value="Submit"
-                    className="bg-blue-700 hover:bg-blue-600 text-slate-100 rounded-lg py-1 text-xl font-bold"
-                />
+        <form onSubmit={handleSubmit(submit)}>
+            <div className="grid grid-cols-2 max-w-4xl  shadow-lg shadow-southeast">
+                <div className=" bg-slate-50 rounded-l-lg pr-4 pl-2 py-8">
+                    <Typography className="py-2 text-right" variant="h4">
+                        <i>Perishing Peculiar Pandora Panopticon</i>
+                    </Typography>
+                    <Typography variant="body1" className="text-right">
+                        While the world was at it's end, a group of mysterious
+                        spirits approached the neverending stream of wind with
+                        chance of gold threads.
+                        <br />
+                        <br />
+                        It wasn't obvious at first, but soon as they manifested
+                        themselves into a single entity, sacrifices were bound
+                        to happen.
+                        <br />
+                        <br />
+                        <i>"See you at the other side, Elfrieden..."</i>
+                        <br />
+                        <br />
+                        Holding my heart and my soul in my both hands, I faced
+                        the gate which would take me beyond the dimension a mere
+                        human can comprehend...
+                    </Typography>
+                </div>
+                <div
+                    className={`px-4 bg-white ${
+                        loading ? "bg-opacity-90" : "bg-opacity-20"
+                    } transition-all duration-500 py-8`}
+                >
+                    {!loading ? (
+                        <div className="gap-2 flex flex-col justify-center w-full h-full">
+                            <div className="bg-white">
+                                <Controller
+                                    name="username"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field }) => (
+                                        <TextField
+                                            label="Your Dignity"
+                                            type="text"
+                                            variant="filled"
+                                            className="w-full"
+                                            {...field}
+                                        />
+                                    )}
+                                />
+                            </div>
+                            <div className="bg-white">
+                                <Controller
+                                    name="password"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field }) => (
+                                        <TextField
+                                            label="Your Soul"
+                                            type="password"
+                                            variant="filled"
+                                            className="w-full"
+                                            {...field}
+                                        />
+                                    )}
+                                />
+                            </div>
+                            <Button variant="contained" type="submit">
+                                Login
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                            <CircularProgress />
+                            <Typography>Signing you in...</Typography>
+                        </div>
+                    )}
+                </div>
             </div>
         </form>
     );

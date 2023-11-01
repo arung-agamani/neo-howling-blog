@@ -64,6 +64,7 @@ import { setUser, UserState } from "@/stores/slice/user";
 import { AxiosError } from "axios";
 import { useSession, signOut as nextSignout } from "next-auth/react";
 import axios from "@/utils/axios";
+import { Metadata } from "next";
 
 type MenuItem = {
     name: string;

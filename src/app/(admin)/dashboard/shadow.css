@@ -1,0 +1,5 @@
+.shadow-southeast {
+    box-shadow: 6px 6px 18px 1px rgba(0, 0, 0, 0.51);
+    -webkit-box-shadow: 6px 6px 18px 1px rgba(0, 0, 0, 0.51);
+    -moz-box-shadow: 6px 6px 18px 1px rgba(0, 0, 0, 0.51);
+}
