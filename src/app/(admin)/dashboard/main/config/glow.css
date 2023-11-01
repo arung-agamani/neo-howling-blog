@@ -1,0 +1,5 @@
+.glow {
+    -webkit-box-shadow: 0px 0px 10px 1px rgba(250, 182, 80, 0.5);
+    -moz-box-shadow: 0px 0px 10px 1px rgba(250, 182, 80, 0.5);
+    box-shadow: 0px 0px 10px 1px rgba(250, 182, 80, 0.5);
+}

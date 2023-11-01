@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -12,8 +12,10 @@ import { AxiosResponse } from "axios";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
+import Parameter from "./Parameter";
 
-interface Config {
+export interface Config {
+    id: string;
     key: string;
     value: string;
     description: string;
@@ -93,7 +95,11 @@ export default function Page() {
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                        <TextField {...field} label="Parameter Key" />
+                        <TextField
+                            {...field}
+                            label="Parameter Key"
+                            className=""
+                        />
                     )}
                 />
 
@@ -130,17 +136,9 @@ export default function Page() {
             <Typography variant="h6" marginTop={"0.5rem"}>
                 Parameters
             </Typography>
-            <div className="grid grid-cols-2 gap-2 my-2">
+            <div className="gap-2 my-2">
                 {configs.map((config) => {
-                    return (
-                        <Fragment key={config.key}>
-                            <TextField defaultValue={config.key} label="Key" />
-                            <TextField
-                                defaultValue={config.value}
-                                label="Value"
-                            />
-                        </Fragment>
-                    );
+                    return <Parameter key={config.id} config={config} />;
                 })}
             </div>
         </Paper>
