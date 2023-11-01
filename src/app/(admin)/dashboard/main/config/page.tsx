@@ -61,7 +61,7 @@ export default function Page() {
     }, []);
 
     async function onNewParameterSubmit(data: any) {
-        const res = await axios.post<
+        const res = await axios.put<
             Config,
             AxiosResponse<ConfigAPIPostResponse>
         >("/api/dashboardv2/config", data, { withCredentials: true });

@@ -50,6 +50,35 @@ export async function POST(req: NextRequest) {
     });
 }
 
+export async function PUT(req: NextRequest) {
+    const body = await req.json();
+    const validate = UpdateConfigSchema.safeParse(body);
+
+    if (!validate.success) return BadRequest({ error: validate.error });
+    const { id, key, value, description } = validate.data;
+
+    const upsert = await prisma.config.upsert({
+        where: {
+            key,
+        },
+        update: {
+            description,
+            key,
+            value,
+        },
+        create: {
+            key,
+            value,
+            description: description || "",
+        },
+    });
+
+    return NextResponse.json({
+        message: "Config added",
+        data: upsert,
+    });
+}
+
 export async function DELETE(req: NextRequest) {
     const searchParam = req.nextUrl.searchParams;
     const id = searchParam.get("id");
