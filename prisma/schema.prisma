@@ -75,6 +75,7 @@ model users {
   phone       String? @default("")
 }
 
+
 model config {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   key String @unique
@@ -85,4 +86,30 @@ model config {
 enum Gender {
   male
   female
+}
+
+model assets {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  name String @unique
+  path String
+  type AssetType
+  remoteLocation RemoteLocation
+  
+  uploader String @db.ObjectId
+  dateUploaded DateTime
+
+}
+
+enum AssetType {
+  MediaThumbnail
+  MediaImage
+  MediaVideo
+  MediaOther
+}
+
+enum RemoteLocation {
+  SelfHosted
+  S3
+  GCS
+  Others
 }
