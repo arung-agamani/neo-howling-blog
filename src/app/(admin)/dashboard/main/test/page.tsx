@@ -80,73 +80,73 @@ export default function Page() {
       });
   };
 
+  // const saveHandler = (...a: any[]) => null;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const saveHandler = (...a: any[]) => null;
-  // const saveHandler = useCallback(
-  //   debounce(async (content) => {
-  //     const url = new URL(window.location.href);
-  //     const id = url.searchParams!.get("id");
-  //     let op: "update" | "create" = "update";
-  //     if (!id) op = "create";
-  //     if (op === "update") {
-  //       try {
-  //         const res = await axios.post("/api/dashboardv2/post/update", {
-  //           id,
-  //           op: "update",
-  //           blogContent: content,
-  //           title: titleInputRef.current?.value,
-  //           description: descInputRef.current?.value,
-  //           bannerUrl: bannerUrlRef.current?.value,
-  //           tags: tagsRef.current?.value.split(","),
-  //         });
-  //         if (res.status == 200) {
-  //           setIsSynced(true);
-  //           setIsModified(false);
-  //           toast.success("Post updated!", {
-  //             position: toast.POSITION.TOP_CENTER,
-  //             autoClose: 3000,
-  //             closeOnClick: true,
-  //             theme: "light",
-  //           });
-  //           return;
-  //         }
-  //       } catch (e) {
-  //         console.error(e);
-  //         toast.error("Post updating failed");
-  //         return;
-  //       }
-  //     } else if (op === "create") {
-  //       try {
-  //         const res = await axios.post("/api/dashboardv2/post/create", {
-  //           author: "Shirayuki Haruka",
-  //           op,
-  //           blogContent: content,
-  //           datePosted: new Date(),
-  //           description: descInputRef.current?.value,
-  //           link: "",
-  //           tags: [],
-  //           title: titleInputRef.current?.value,
-  //         });
+  const saveHandler = useCallback(
+    debounce(async (content) => {
+      const url = new URL(window.location.href);
+      const id = url.searchParams!.get("id");
+      let op: "update" | "create" = "update";
+      if (!id) op = "create";
+      if (op === "update") {
+        try {
+          const res = await axios.post("/api/dashboardv2/post/update", {
+            id,
+            op: "update",
+            blogContent: content,
+            title: titleInputRef.current?.value,
+            description: descInputRef.current?.value,
+            bannerUrl: bannerUrlRef.current?.value,
+            tags: tagsRef.current?.value.split(","),
+          });
+          if (res.status == 200) {
+            setIsSynced(true);
+            setIsModified(false);
+            toast.success("Post updated!", {
+              position: toast.POSITION.TOP_CENTER,
+              autoClose: 3000,
+              closeOnClick: true,
+              theme: "light",
+            });
+            return;
+          }
+        } catch (e) {
+          console.error(e);
+          toast.error("Post updating failed");
+          return;
+        }
+      } else if (op === "create") {
+        try {
+          const res = await axios.post("/api/dashboardv2/post/create", {
+            author: "Shirayuki Haruka",
+            op,
+            blogContent: content,
+            datePosted: new Date(),
+            description: descInputRef.current?.value,
+            link: "",
+            tags: [],
+            title: titleInputRef.current?.value,
+          });
 
-  //         if (res.status == 200) {
-  //           setIsSynced(true);
-  //           setIsModified(false);
-  //           toast.success("Post created!");
-  //           setTimeout(() => {
-  //             router.push(`/dashboard/main/posts/edit?id=${res.data.data.id}`);
-  //           }, 3000);
-  //           console.log(res.data);
-  //           return;
-  //         }
-  //       } catch (e) {
-  //         console.error(e);
-  //         toast.error("Post creation failed");
-  //         return;
-  //       }
-  //     }
-  //   }, 30000),
-  //   []
-  // );
+          if (res.status == 200) {
+            setIsSynced(true);
+            setIsModified(false);
+            toast.success("Post created!");
+            setTimeout(() => {
+              router.push(`/dashboard/main/posts/edit?id=${res.data.data.id}`);
+            }, 3000);
+            console.log(res.data);
+            return;
+          }
+        } catch (e) {
+          console.error(e);
+          toast.error("Post creation failed");
+          return;
+        }
+      }
+    }, 30000),
+    []
+  );
 
   useEffect(() => {
     saveHandler(content);
