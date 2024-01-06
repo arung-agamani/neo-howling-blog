@@ -130,10 +130,10 @@ const Editor: React.FC<Props> = ({
 
   useEffect(() => {
     if (quill) {
-      if (!initialized) {
-        quill.clipboard.dangerouslyPasteHTML(content);
-        setInitialized(true);
-      }
+      // if (!initialized) {
+      quill.clipboard.dangerouslyPasteHTML(content);
+      //   setInitialized(true);
+      // }
       quill.on("text-change", () => {
         // console.log(quill.root.innerHTML);
         setContent(quill.root.innerHTML);
@@ -142,6 +142,7 @@ const Editor: React.FC<Props> = ({
       });
     }
   }, [quill]);
+
   return <div ref={quillRef}></div>;
 };
 
