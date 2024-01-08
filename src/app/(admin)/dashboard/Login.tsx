@@ -16,7 +16,6 @@ import "./shadow.css";
 import axios from "@/utils/axios";
 import { AxiosError } from "axios";
 
-// TODO: Investigate firefox behavior on forms cannot be cleaned (ref -> reset function from react hook form)
 export default function Login() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">("login");

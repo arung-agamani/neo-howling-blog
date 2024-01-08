@@ -8,6 +8,8 @@ import QuillBlotFormatter from "quill-blot-formatter";
 import { toast } from "react-toastify";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "quill/dist/quill.snow.css";
+import "highlight.js/styles/monokai-sublime.css";
+import hljs from "highlight.js";
 interface PostMetadata {
   author?: string;
   title?: string;
@@ -27,7 +29,7 @@ interface Props {
   setIsModified: Dispatch<SetStateAction<boolean>>;
   setIsSynced: Dispatch<SetStateAction<boolean>>;
 }
-
+// TODO: fix codeblock not working
 const Editor: React.FC<Props> = ({
   page,
   isModified,
@@ -118,6 +120,7 @@ const Editor: React.FC<Props> = ({
         upload: imageUploader,
       },
       blotFormatter: true,
+      syntax: true,
     },
   });
   const [initialized, setInitialized] = useState(false);

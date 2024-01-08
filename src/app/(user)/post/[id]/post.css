@@ -1,40 +1,40 @@
 .post {
-    font-size: large;
+  font-size: large;
 }
 
 .post p {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .post h1 {
-    font-weight: 300;
+  font-weight: 300;
 }
 
 .post h2 {
-    font-size: xx-large;
-    font-weight: 500;
-    border-bottom: solid 4px rgb(42, 52, 97);
+  font-size: xx-large;
+  font-weight: 100;
+  border-bottom: solid 4px rgb(42, 52, 97);
 }
 
 .post h3 {
-    font-size: x-large;
-    font-weight: 500;
-    border-bottom: solid 2px rgb(42, 52, 97);
+  font-size: x-large;
+  font-weight: 500;
+  border-bottom: solid 2px rgb(42, 52, 97);
 }
 
 .post pre {
-    background-color: black;
-    color: white;
-    overflow-x: scroll;
-    padding: 1rem;
+  background-color: black;
+  color: white;
+  overflow-x: scroll;
+  padding: 1rem;
 }
 
 .post code {
-    padding-left: 4px;
-    padding-right: 4px;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    border-radius: 4px;
-    background-color: slategray;
-    color: white;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  border-radius: 4px;
+  background-color: slategray;
+  color: white;
 }

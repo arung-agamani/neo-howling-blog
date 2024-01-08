@@ -10,7 +10,6 @@ import { z, ZodError } from "zod";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 const router = createRouter<NextApiRequest, NextApiResponse>();
 router.use(verifyToken);
-// TODO: Add security headers
 
 const client = new S3Client({
     region: "ap-southeast-1",
