@@ -10,6 +10,7 @@ import {
 import ReactQuill, { Quill } from "react-quill";
 import ImageUploader from "quill-image-uploader";
 import QuillMarkdown from "quilljs-markdown";
+import QuillBlotFormatter from "quill-blot-formatter";
 import { toast } from "react-toastify";
 import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
 import "react-quill/dist/quill.snow.css";
@@ -36,6 +37,7 @@ interface Props {
 
 Quill.register("modules/imageUploader", ImageUploader);
 Quill.register("modules/QuillMarkdown", QuillMarkdown, true);
+Quill.register("modules/blotFormatter", QuillBlotFormatter);
 
 const Editor: React.FC<Props> = ({
     page,
@@ -70,6 +72,7 @@ const Editor: React.FC<Props> = ({
                 },
             },
             QuillMarkdown: {},
+            blotFormatter: true,
             imageUploader: {
                 upload: (file: File) => {
                     return new Promise((resolve, reject) => {
