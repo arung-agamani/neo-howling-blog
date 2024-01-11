@@ -1,7 +1,5 @@
-"use client";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import DarkModeToggle from "./DarkModeToggle";
 
 function TabLink({ label, target }: { label: string; target: string }) {
     return (
@@ -15,14 +13,6 @@ function TabLink({ label, target }: { label: string; target: string }) {
 }
 
 export default function Navbar() {
-    const { systemTheme, theme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-    const currentTheme = theme;
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-    if (!mounted) return null;
     return (
         <header className="sticky top-0 bg-[#000B] text-white py-2 w-full">
             <div className="container mx-auto w-full max-w-sm lg:max-w-4xl">
@@ -41,19 +31,7 @@ export default function Navbar() {
                         <div>
                             <TabLink target="#" label="Snippets" />
                         </div>
-                        <div>
-                            <button
-                                suppressHydrationWarning
-                                className=" bg-gray-400 p-2"
-                                onClick={() =>
-                                    theme == "dark"
-                                        ? setTheme("light")
-                                        : setTheme("dark")
-                                }
-                            >
-                                {theme}
-                            </button>
-                        </div>
+                        <DarkModeToggle />
                     </div>
                     {/* <span className="flex-grow"></span> */}
                     <div className="ml-auto hidden lg:block">

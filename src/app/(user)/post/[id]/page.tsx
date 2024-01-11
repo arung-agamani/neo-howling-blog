@@ -7,8 +7,10 @@ import FloatingContainer from "@/components/FloatingContainer";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
-import "./github-markdown.css";
 import "quill/dist/quill.snow.css";
+import "highlight.js/styles/monokai-sublime.css";
+import "./github-markdown.css";
+import "./code-block.css";
 // import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
 // import "./post.css";
 
