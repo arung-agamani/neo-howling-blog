@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 function TabLink({ label, target }: { label: string; target: string }) {
     return (
@@ -15,7 +16,13 @@ function TabLink({ label, target }: { label: string; target: string }) {
 
 export default function Navbar() {
     const { systemTheme, theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
     const currentTheme = theme;
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+    if (!mounted) return null;
     return (
         <header className="sticky top-0 bg-[#000B] text-white py-2 w-full">
             <div className="container mx-auto w-full max-w-sm lg:max-w-4xl">

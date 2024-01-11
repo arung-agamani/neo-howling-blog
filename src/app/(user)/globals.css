@@ -7,7 +7,7 @@
         list-style: revert;
     }
     body {
-        @apply dark:bg-gray-800 bg-white;
+        @apply dark:bg-gray-800 bg-slate-600;
     }
 }
 

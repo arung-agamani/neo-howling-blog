@@ -29,7 +29,7 @@ export default async function Page() {
     });
 
     return (
-        <div className="bg-white dark:bg-gray-900 pt-2 flex flex-col justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16">
+        <div className=" bg-slate-600 dark:bg-gray-900 pt-2 flex flex-col justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16">
             {/* <p className="max-w-5xl text-xl text-center mx-auto my-2 py-8 px-4 border border-gray-600 rounded">
                 Welcome to Howling Blog! Here you can see some of my thoughts,
                 materialized in the form of blog post.
