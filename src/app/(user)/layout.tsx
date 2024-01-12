@@ -1,8 +1,8 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
+import { Provider } from "./ThemeProvider";
 import "./globals.css";
-
 export const metadata = {
     title: "Howling Blog",
     icons: {
@@ -16,14 +16,16 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html>
-            <body className="bg-gray-700">
+        <html suppressHydrationWarning>
+            <body /* className="bg-gray-700" */>
                 {/* <Header /> */}
-                <Navbar />
-                {children}
-                <footer>
-                    <Footer />
-                </footer>
+                <Provider>
+                    <Navbar />
+                    {children}
+                    <footer>
+                        <Footer />
+                    </footer>
+                </Provider>
             </body>
         </html>
     );

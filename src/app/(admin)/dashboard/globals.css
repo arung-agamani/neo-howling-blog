@@ -5,3 +5,7 @@
 body {
     background-color: #947eb0;
 }
+
+body {
+    font-size: calc(15px + 0.390625vw);
+}

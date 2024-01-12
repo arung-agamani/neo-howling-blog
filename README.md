@@ -17,9 +17,9 @@ The former holds everything that it needs to store the pages, users, basically e
 
 ## Features
 
--   Fully functional blog platform with just the features required to create blog posts.
--   SSR powered by Next.js. As such, all other features offered by Next.js are also available, making this base application very extensible.
--   Create blog posts using WYSIWYG Editor, powered by Quill.js
+- Fully functional blog platform with just the features required to create blog posts.
+- SSR powered by Next.js. As such, all other features offered by Next.js are also available, making this base application very extensible.
+- Create blog posts using WYSIWYG Editor, powered by Quill.js
 
 ## Usage
 
@@ -27,13 +27,13 @@ The former holds everything that it needs to store the pages, users, basically e
 
 1. MongoDb
 
-    You can self-host your mongodb instance or use MongoDb Atlas or have other cloud provider provision them for you. As this app uses `Prisma.js`, the requirement for any self-hosted mongodb instance is that it should have replica set enabled. MongoDb Atlas on free tier will give you enough starting point for usable mongodb server, but you can also provision by yourself.
+   You can self-host your mongodb instance or use MongoDb Atlas or have other cloud provider provision them for you. As this app uses `Prisma.js`, the requirement for any self-hosted mongodb instance is that it should have replica set enabled. MongoDb Atlas on free tier will give you enough starting point for usable mongodb server, but you can also provision by yourself.
 
 2. AWS S3 Bucket
 
-    This app is able to host it's assets in AWS S3, which is accessible through the dashboard, on asset manager and also on image uploader function attached to Quill.js. Uploaded files on S3 should be accessible publicly, which you can set through bucket policy.
+   This app is able to host it's assets in AWS S3, which is accessible through the dashboard, on asset manager and also on image uploader function attached to Quill.js. Uploaded files on S3 should be accessible publicly, which you can set through bucket policy.
 
-    To manage files, you are required to create credential to access AWS S3, which should be through IAM user. The access key and secret key will be used as environment variables, which described below.
+   To manage files, you are required to create credential to access AWS S3, which should be through IAM user. The access key and secret key will be used as environment variables, which described below.
 
 ### Prepare environment variables and configs
 
@@ -52,3 +52,8 @@ Put the required variables in `.env` file in the project root directory (next to
 ### Development and Deployment
 
 As this is a standard Next.js project, development can be started by using the `dev` script defined in `package.json`, as well as creating deployment builds with `build` script. This repo mainly uses `npm`, but you can also use `yarn` or `pnpm`. Just make sure to adjust the lock files as needed.
+
+### Application Special Configs
+
+1. `ALLOW_USER_CREATION`: Set to `FALSE` (case-sensitive) to disable user creation through /api/signupv2 route
+2. `LOGIN_BACKGROUND_IMAGE`: Set to direct link of an image to change login page background.

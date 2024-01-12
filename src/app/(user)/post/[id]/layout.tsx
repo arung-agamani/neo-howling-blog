@@ -15,7 +15,7 @@ export default function PostLayout({
             />
             <Suspense fallback={<Loading />}>{children}</Suspense>
             <Link href={"/"}>
-                <div className="bg-blue-700 text-slate-200 py-4">
+                <div className="bg-blue-700 dark:bg-blue-900 dark:rounded-xl dark:mx-4  text-slate-200 py-4">
                     <p className="text-4xl text-center">Back to Home</p>
                 </div>
             </Link>

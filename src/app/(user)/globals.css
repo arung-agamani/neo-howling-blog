@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer base {
+    ul,
+    ol {
+        list-style: revert;
+    }
+    body {
+        @apply dark:bg-gray-800 bg-slate-600;
+    }
+}
+
+.ql-indent-1 {
+    margin-left: 2.2rem;
+}
+.ql-indent-2 {
+    margin-left: 4.4rem;
+}

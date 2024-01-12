@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import axios from "@/utils/axios";
 import debounce from "lodash.debounce";
 
-import "./editor.css";
+// import "./editor.css";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
@@ -27,6 +27,7 @@ interface PostMetadata {
 export default function Page() {
     const [content, setContent] = useState("");
     const [page, setPage] = useState<PostMetadata>({});
+    const [loading, setLoading] = useState<boolean>(true);
     const [isModified, setIsModified] = useState(false);
     const [isSynced, setIsSynced] = useState(false);
     const titleInputRef = useRef<HTMLTextAreaElement>(null);
@@ -40,9 +41,9 @@ export default function Page() {
     const searchParams = useSearchParams();
     useEffect(() => {
         (async () => {
-            if (!searchParams) return;
+            if (!searchParams) return setLoading(false);
             const id = searchParams.get("id");
-            if (!id) return;
+            if (!id) return setLoading(false);
 
             try {
                 const res = await axios.get("/api/dashboardv2/post/get", {
@@ -56,6 +57,8 @@ export default function Page() {
                 setIsSynced(true);
             } catch (error) {
                 setContent("<h1>Failed to fetch content</h1>");
+            } finally {
+                setLoading(false);
             }
         })();
 
@@ -81,88 +84,72 @@ export default function Page() {
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const saveHandler = useCallback(
-        debounce(async (content) => {
-            const url = new URL(window.location.href);
-            const id = url.searchParams!.get("id");
-            let op: "update" | "create" = "update";
-            if (!id) op = "create";
-            if (op === "update") {
-                try {
-                    const res = await axios.post(
-                        "/api/dashboardv2/post/update",
-                        {
-                            id,
-                            op: "update",
-                            blogContent: content,
-                            title: titleInputRef.current?.value,
-                            description: descInputRef.current?.value,
-                            bannerUrl: bannerUrlRef.current?.value,
-                            tags: tagsRef.current?.value.split(","),
-                        }
-                    );
-                    if (res.status == 200) {
-                        setIsSynced(true);
-                        setIsModified(false);
-                        toast.success("Post updated!", {
-                            position: toast.POSITION.TOP_CENTER,
-                            autoClose: 3000,
-                            closeOnClick: true,
-                            theme: "light",
-                        });
-                        return;
-                    }
-                } catch (e) {
-                    console.error(e);
-                    toast.error("Post updating failed");
-                    return;
-                }
-            } else if (op === "create") {
-                try {
-                    const res = await axios.post(
-                        "/api/dashboardv2/post/create",
-                        {
-                            author: "Shirayuki Haruka",
-                            op,
-                            blogContent: content,
-                            datePosted: new Date(),
-                            description: descInputRef.current?.value,
-                            link: "",
-                            tags: [],
-                            title: titleInputRef.current?.value,
-                        }
-                    );
-
-                    if (res.status == 200) {
-                        setIsSynced(true);
-                        setIsModified(false);
-                        toast.success("Post created!");
-                        setTimeout(() => {
-                            router.push(
-                                `/dashboard/main/posts/edit?id=${res.data.data.id}`
-                            );
-                        }, 3000);
-                        console.log(res.data);
-                        return;
-                    }
-                } catch (e) {
-                    console.error(e);
-                    toast.error("Post creation failed");
-                    return;
-                }
+    const saveHandler = async () => {
+        const url = new URL(window.location.href);
+        const id = url.searchParams!.get("id");
+        let op: "update" | "create" = "update";
+        if (!id) op = "create";
+        if (op === "update") {
+            try {
+                const res = await axios.post("/api/dashboardv2/post/update", {
+                    id,
+                    op: "update",
+                    blogContent: content,
+                    title: titleInputRef.current?.value,
+                    description: descInputRef.current?.value,
+                    bannerUrl: bannerUrlRef.current?.value,
+                    tags: tagsRef.current?.value.split(","),
+                });
+                setIsSynced(true);
+                setIsModified(false);
+                toast.success("Post updated!", {
+                    position: toast.POSITION.TOP_CENTER,
+                    autoClose: 3000,
+                    closeOnClick: true,
+                    theme: "light",
+                });
+            } catch (e) {
+                console.error(e);
+                toast.error("Post updating failed");
             }
-        }, 30000),
-        []
-    );
+        } else if (op === "create") {
+            try {
+                const res = await axios.post("/api/dashboardv2/post/create", {
+                    author: "Shirayuki Haruka",
+                    op,
+                    blogContent: content,
+                    datePosted: new Date(),
+                    description: descInputRef.current?.value,
+                    link: "",
+                    tags: [],
+                    title: titleInputRef.current?.value,
+                });
+                // console.log(res.status);
+                setIsSynced(true);
+                setIsModified(false);
+                toast.success("Post created!");
+                setTimeout(() => {
+                    router.push(
+                        `/dashboard/main/posts/edit?id=${res.data.data.id}`
+                    );
+                }, 3000);
+                // console.log(res.data);
+            } catch (e) {
+                console.log(e);
+                toast.error("Post creation failed");
+            }
+        }
+    };
 
-    useEffect(() => {
-        saveHandler(content);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [content]);
+    //   useEffect(() => {
+    //     saveHandler(content);
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    //   }, [content]);
+    if (loading) return <h1>Loading...</h1>;
     return (
         <>
             <div className="flex">
-                <div className="flex-grow">
+                <div className="flex-grow bg-white">
                     <Editor
                         {...{
                             page,

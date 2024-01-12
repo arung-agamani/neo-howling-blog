@@ -3,11 +3,16 @@
 // import { useEffect, useState } from "react";
 import HomeButton from "@/components/HomeButton";
 import ScrollTop from "@/components/ScrollTop";
+import FloatingContainer from "@/components/FloatingContainer";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
-import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
-import "./post.css";
+import "quill/dist/quill.snow.css";
+import "highlight.js/styles/monokai-sublime.css";
+import "./github-markdown.css";
+import "./code-block.css";
+// import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
+// import "./post.css";
 
 interface Params {
     id: string;
@@ -71,7 +76,7 @@ export default async function Page({ params }: { params: Params }) {
     // console.log(data.blogContent);
 
     return (
-        <div className="post container mx-auto max-lg bg-white px-4 pt-4 overflow-hidden">
+        <div className="container mx-auto max-lg bg-white dark:bg-slate-800 px-4 pt-4 overflow-hidden">
             <h1 className=" text-3xl mx-8 pt-4">{data.title}</h1>
             <p className="mx-8 my-4">{data.description}</p>
             <hr />
@@ -82,12 +87,12 @@ export default async function Page({ params }: { params: Params }) {
             <hr className="my-4" />
             <div
                 dangerouslySetInnerHTML={{ __html: data.blogContent }}
-                className="mx-2 lg:mx-10 mt-10 font-sans font-normal"
+                className=" mx-2 p-4 lg:mx-10 mt-10 font-sans font-normal markdown-body bg-white dark:bg-slate-800"
             />
-            <div className="floating-container flex gap-3">
+            <FloatingContainer>
                 <HomeButton />
                 <ScrollTop />
-            </div>
+            </FloatingContainer>
         </div>
     );
 }
