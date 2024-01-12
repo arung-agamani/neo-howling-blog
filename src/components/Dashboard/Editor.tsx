@@ -14,6 +14,7 @@ import QuillBlotFormatter from "quill-blot-formatter";
 import { toast } from "react-toastify";
 import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
 import "react-quill/dist/quill.snow.css";
+import "./EditorOverride.css";
 
 interface PostMetadata {
     author?: string;
