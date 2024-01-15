@@ -78,14 +78,18 @@ export default async function Page({ params }: { params: Params }) {
 
     return (
         <div className="container mx-auto max-lg bg-white dark:bg-slate-900 px-4 pt-4 overflow-hidden">
-            <h1 className=" text-3xl mx-8 pt-4">{data.title}</h1>
-            <p className="mx-8 my-4">{data.description}</p>
-            <hr />
+            <h1 className="text-3xl mx-8 pt-4 text-center">{data.title}</h1>
+            <p className="mx-8 my-4 text-center">{data.description}</p>
+            {/* <hr className="mx-4" /> */}
             {data.bannerUrl && (
-                <img src={data.bannerUrl} alt="This post's banner image" />
+                <img
+                    src={data.bannerUrl}
+                    className="mx-auto"
+                    alt="This post's banner image"
+                />
             )}
 
-            <hr className="my-4" />
+            {/* <hr className="my-4" /> */}
             <PostContainer content={data.blogContent} />
             {/* <div
                 dangerouslySetInnerHTML={{ __html: data.blogContent }}
