@@ -11,6 +11,7 @@ import "quill/dist/quill.snow.css";
 import "highlight.js/styles/monokai-sublime.css";
 import "./github-markdown.css";
 import "./code-block.css";
+import PostContainer from "@/components/PostContainer";
 // import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
 // import "./post.css";
 
@@ -76,7 +77,7 @@ export default async function Page({ params }: { params: Params }) {
     // console.log(data.blogContent);
 
     return (
-        <div className="container mx-auto max-lg bg-white dark:bg-slate-800 px-4 pt-4 overflow-hidden">
+        <div className="container mx-auto max-lg bg-white dark:bg-slate-900 px-4 pt-4 overflow-hidden">
             <h1 className=" text-3xl mx-8 pt-4">{data.title}</h1>
             <p className="mx-8 my-4">{data.description}</p>
             <hr />
@@ -85,10 +86,11 @@ export default async function Page({ params }: { params: Params }) {
             )}
 
             <hr className="my-4" />
-            <div
+            <PostContainer content={data.blogContent} />
+            {/* <div
                 dangerouslySetInnerHTML={{ __html: data.blogContent }}
-                className=" mx-2 p-4 lg:mx-10 mt-10 font-sans font-normal markdown-body bg-white dark:bg-slate-800"
-            />
+                className={`mx-2 p-4 lg:mx-10 mt-10 font-sans font-normal markdown-body bg-white dark:bg-slate-900`}
+            /> */}
             <FloatingContainer>
                 <HomeButton />
                 <ScrollTop />

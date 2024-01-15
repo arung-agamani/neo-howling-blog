@@ -8,6 +8,7 @@
     }
     body {
         @apply dark:bg-gray-800 bg-slate-600;
+        font-size: calc(15px + 0.390625vw);
     }
 }
 
