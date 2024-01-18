@@ -16,9 +16,9 @@ export default function Navbar() {
     return (
         <header className="sticky top-0 bg-[#000B] text-white py-2 w-full">
             <div className="container mx-auto w-full max-w-sm lg:max-w-4xl">
-                <div className="flex w-full align-text-bottom leading-loose">
+                <div className="flex w-full ">
                     <DarkModeToggle />
-                    <div className="text-2xl hidden lg:block">
+                    <div className="hidden lg:flex text-3xl">
                         <TabLink target="/" label="Howling Blog" />
                     </div>
                     {/* <span className="flex-grow"></span> */}
