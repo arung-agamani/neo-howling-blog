@@ -77,7 +77,7 @@ export default async function Page({ params }: { params: Params }) {
     // console.log(data.blogContent);
 
     return (
-        <div className="container mx-auto max-lg bg-white dark:bg-slate-900 px-4 pt-4 overflow-hidden">
+        <div className="container mx-auto max-lg bg-white dark:bg-slate-900 px-4 pt-4 overflow-hidden rounded-b-2xl">
             <h1 className="text-3xl mx-8 pt-4 text-center">{data.title}</h1>
             <p className="mx-8 my-4 text-center">{data.description}</p>
             {/* <hr className="mx-4" /> */}

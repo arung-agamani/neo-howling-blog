@@ -77,19 +77,6 @@ export default async function Page() {
                         </div>
                     </Link>
                 </div>
-                {/* <div className="bg-white ml-8 rounded-t-lg pb-8 w-full h-full lg:flex lg:flex-col justify-center align-top max-w-lg hidden">
-                    <p className="text-3xl font-semibold text-center mb-2">
-                        Good Stuff
-                    </p>
-                    {[
-                        "https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/2/3/94001464_p0.png",
-                        "https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/2/3/100827958_p0.jpg",
-                        "https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/2/3/100597943_p0_master1200.jpg",
-                        "https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/2023/2/3/100597943_p1_master1200.jpg",
-                    ].map((x) => (
-                        <img src={x} alt={"Some good stuffs"} key={x} />
-                    ))}
-                </div> */}
             </div>
             <FloatingContainer>
                 <ScrollTop />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface Props {
     content: string;
@@ -9,6 +9,12 @@ interface Props {
 
 const PostContainer: React.FC<Props> = ({ content }) => {
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+    if (!mounted) return null;
     return (
         <div
             suppressHydrationWarning
