@@ -106,7 +106,7 @@ const Editor: React.FC<Props> = ({
                             try {
                                 toast.info(`Uploading ${loadedFile?.name}...`);
                                 const presignedUrl = await fetch(
-                                    `${window.location.origin}/api/dashboard/upload`,
+                                    `${window.location.origin}/api/dashboardv2/assets/upload`,
                                     {
                                         method: "POST",
                                         headers: {
@@ -172,7 +172,11 @@ const Editor: React.FC<Props> = ({
         const qlContainer = document.getElementsByClassName(
             "ql-container"
         )[0] as HTMLDivElement;
-        qlContainer.style.maxHeight = `${window.innerHeight - toolbarHeight}px`;
+        const appbarHeight =
+            document.getElementById("app-bar")?.clientHeight || 0;
+        qlContainer.style.maxHeight = `${
+            window.innerHeight - toolbarHeight - appbarHeight
+        }px`;
     }, []);
 
     function imageHandler() {
