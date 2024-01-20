@@ -148,7 +148,12 @@ export default function Page() {
     if (loading) return <h1>Loading...</h1>;
     return (
         <>
-            <div className="flex">
+            <div
+                className="flex"
+                style={{
+                    height: "calc(100vh - 64px)",
+                }}
+            >
                 <div className="flex-grow bg-white">
                     <Editor
                         {...{
@@ -163,7 +168,7 @@ export default function Page() {
                         }}
                     />
                 </div>
-                <div className="py-2 bg-white text-black sticky h-screen top-0 flex flex-col w-full max-w-xs">
+                <div className="py-2 bg-white text-black sticky h-full top-0 flex flex-col w-full max-w-xs">
                     <div className="mx-2 pb-4">
                         <label className="text-xl">Title</label>
                         <textarea

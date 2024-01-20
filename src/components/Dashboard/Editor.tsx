@@ -172,10 +172,10 @@ const Editor: React.FC<Props> = ({
         const qlContainer = document.getElementsByClassName(
             "ql-container"
         )[0] as HTMLDivElement;
-        const appbarHeight =
-            document.getElementById("app-bar")?.clientHeight || 0;
+        // const appbarHeight =
+        //     document.getElementById("app-bar")?.clientHeight || 0;
         qlContainer.style.maxHeight = `${
-            window.innerHeight - toolbarHeight - appbarHeight
+            window.innerHeight - toolbarHeight - 64
         }px`;
     }, []);
 
