@@ -46,6 +46,7 @@ import UserIcon from "@mui/icons-material/AccountBox";
 import LogoutIcon from "@mui/icons-material/Logout";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import FolderIcon from "@mui/icons-material/Folder";
 
 // function FrozenRouter(props: PropsWithChildren<{}>) {
 //     const context = useContext(LayoutRouterContext);
@@ -106,7 +107,14 @@ const hierarchy: MenuItem[] = [
     },
     {
         name: "assets",
-        children: [],
+        children: [
+            {
+                name: "Browser",
+                children: [],
+                link: "browser",
+                icon: <FolderIcon />,
+            },
+        ],
         icon: <PermMedia />,
     },
     {
