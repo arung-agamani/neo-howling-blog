@@ -9,3 +9,13 @@ body {
 body {
     font-size: calc(15px + 0.390625vw);
 }
+
+.hyperlink {
+    @apply text-blue-600 underline;
+}
+.hyperlink:hover {
+    @apply text-blue-800;
+}
+.hyperlink:visited {
+    @apply text-purple-600;
+}
