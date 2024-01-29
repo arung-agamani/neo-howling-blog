@@ -1,13 +1,17 @@
 "use client";
 import axios from "@/utils/axios";
 import { Divider, Toolbar, Typography } from "@mui/material";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import FolderIcon from "@mui/icons-material/FolderOpen";
 import FileIcon from "@mui/icons-material/InsertDriveFile";
 import Drawer from "@mui/material/Drawer";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import mime from "mime-types";
+import { useDropzone } from "react-dropzone";
+import { toast } from "react-toastify";
+import { ServerUpload } from "@/lib/Assets";
+import { useSearchParams } from "next/navigation";
 
 interface ListingItem {
     id: string;
@@ -49,22 +53,67 @@ const RenderBreadcrumbs: React.FC<{
 };
 
 const AssetsBrowserPage = () => {
-    const [currentLocation, setCurrentLocation] = useState("");
+    const searchParams = useSearchParams()!;
+    const cd = searchParams?.get("cd");
+    const [currentLocation, setCurrentLocation] = useState(
+        (Array.isArray(cd) ? cd[0] : cd) || ""
+    );
     const [selectedId, setSelectedId] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const fetchDirectoryListing = async () => {
+        const res = await axios.get("/api/dashboardv2/assets/list", {
+            params: {
+                prefix: !(currentLocation === "" || currentLocation === "/")
+                    ? currentLocation
+                    : undefined,
+            },
+        });
+
+        return res.data as ListingItem[];
+    };
     const { data: objects, isSuccess } = useQuery({
         queryKey: ["s3DirData", currentLocation],
-        queryFn: async () => {
-            const res = await axios.get("/api/dashboardv2/assets/list", {
-                params: {
-                    prefix: !(currentLocation === "" || currentLocation === "/")
-                        ? currentLocation
-                        : undefined,
-                },
-            });
-            return res.data as ListingItem[];
-        },
+        queryFn: fetchDirectoryListing,
         staleTime: 60000,
+    });
+    const queryClient = useQueryClient();
+
+    const onDrop = useCallback(
+        async (acceptedFiles: File[]) => {
+            for await (const file of acceptedFiles) {
+                const res = await ServerUpload(
+                    currentLocation,
+                    file.name,
+                    file.type
+                );
+                console.log(res);
+                if (res.success) {
+                    axios
+                        .put(res.signedUrl, file, {
+                            headers: {
+                                "Content-Length": String(file.size),
+                            },
+                        })
+                        .then((res) => {
+                            toast.success(
+                                `File ${file.name} has been successfully uploaded`
+                            );
+                        })
+                        .catch((err) => {
+                            toast.error(`Error when uploading ${file.name}`);
+                            console.error(err);
+                        });
+                }
+            }
+            queryClient.invalidateQueries({
+                queryKey: ["s3DirData", currentLocation],
+            });
+        },
+        [currentLocation, queryClient]
+    );
+
+    const { getRootProps, isDragActive } = useDropzone({
+        onDrop,
     });
 
     const DetailPaneData = () => {
@@ -95,7 +144,10 @@ const AssetsBrowserPage = () => {
     };
 
     return (
-        <div className="m-4 p-4 rounded-lg bg-white flex flex-col">
+        <div
+            className="p-4 bg-white flex flex-col h-full relative"
+            {...getRootProps()}
+        >
             <Drawer
                 anchor="right"
                 open={sidebarOpen}
@@ -185,6 +237,11 @@ const AssetsBrowserPage = () => {
             ) : (
                 <div className="flex justify-center align-middle py-8">
                     <CircularProgress />
+                </div>
+            )}
+            {isDragActive && (
+                <div className="absolute top-0 left-0 w-full h-full bg-slate-400 bg-opacity-50 flex flex-col justify-center items-center align-middle">
+                    <p>Drop File here to upload</p>
                 </div>
             )}
         </div>

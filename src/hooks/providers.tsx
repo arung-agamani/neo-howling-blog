@@ -6,6 +6,7 @@ import {
     QueryClientProvider,
     HydrationBoundary,
 } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 export default function QueryProviders({
     children,
@@ -17,6 +18,7 @@ export default function QueryProviders({
     return (
         <QueryClientProvider client={queryClient}>
             <HydrationBoundary>{children}</HydrationBoundary>
+            <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
     );
 }
