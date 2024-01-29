@@ -1,6 +1,12 @@
 "use client";
 import axios from "@/utils/axios";
-import { Divider, Toolbar, Typography } from "@mui/material";
+import {
+    Button,
+    Divider,
+    IconButton,
+    Toolbar,
+    Typography,
+} from "@mui/material";
 import React, { useCallback, useState } from "react";
 import FolderIcon from "@mui/icons-material/FolderOpen";
 import FileIcon from "@mui/icons-material/InsertDriveFile";
@@ -10,9 +16,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import mime from "mime-types";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
-import { ServerUpload } from "@/lib/Assets";
+import { ServerDeleteAsset, ServerUpload } from "@/lib/Assets";
 import { useSearchParams } from "next/navigation";
 
+import DeleteIcon from "@mui/icons-material/Delete";
+import RenameIcon from "@mui/icons-material/DriveFileRenameOutline";
+
+// TODO: implement renaming
 interface ListingItem {
     id: string;
     name: string;
@@ -105,12 +115,27 @@ const AssetsBrowserPage = () => {
                         });
                 }
             }
-            queryClient.invalidateQueries({
+            queryClient.refetchQueries({
                 queryKey: ["s3DirData", currentLocation],
             });
         },
         [currentLocation, queryClient]
     );
+
+    const handleAssetDelete = async () => {
+        console.log("Delete asset called");
+        const res = await ServerDeleteAsset(selectedId);
+        if (!res.success) {
+            toast.error(res.message);
+            return;
+        }
+        toast.success(res.message);
+        setSelectedId("");
+        setSidebarOpen(false);
+        queryClient.invalidateQueries({
+            queryKey: ["s3DirData", currentLocation],
+        });
+    };
 
     const { getRootProps, isDragActive } = useDropzone({
         onDrop,
@@ -139,24 +164,35 @@ const AssetsBrowserPage = () => {
                 >
                     {`https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${item.id}`}
                 </a>
+                <p className="font-semibold text-blue-900">Actions</p>
+                <div className="flex justify-around">
+                    <IconButton
+                        size="medium"
+                        onClick={() => {
+                            handleAssetDelete();
+                        }}
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                    <IconButton size="small">
+                        <RenameIcon />
+                    </IconButton>
+                </div>
             </React.Fragment>
         );
     };
 
     return (
-        <div
-            className="p-4 bg-white flex flex-col h-full relative"
-            {...getRootProps()}
-        >
+        <>
             <Drawer
                 anchor="right"
                 open={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
                 sx={{
-                    width: 500,
+                    width: 600,
                     flexShrink: 0,
                     "& .MuiDrawer-paper": {
-                        width: 500,
+                        width: 600,
                         boxSizing: "border-box",
                     },
                 }}
@@ -178,73 +214,81 @@ const AssetsBrowserPage = () => {
                             }`}
                             className="py-2"
                         />
-                        <div className="grid grid-cols-4">
+                        <div className="grid grid-cols-4 gap-1">
                             <DetailPaneData />
                         </div>
                     </div>
                 )}
             </Drawer>
-            <Typography variant="h3">Assets Browser</Typography>
-            <Divider />
-            <div className="gap-2 flex pt-4 text-xl">
-                <div
-                    className=" text-blue-500 hover:text-blue-400 hover:cursor-pointer"
-                    onClick={() => setCurrentLocation("")}
-                >
-                    Home
+            <div
+                className="p-4 bg-white flex flex-col h-full relative"
+                {...getRootProps()}
+            >
+                <Typography variant="h3">Assets Browser</Typography>
+                <Divider />
+                <div className="gap-2 flex pt-4 text-xl">
+                    <div
+                        className=" text-blue-500 hover:text-blue-400 hover:cursor-pointer"
+                        onClick={() => setCurrentLocation("")}
+                    >
+                        Home
+                    </div>
+                    {
+                        <RenderBreadcrumbs
+                            arr={currentLocation.split("/")}
+                            idx={0}
+                            setLocation={setCurrentLocation}
+                        />
+                    }
                 </div>
-                {
-                    <RenderBreadcrumbs
-                        arr={currentLocation.split("/")}
-                        idx={0}
-                        setLocation={setCurrentLocation}
-                    />
-                }
+                {isSuccess ? (
+                    <div className="grid grid-cols-4 gap-4 my-4">
+                        {isSuccess &&
+                            objects.map((obj: any) => (
+                                <div
+                                    key={obj.id}
+                                    className={`px-2 py-4 rounded-lg border flex gap-2 ${
+                                        selectedId === obj.id
+                                            ? "bg-slate-100"
+                                            : ""
+                                    } hover:cursor-pointer hover:bg-slate-200 transition-colors duration-75`}
+                                    onClickCapture={() => {
+                                        setSelectedId(obj.id);
+                                        if (!obj.isDir) {
+                                            setSidebarOpen(true);
+                                        }
+                                    }}
+                                    onDoubleClickCapture={() => {
+                                        if (obj.isDir)
+                                            setCurrentLocation(obj.id);
+                                        else
+                                            window
+                                                .open(
+                                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${obj.id}`,
+                                                    "_blank"
+                                                )
+                                                ?.focus();
+                                    }}
+                                >
+                                    {obj.isDir ? <FolderIcon /> : <FileIcon />}
+                                    <Typography variant="body1" noWrap>
+                                        {obj.name}
+                                    </Typography>
+                                </div>
+                            ))}
+                    </div>
+                ) : (
+                    <div className="flex justify-center align-middle py-8">
+                        <CircularProgress />
+                    </div>
+                )}
+                {isDragActive && (
+                    <div className="absolute top-0 left-0 w-full h-full bg-slate-400 bg-opacity-50 flex flex-col justify-center items-center align-middle">
+                        <p>Drop File here to upload</p>
+                    </div>
+                )}
             </div>
-            {isSuccess ? (
-                <div className="grid grid-cols-4 gap-4 my-4">
-                    {isSuccess &&
-                        objects.map((obj: any) => (
-                            <div
-                                key={obj.id}
-                                className={`px-2 py-4 rounded-lg border flex gap-2 ${
-                                    selectedId === obj.id ? "bg-slate-100" : ""
-                                } hover:cursor-pointer hover:bg-slate-200 transition-colors duration-75`}
-                                onClickCapture={() => {
-                                    setSelectedId(obj.id);
-                                    if (!obj.isDir) {
-                                        setSidebarOpen(true);
-                                    }
-                                }}
-                                onDoubleClickCapture={() => {
-                                    if (obj.isDir) setCurrentLocation(obj.id);
-                                    else
-                                        window
-                                            .open(
-                                                `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${obj.id}`,
-                                                "_blank"
-                                            )
-                                            ?.focus();
-                                }}
-                            >
-                                {obj.isDir ? <FolderIcon /> : <FileIcon />}
-                                <Typography variant="body1" noWrap>
-                                    {obj.name}
-                                </Typography>
-                            </div>
-                        ))}
-                </div>
-            ) : (
-                <div className="flex justify-center align-middle py-8">
-                    <CircularProgress />
-                </div>
-            )}
-            {isDragActive && (
-                <div className="absolute top-0 left-0 w-full h-full bg-slate-400 bg-opacity-50 flex flex-col justify-center items-center align-middle">
-                    <p>Drop File here to upload</p>
-                </div>
-            )}
-        </div>
+        </>
     );
 };
 
