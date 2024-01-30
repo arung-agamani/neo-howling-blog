@@ -2,8 +2,14 @@
 import axios from "@/utils/axios";
 import {
     Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     Divider,
     IconButton,
+    TextField,
     Toolbar,
     Typography,
 } from "@mui/material";
@@ -16,13 +22,22 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import mime from "mime-types";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
-import { ServerDeleteAsset, ServerUpload } from "@/lib/Assets";
+import {
+    ServerCreateDirectory,
+    ServerDeleteAsset,
+    ServerUpload,
+} from "@/lib/Assets";
 import { useSearchParams } from "next/navigation";
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import RenameIcon from "@mui/icons-material/DriveFileRenameOutline";
+import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 // TODO: implement renaming
+// FIXME: browser history state not keeping track relative directory
 interface ListingItem {
     id: string;
     name: string;
@@ -64,12 +79,43 @@ const RenderBreadcrumbs: React.FC<{
 
 const AssetsBrowserPage = () => {
     const searchParams = useSearchParams()!;
+    const queryClient = useQueryClient();
     const cd = searchParams?.get("cd");
     const [currentLocation, setCurrentLocation] = useState(
         (Array.isArray(cd) ? cd[0] : cd) || ""
     );
     const [selectedId, setSelectedId] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    // New Folder Dialog
+    const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+    const handleNewFolderDialogClose = () => {
+        setNewFolderDialogOpen(false);
+    };
+    const { handleSubmit, reset, control } = useForm({
+        resolver: zodResolver(z.object({ folderName: z.string().min(1) })),
+        defaultValues: { folderName: "" },
+    });
+    const handleNewFolderDialogSubmit = async (data: {
+        folderName: string;
+    }) => {
+        console.log(data);
+        const res = await ServerCreateDirectory(
+            currentLocation,
+            data.folderName
+        );
+        if (!res.success) {
+            toast.error(res.message);
+        } else {
+            toast.success(res.message);
+        }
+        setNewFolderDialogOpen(false);
+        reset();
+        queryClient.invalidateQueries({
+            queryKey: ["s3DirData", currentLocation],
+        });
+    };
+
+    // Directory Navigation
     const fetchDirectoryListing = async () => {
         const res = await axios.get("/api/dashboardv2/assets/list", {
             params: {
@@ -86,7 +132,6 @@ const AssetsBrowserPage = () => {
         queryFn: fetchDirectoryListing,
         staleTime: 60000,
     });
-    const queryClient = useQueryClient();
 
     const onDrop = useCallback(
         async (acceptedFiles: File[]) => {
@@ -102,6 +147,7 @@ const AssetsBrowserPage = () => {
                         .put(res.signedUrl, file, {
                             headers: {
                                 "Content-Length": String(file.size),
+                                "Content-Type": file.type,
                             },
                         })
                         .then((res) => {
@@ -139,6 +185,7 @@ const AssetsBrowserPage = () => {
 
     const { getRootProps, isDragActive } = useDropzone({
         onDrop,
+        noClick: true,
     });
 
     const DetailPaneData = () => {
@@ -184,6 +231,42 @@ const AssetsBrowserPage = () => {
 
     return (
         <>
+            <Dialog
+                open={newFolderDialogOpen}
+                onClose={handleNewFolderDialogClose}
+                PaperProps={{
+                    component: "form",
+                    onSubmit: handleSubmit(handleNewFolderDialogSubmit),
+                }}
+            >
+                <DialogTitle>Create Folder</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        You are about to create a new folder in current
+                        location, {currentLocation || "Home"}. Please enter the
+                        folder name.
+                    </DialogContentText>
+                    <Controller
+                        name="folderName"
+                        control={control}
+                        rules={{ required: true }}
+                        render={({ field }) => (
+                            <TextField
+                                {...field}
+                                autoFocus
+                                required
+                                margin="dense"
+                                fullWidth
+                                variant="standard"
+                            />
+                        )}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleNewFolderDialogClose}>Cancel</Button>
+                    <Button type="submit">Create</Button>
+                </DialogActions>
+            </Dialog>
             <Drawer
                 anchor="right"
                 open={sidebarOpen}
@@ -226,7 +309,7 @@ const AssetsBrowserPage = () => {
             >
                 <Typography variant="h3">Assets Browser</Typography>
                 <Divider />
-                <div className="gap-2 flex pt-4 text-xl">
+                <div className="gap-2 flex py-4 text-xl">
                     <div
                         className=" text-blue-500 hover:text-blue-400 hover:cursor-pointer"
                         onClick={() => setCurrentLocation("")}
@@ -241,10 +324,21 @@ const AssetsBrowserPage = () => {
                         />
                     }
                 </div>
+                <div>
+                    <Button
+                        startIcon={<CreateNewFolderIcon />}
+                        variant="outlined"
+                        onClick={() => {
+                            setNewFolderDialogOpen(true);
+                        }}
+                    >
+                        New Folder
+                    </Button>
+                </div>
                 {isSuccess ? (
-                    <div className="grid grid-cols-4 gap-4 my-4">
-                        {isSuccess &&
-                            objects.map((obj: any) => (
+                    objects.length > 0 ? (
+                        <div className="grid grid-cols-4 gap-4 my-4">
+                            {objects.map((obj: any) => (
                                 <div
                                     key={obj.id}
                                     className={`px-2 py-4 rounded-lg border flex gap-2 ${
@@ -276,7 +370,12 @@ const AssetsBrowserPage = () => {
                                     </Typography>
                                 </div>
                             ))}
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="w-full h-full flex flex-col justify-start items-center pt-16">
+                            <p>Empty Folder</p>
+                        </div>
+                    )
                 ) : (
                     <div className="flex justify-center align-middle py-8">
                         <CircularProgress />

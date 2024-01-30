@@ -12,6 +12,7 @@ export async function ServerUpload(
     fileName: string,
     mime: string
 ) {
+    console.log(`Incoming upload ${prefix}${fileName} with mimetype ${mime}`);
     try {
         const command = new PutObjectCommand({
             Bucket: process.env.BUCKET_NAME,
@@ -31,6 +32,31 @@ export async function ServerUpload(
             success: false,
             message: "Something went wrong",
             signedUrl: "",
+        };
+    }
+}
+
+export async function ServerCreateDirectory(prefix: string, dirname: string) {
+    try {
+        const command = new PutObjectCommand({
+            Bucket: process.env.BUCKET_NAME,
+            Key: `${prefix}${dirname}/`,
+        });
+        const mkdirRes = await s3Client.send(command);
+        return {
+            success: true,
+            message: `Directory "${dirname}" has been created`,
+        };
+    } catch (error) {
+        let message = "Unknown error";
+        if (error instanceof S3ServiceException) {
+            message = `Error on folder creation: ${error.name} - ${error.message}`;
+        }
+        console.log(message);
+        console.log(error);
+        return {
+            success: false,
+            message,
         };
     }
 }

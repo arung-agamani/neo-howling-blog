@@ -28,12 +28,14 @@ export async function GET(req: NextRequest) {
 
         if (s3Objects) {
             files.push(
-                ...s3Objects.map((obj) => ({
-                    id: obj.Key!,
-                    name: path.basename(obj.Key!),
-                    modDate: obj.LastModified,
-                    size: obj.Size,
-                }))
+                ...s3Objects
+                    .filter((obj) => obj.Key !== prefix)
+                    .map((obj) => ({
+                        id: obj.Key!,
+                        name: path.basename(obj.Key!),
+                        modDate: obj.LastModified,
+                        size: obj.Size,
+                    }))
             );
         }
 
