@@ -33,20 +33,13 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
+    TDirectoryListingItem,
     TGeneratePUTSignedURLParams,
     TGeneratePUTSignedURLResponse,
 } from "@/types";
 import { AxiosResponse } from "axios";
 
 // TODO: implement renaming
-// FIXME: browser history state not keeping track relative directory
-interface ListingItem {
-    id: string;
-    name: string;
-    modDate?: string;
-    size?: number;
-    isDir?: boolean;
-}
 
 const RenderBreadcrumbs: React.FC<{
     arr: string[];
@@ -138,7 +131,7 @@ const AssetsBrowserPage = () => {
             },
         });
 
-        return res.data as ListingItem[];
+        return res.data as TDirectoryListingItem[];
     };
     const { data: objects, isSuccess } = useQuery({
         queryKey: ["s3DirData", currentLocation],

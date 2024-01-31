@@ -38,10 +38,10 @@ export async function POST(req: NextRequest) {
         }
         console.log(message);
         console.log(error);
-        return {
+        return NextResponse.json({
             success: false,
             message,
             errors: "Omitted",
-        };
+        });
     }
 }

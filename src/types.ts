@@ -34,3 +34,13 @@ export const GeneratePUTSignedURLResponse = z.discriminatedUnion("success", [
 export type TGeneratePUTSignedURLResponse = z.infer<
     typeof GeneratePUTSignedURLResponse
 >;
+
+export const DirectoryListingItem = z.object({
+    id: z.string(),
+    name: z.string(),
+    modDate: z.string().optional(),
+    size: z.number().optional(),
+    isDir: z.boolean().optional(),
+});
+
+export type TDirectoryListingItem = z.infer<typeof DirectoryListingItem>;
