@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import axios from "@/utils/axios";
 import {
@@ -13,7 +14,7 @@ import {
     Toolbar,
     Typography,
 } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import FolderIcon from "@mui/icons-material/FolderOpen";
 import FileIcon from "@mui/icons-material/InsertDriveFile";
 import Drawer from "@mui/material/Drawer";
@@ -22,12 +23,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import mime from "mime-types";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
-import {
-    ServerCreateDirectory,
-    ServerDeleteAsset,
-    ServerUpload,
-} from "@/lib/Assets";
-import { useSearchParams } from "next/navigation";
+import { ServerCreateDirectory, ServerDeleteAsset } from "@/lib/Assets";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import RenameIcon from "@mui/icons-material/DriveFileRenameOutline";
@@ -83,12 +80,23 @@ const RenderBreadcrumbs: React.FC<{
 };
 
 const AssetsBrowserPage = () => {
+    const pathname = usePathname();
     const searchParams = useSearchParams()!;
     const queryClient = useQueryClient();
     const cd = searchParams?.get("cd");
     const [currentLocation, setCurrentLocation] = useState(
         (Array.isArray(cd) ? cd[0] : cd) || ""
     );
+    const handleLocationNavigate = (loc: string) => {
+        const urlParams = new URLSearchParams(searchParams.toString());
+        urlParams.set("cd", loc);
+        window.history.pushState(
+            null,
+            "",
+            `${pathname}?${urlParams.toString()}`
+        );
+        setCurrentLocation(loc);
+    };
     const [selectedId, setSelectedId] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
     // New Folder Dialog
@@ -246,6 +254,10 @@ const AssetsBrowserPage = () => {
         );
     };
 
+    useEffect(() => {
+        setCurrentLocation(searchParams.get("cd") || "");
+    }, [pathname, searchParams]);
+
     return (
         <>
             <Dialog
@@ -313,6 +325,7 @@ const AssetsBrowserPage = () => {
                                     ?.id
                             }`}
                             className="py-2"
+                            alt={`Preview image`}
                         />
                         <div className="grid grid-cols-4 gap-1">
                             <DetailPaneData />
@@ -329,7 +342,7 @@ const AssetsBrowserPage = () => {
                 <div className="gap-2 flex py-4 text-xl">
                     <div
                         className=" text-blue-500 hover:text-blue-400 hover:cursor-pointer"
-                        onClick={() => setCurrentLocation("")}
+                        onClick={() => handleLocationNavigate("")}
                     >
                         Home
                     </div>
@@ -337,7 +350,7 @@ const AssetsBrowserPage = () => {
                         <RenderBreadcrumbs
                             arr={currentLocation.split("/")}
                             idx={0}
-                            setLocation={setCurrentLocation}
+                            setLocation={handleLocationNavigate}
                         />
                     }
                 </div>
@@ -371,7 +384,7 @@ const AssetsBrowserPage = () => {
                                     }}
                                     onDoubleClickCapture={() => {
                                         if (obj.isDir)
-                                            setCurrentLocation(obj.id);
+                                            handleLocationNavigate(obj.id);
                                         else
                                             window
                                                 .open(
