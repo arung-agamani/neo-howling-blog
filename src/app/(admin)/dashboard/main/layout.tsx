@@ -8,7 +8,7 @@ import React, {
     // useContext,
     // useRef,
 } from "react";
-import { useRouter /* , usePathname */ } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { toast } from "react-toastify";
@@ -47,6 +47,11 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import FolderIcon from "@mui/icons-material/Folder";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import SettingsIcon from "@mui/icons-material/Settings";
+import PersonIcon from "@mui/icons-material/Person";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
 
 // function FrozenRouter(props: PropsWithChildren<{}>) {
 //     const context = useContext(LayoutRouterContext);
@@ -117,34 +122,30 @@ const hierarchy: MenuItem[] = [
         ],
         icon: <PermMedia />,
     },
-    {
-        name: "test",
-        children: [],
-        icon: <Tag />,
-    },
     // {
-    //     name: "config",
-    //     children: [
-    //         {
-    //             name: "user",
-    //             children: [
-    //                 {
-    //                     name: "profile",
-    //                     children: [],
-    //                 },
-    //             ],
-    //         },
-    //         {
-    //             name: "global",
-    //             children: [
-    //                 {
-    //                     name: "profile",
-    //                     children: [],
-    //                 },
-    //             ],
-    //         },
-    //     ],
+    //     name: "test",
+    //     children: [],
+    //     icon: <Tag />,
     // },
+    {
+        name: "management",
+        link: "management",
+        children: [
+            {
+                name: "parameters",
+                link: "config",
+                icon: <CheckBoxIcon />,
+                children: [],
+            },
+            {
+                name: "users",
+                link: "users",
+                icon: <PersonIcon />,
+                children: [],
+            },
+        ],
+        icon: <SettingsIcon />,
+    },
 ];
 
 const TreeView: React.FC<{
@@ -152,7 +153,8 @@ const TreeView: React.FC<{
     parentLink: string;
     depth: number;
 }> = ({ data, parentLink, depth }) => {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
+    const router = useRouter();
     const handleClick = () => {
         setOpen(!open);
     };
@@ -160,21 +162,54 @@ const TreeView: React.FC<{
         <React.Fragment
             key={`${parentLink}/${data.link ? data.link : data.name}`}
         >
-            <Link href={`${parentLink}/${data.link ? data.link : data.name}`}>
-                {/* <div
-                    className={`mx-2 rounded-xl py-1 px-4 text-slate-800 font-bold ${
-                        depth % 2 != 0 ? "bg-slate-50" : "bg-slate-400"
-                    }`}
+            {data.children.length === 0 ? (
+                <Link
+                    href={`${parentLink}/${data.link ? data.link : data.name}`}
                 >
-                    <span>{data.name}</span>
-                </div> */}
-                <ListItem disablePadding>
+                    <ListItem disablePadding>
+                        <ListItemButton
+                            sx={{
+                                "& .MuiListItemIcon-root": {
+                                    color: "#947EB0",
+                                },
+                            }}
+                            onClick={handleClick}
+                        >
+                            {data.icon && (
+                                <ListItemIcon>{data.icon}</ListItemIcon>
+                            )}
+                            <ListItemText className="capitalize">
+                                {data.name}
+                            </ListItemText>
+                        </ListItemButton>
+                    </ListItem>
+                </Link>
+            ) : (
+                <ListItem
+                    disablePadding
+                    secondaryAction={
+                        <IconButton
+                            edge="end"
+                            color="secondary"
+                            onClick={handleClick}
+                        >
+                            {open ? <ExpandLess /> : <ExpandMore />}
+                        </IconButton>
+                    }
+                >
                     <ListItemButton
                         sx={{
                             "& .MuiListItemIcon-root": {
                                 color: "#947EB0",
                             },
                         }}
+                        onClick={() =>
+                            router.push(
+                                `${parentLink}/${
+                                    data.link ? data.link : data.name
+                                }`
+                            )
+                        }
                     >
                         {data.icon && <ListItemIcon>{data.icon}</ListItemIcon>}
                         <ListItemText className="capitalize">
@@ -182,7 +217,7 @@ const TreeView: React.FC<{
                         </ListItemText>
                     </ListItemButton>
                 </ListItem>
-            </Link>
+            )}
             {data.children && (
                 <Collapse in={open} unmountOnExit timeout="auto">
                     {data.children.map((child, index) => (
@@ -422,22 +457,6 @@ export default function PostLayout({
                     </List>
                     <Divider />
                     <List>
-                        <Link href={"/dashboard/main/config"}>
-                            <ListItem disablePadding>
-                                <ListItemButton
-                                    sx={{
-                                        "& .MuiListItemIcon-root": {
-                                            color: "#947EB0",
-                                        },
-                                    }}
-                                >
-                                    <ListItemIcon>
-                                        <Home />
-                                    </ListItemIcon>
-                                    <ListItemText>Configurations</ListItemText>
-                                </ListItemButton>
-                            </ListItem>
-                        </Link>
                         <Link href={"/"}>
                             <ListItem disablePadding>
                                 <ListItemButton
