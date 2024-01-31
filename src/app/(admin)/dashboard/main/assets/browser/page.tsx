@@ -35,6 +35,11 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import {
+    TGeneratePUTSignedURLParams,
+    TGeneratePUTSignedURLResponse,
+} from "@/types";
+import { AxiosResponse } from "axios";
 
 // TODO: implement renaming
 // FIXME: browser history state not keeping track relative directory
@@ -135,37 +140,49 @@ const AssetsBrowserPage = () => {
 
     const onDrop = useCallback(
         async (acceptedFiles: File[]) => {
-            for await (const file of acceptedFiles) {
-                const res = await ServerUpload(
-                    currentLocation,
-                    file.name,
-                    file.type
+            for (const file of acceptedFiles) {
+                const res = await axios.post<
+                    TGeneratePUTSignedURLParams,
+                    AxiosResponse<TGeneratePUTSignedURLResponse>
+                >(
+                    "/api/dashboardv2/assets/upload-raw",
+                    {
+                        prefix: currentLocation,
+                        filename: file.name,
+                        mime: file.type,
+                    },
+                    {
+                        validateStatus: () => true,
+                    }
                 );
-                console.log(res);
-                if (res.success) {
-                    axios
-                        .put(res.signedUrl, file, {
-                            headers: {
-                                "Content-Length": String(file.size),
-                                "Content-Type": file.type,
-                            },
-                        })
-                        .then((res) => {
-                            toast.success(
-                                `File ${file.name} has been successfully uploaded`
-                            );
-                        })
-                        .catch((err) => {
-                            toast.error(`Error when uploading ${file.name}`);
-                            console.error(err);
-                        });
+                if (res.data.success) {
+                    try {
+                        const uploadRes = await axios.put(
+                            res.data.signedUrl,
+                            file,
+                            {
+                                headers: {
+                                    "Content-Length": String(file.size),
+                                    "Content-Type": file.type,
+                                },
+                            }
+                        );
+                        toast.success(
+                            `File ${file.name} has been successfully uploaded`
+                        );
+                    } catch (error) {
+                        toast.error(`Error when uploading ${file.name}`);
+                        console.error(error);
+                    }
+                } else {
+                    toast.error(res.data.message);
                 }
             }
-            queryClient.refetchQueries({
+            queryClient.invalidateQueries({
                 queryKey: ["s3DirData", currentLocation],
             });
         },
-        [currentLocation, queryClient]
+        [queryClient, currentLocation]
     );
 
     const handleAssetDelete = async () => {
