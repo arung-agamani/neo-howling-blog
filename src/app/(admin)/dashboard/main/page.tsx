@@ -16,6 +16,7 @@ import PostItemSkeleton from "@/components/Dashboard/PostItemSkeleton";
 import Divider from "@mui/material/Divider";
 import Skeleton from "@mui/material/Skeleton";
 import { useAppSelector } from "@/stores/hooks";
+import { useQuery } from "@tanstack/react-query";
 
 interface UserCred {
     user: {
@@ -47,32 +48,15 @@ interface Stats {
 
 export default function Page() {
     const user = useAppSelector((state) => state.user);
-    const [stats, setStats] = useState<Stats>({
-        total: -1,
-        unpublished: -1,
-        recentPosts: [],
-        untaggedPosts: [],
-        tags: [],
+    const { data: stats, isSuccess } = useQuery({
+        queryKey: ["statsData"],
+        queryFn: async () => {
+            const { data } = await axios.get("/api/dashboardv2");
+            return data.stats as Stats;
+        },
+        staleTime: 60000,
     });
-    useEffect(() => {
-        (async () => {
-            try {
-                const { data } = await axios.get("/api/dashboardv2", {
-                    withCredentials: true,
-                });
-                setStats(data.stats);
-            } catch (error) {
-                if (error instanceof AxiosError) {
-                    const e = error as AxiosError<{ message: string }>;
-                    toast.error(
-                        e.response?.data.message ||
-                            "Error when fetching statistics"
-                    );
-                }
-            }
-        })();
-    }, []);
-    if (!user)
+    if (!isSuccess)
         return (
             <Grid
                 container

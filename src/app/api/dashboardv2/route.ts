@@ -9,6 +9,18 @@ export async function GET(req: NextRequest, res: NextResponse) {
         where: { isPublished: false },
     });
     const recentPosts = await prisma.posts.findMany({
+        where: {
+            OR: [
+                {
+                    deleted: {
+                        isSet: false,
+                    },
+                },
+                {
+                    deleted: false,
+                },
+            ],
+        },
         orderBy: {
             datePosted: "desc",
         },
@@ -35,12 +47,23 @@ export async function GET(req: NextRequest, res: NextResponse) {
             tags: {
                 isEmpty: true,
             },
+            OR: [
+                {
+                    deleted: {
+                        isSet: false,
+                    },
+                },
+                {
+                    deleted: false,
+                },
+            ],
         },
         select: {
             id: true,
             title: true,
             description: true,
         },
+        take: 5,
     });
     return NextResponse.json({
         message: "Dashboard page",

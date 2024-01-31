@@ -9,6 +9,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import ThemeRegistry from "./main/ThemeRegistry";
+import QueryProviders from "@/hooks/providers";
 
 export default function PostLayout({
     children,
@@ -36,7 +37,9 @@ export default function PostLayout({
                 <ToastContainer autoClose={3000} pauseOnFocusLoss={false} />
                 <SessionProvider>
                     <ThemeRegistry options={{ key: "mui" }}>
-                        <ReduxProvider>{children}</ReduxProvider>
+                        <QueryProviders>
+                            <ReduxProvider>{children}</ReduxProvider>
+                        </QueryProviders>
                     </ThemeRegistry>
                 </SessionProvider>
             </body>
