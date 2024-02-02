@@ -1,57 +1,49 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 "use client";
-import React, {
-    useEffect,
-    useState,
-    Suspense,
-    // PropsWithChildren,
-    // useContext,
-    // useRef,
-} from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
 
-import { toast } from "react-toastify";
 // import { motion, AnimatePresence } from "framer-motion";
 // import { LayoutRouterContext } from "next/dist/shared/lib/app-router-context";
 // import { Paper } from "@mui/material";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 
-import Drawer from "@mui/material/Drawer";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import Collapse from "@mui/material/Collapse";
-import Divider from "@mui/material/Divider";
 import AppBar from "@mui/material/AppBar";
 import Avatar from "@mui/material/Avatar";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+import Collapse from "@mui/material/Collapse";
+import Divider from "@mui/material/Divider";
+import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 
-import Home from "@mui/icons-material/Home";
-import Article from "@mui/icons-material/Article";
-import PostAdd from "@mui/icons-material/PostAdd";
-import Drafts from "@mui/icons-material/Drafts";
-import Delete from "@mui/icons-material/Delete";
-import Tag from "@mui/icons-material/Tag";
-import PermMedia from "@mui/icons-material/PermMedia";
-import MenuIcon from "@mui/icons-material/Menu";
 import UserIcon from "@mui/icons-material/AccountBox";
-import LogoutIcon from "@mui/icons-material/Logout";
-import FeedbackIcon from "@mui/icons-material/Feedback";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import FolderIcon from "@mui/icons-material/Folder";
+import Article from "@mui/icons-material/Article";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import Delete from "@mui/icons-material/Delete";
+import Drafts from "@mui/icons-material/Drafts";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
-import SettingsIcon from "@mui/icons-material/Settings";
+import FeedbackIcon from "@mui/icons-material/Feedback";
+import FolderIcon from "@mui/icons-material/Folder";
+import Home from "@mui/icons-material/Home";
+import LogoutIcon from "@mui/icons-material/Logout";
+import MenuIcon from "@mui/icons-material/Menu";
+import PermMedia from "@mui/icons-material/PermMedia";
 import PersonIcon from "@mui/icons-material/Person";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import PostAdd from "@mui/icons-material/PostAdd";
+import SettingsIcon from "@mui/icons-material/Settings";
+import Tag from "@mui/icons-material/Tag";
 
 // function FrozenRouter(props: PropsWithChildren<{}>) {
 //     const context = useContext(LayoutRouterContext);
@@ -64,13 +56,11 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 //     );
 // }
 
-import Loading from "./loading";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import { setUser, UserState } from "@/stores/slice/user";
-import { AxiosError } from "axios";
-import { useSession, signOut as nextSignout } from "next-auth/react";
 import axios from "@/utils/axios";
-import { Metadata } from "next";
+import { signOut as nextSignout, useSession } from "next-auth/react";
+import Loading from "./loading";
 
 type MenuItem = {
     name: string;

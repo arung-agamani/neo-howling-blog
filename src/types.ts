@@ -44,3 +44,24 @@ export const DirectoryListingItem = z.object({
 });
 
 export type TDirectoryListingItem = z.infer<typeof DirectoryListingItem>;
+
+export const RenameAssetParams = z.object({
+    source: z.string(),
+    target: z.string(),
+});
+
+export type TRenameAssetParams = z.infer<typeof RenameAssetParams>;
+
+export const RenameAssetResponse = z.discriminatedUnion("success", [
+    z.object({
+        success: z.literal(true),
+        source: z.string(),
+        target: z.string(),
+        message: z.string(),
+    }),
+    z.object({
+        success: z.literal(false),
+        message: z.string(),
+    }),
+]);
+export type TRenameAssetResponse = z.infer<typeof RenameAssetResponse>;

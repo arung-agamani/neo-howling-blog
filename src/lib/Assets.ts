@@ -1,21 +1,24 @@
 "use server";
 import { s3Client } from "@/utils/aws-client";
 import {
+    CopyObjectCommand,
     DeleteObjectCommand,
     PutObjectCommand,
     S3ServiceException,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+const BUCKET = process.env.BUCKET_NAME;
+
 export async function ServerUpload(
     prefix: string,
     fileName: string,
-    mime: string
+    mime: string,
 ) {
     console.log(`Incoming upload ${prefix}${fileName} with mimetype ${mime}`);
     try {
         const command = new PutObjectCommand({
-            Bucket: process.env.BUCKET_NAME,
+            Bucket: BUCKET,
             Key: `${prefix}${fileName}`,
             ContentType: mime,
         });
@@ -39,7 +42,7 @@ export async function ServerUpload(
 export async function ServerCreateDirectory(prefix: string, dirname: string) {
     try {
         const command = new PutObjectCommand({
-            Bucket: process.env.BUCKET_NAME,
+            Bucket: BUCKET,
             Key: `${prefix}${dirname}/`,
         });
         const mkdirRes = await s3Client.send(command);
@@ -61,6 +64,40 @@ export async function ServerCreateDirectory(prefix: string, dirname: string) {
     }
 }
 
+export async function ServerRenameAsset(source: string, target: string) {
+    try {
+        console.log(`BUCKET is ${BUCKET}\n${source}\n${target}`);
+        const copyCommand = new CopyObjectCommand({
+            Bucket: BUCKET,
+            CopySource: `${BUCKET}/${source}`,
+            Key: target,
+        });
+        await s3Client.send(copyCommand);
+        const deleteCommand = new DeleteObjectCommand({
+            Bucket: BUCKET,
+            Key: source,
+        });
+        await s3Client.send(deleteCommand);
+        return {
+            success: true,
+            source,
+            target,
+            message: `Object renamed from ${source} to ${target}`,
+        };
+    } catch (error) {
+        let message = "Unknown error";
+        if (error instanceof S3ServiceException) {
+            message = `Error on object renaming: ${error.name} - ${error.message}`;
+        }
+        console.log(message);
+        console.log(error);
+        return {
+            success: false,
+            message,
+        };
+    }
+}
+
 export async function ServerDeleteAsset(key: string) {
     if (!key)
         return {
@@ -69,7 +106,7 @@ export async function ServerDeleteAsset(key: string) {
         };
     try {
         const command = new DeleteObjectCommand({
-            Bucket: process.env.BUCKET_NAME,
+            Bucket: BUCKET,
             Key: key,
         });
         const deleteRes = await s3Client.send(command);

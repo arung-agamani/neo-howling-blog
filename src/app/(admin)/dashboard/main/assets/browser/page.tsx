@@ -1,6 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
+import {
+    ServerCreateDirectory,
+    ServerDeleteAsset,
+    ServerRenameAsset,
+} from "@/lib/Assets";
 import axios from "@/utils/axios";
+import FolderIcon from "@mui/icons-material/FolderOpen";
+import FileIcon from "@mui/icons-material/InsertDriveFile";
 import {
     Button,
     Dialog,
@@ -14,30 +21,27 @@ import {
     Toolbar,
     Typography,
 } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
-import FolderIcon from "@mui/icons-material/FolderOpen";
-import FileIcon from "@mui/icons-material/InsertDriveFile";
-import Drawer from "@mui/material/Drawer";
 import CircularProgress from "@mui/material/CircularProgress";
+import Drawer from "@mui/material/Drawer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import mime from "mime-types";
+import { usePathname, useSearchParams } from "next/navigation";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
-import { ServerCreateDirectory, ServerDeleteAsset } from "@/lib/Assets";
-import { usePathname, useSearchParams } from "next/navigation";
 
-import DeleteIcon from "@mui/icons-material/Delete";
-import RenameIcon from "@mui/icons-material/DriveFileRenameOutline";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import { useForm, Controller, SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
     TDirectoryListingItem,
     TGeneratePUTSignedURLParams,
     TGeneratePUTSignedURLResponse,
 } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+import DeleteIcon from "@mui/icons-material/Delete";
+import RenameIcon from "@mui/icons-material/DriveFileRenameOutline";
 import { AxiosResponse } from "axios";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { z } from "zod";
 
 const AssetBrowserDialogPayload = z.discriminatedUnion("op", [
     z.object({
@@ -46,7 +50,10 @@ const AssetBrowserDialogPayload = z.discriminatedUnion("op", [
     }),
     z.object({
         op: z.literal("rename"),
-        targetName: z.string().nonempty(),
+        targetName: z
+            .string()
+            .nonempty()
+            .refine((str) => !str.includes("/"), "No slashes allowed"),
     }),
 ]);
 type TAssetBrowserDialogPayload = z.infer<typeof AssetBrowserDialogPayload>;
@@ -57,7 +64,7 @@ const AssetBrowserDialogFields = z.object({
         z.object({
             name: z.string().nonempty(),
             label: z.string(),
-        })
+        }),
     ),
     op: z.string(),
 });
@@ -79,7 +86,7 @@ const RenderBreadcrumbs: React.FC<{
                         arr
                             .slice(0, idx + 1)
                             .join("/")
-                            .concat("/")
+                            .concat("/"),
                     )
                 }
             >
@@ -100,7 +107,7 @@ const AssetsBrowserPage = () => {
     const queryClient = useQueryClient();
     const cd = searchParams?.get("cd");
     const [currentLocation, setCurrentLocation] = useState(
-        (Array.isArray(cd) ? cd[0] : cd) || ""
+        (Array.isArray(cd) ? cd[0] : cd) || "",
     );
     const handleLocationNavigate = (loc: string) => {
         const urlParams = new URLSearchParams(searchParams.toString());
@@ -108,16 +115,35 @@ const AssetsBrowserPage = () => {
         window.history.pushState(
             null,
             "",
-            `${pathname}?${urlParams.toString()}`
+            `${pathname}?${urlParams.toString()}`,
         );
         setCurrentLocation(loc);
     };
     const [selectedId, setSelectedId] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { handleSubmit, reset, control, setValue } =
+    const { handleSubmit, reset, control, setValue, getFieldState } =
         useForm<TAssetBrowserDialogPayload>({
             resolver: zodResolver(AssetBrowserDialogPayload),
         });
+
+    // Directory Navigation
+    const fetchDirectoryListing = async () => {
+        const res = await axios.get("/api/dashboardv2/assets/list", {
+            params: {
+                prefix: !(currentLocation === "" || currentLocation === "/")
+                    ? currentLocation
+                    : undefined,
+            },
+        });
+
+        return res.data as TDirectoryListingItem[];
+    };
+    const { data: objects, isSuccess } = useQuery({
+        queryKey: ["s3DirData", currentLocation],
+        queryFn: fetchDirectoryListing,
+        staleTime: 60000,
+    });
+
     // All-purpose Dialog
     const [dialogDisplayData, setDialogDisplayData] =
         useState<TAssetBrowserDialogFields>({
@@ -156,10 +182,6 @@ const AssetsBrowserPage = () => {
                     name: "targetName",
                     label: "Desired Name",
                 },
-                {
-                    name: "test",
-                    label: "test",
-                },
             ],
             op: "rename",
         });
@@ -173,7 +195,7 @@ const AssetsBrowserPage = () => {
         if (data.op === "createFolder") {
             const res = await ServerCreateDirectory(
                 currentLocation,
-                data.folderName
+                data.folderName,
             );
             if (!res.success) {
                 toast.error(res.message);
@@ -181,8 +203,17 @@ const AssetsBrowserPage = () => {
                 toast.success(res.message);
             }
         } else {
-            // TODO: implement rename here
-            toast.warn("Rename is currently unimplemented");
+            const res = await ServerRenameAsset(
+                objects?.find((x) => x.id === selectedId)?.id!,
+                `${currentLocation}${data.targetName}`,
+            );
+            if (res.success) {
+                toast.success(res.message);
+            } else {
+                toast.error(res.message);
+            }
+            setSidebarOpen(false);
+            // toast.warn("Rename is currently unimplemented");
         }
         handleDialogClose();
         reset();
@@ -190,24 +221,6 @@ const AssetsBrowserPage = () => {
             queryKey: ["s3DirData", currentLocation],
         });
     };
-
-    // Directory Navigation
-    const fetchDirectoryListing = async () => {
-        const res = await axios.get("/api/dashboardv2/assets/list", {
-            params: {
-                prefix: !(currentLocation === "" || currentLocation === "/")
-                    ? currentLocation
-                    : undefined,
-            },
-        });
-
-        return res.data as TDirectoryListingItem[];
-    };
-    const { data: objects, isSuccess } = useQuery({
-        queryKey: ["s3DirData", currentLocation],
-        queryFn: fetchDirectoryListing,
-        staleTime: 60000,
-    });
 
     const onDrop = useCallback(
         async (acceptedFiles: File[]) => {
@@ -224,7 +237,7 @@ const AssetsBrowserPage = () => {
                     },
                     {
                         validateStatus: () => true,
-                    }
+                    },
                 );
                 if (res.data.success) {
                     try {
@@ -236,10 +249,10 @@ const AssetsBrowserPage = () => {
                                     "Content-Length": String(file.size),
                                     "Content-Type": file.type,
                                 },
-                            }
+                            },
                         );
                         toast.success(
-                            `File ${file.name} has been successfully uploaded`
+                            `File ${file.name} has been successfully uploaded`,
                         );
                     } catch (error) {
                         toast.error(`Error when uploading ${file.name}`);
@@ -253,7 +266,7 @@ const AssetsBrowserPage = () => {
                 queryKey: ["s3DirData", currentLocation],
             });
         },
-        [queryClient, currentLocation]
+        [queryClient, currentLocation],
     );
 
     const handleAssetDelete = async () => {
@@ -349,7 +362,7 @@ const AssetsBrowserPage = () => {
                             rules={{ required: true }}
                             shouldUnregister={true}
                             defaultValue={""}
-                            render={({ field }) => (
+                            render={({ field, fieldState }) => (
                                 <TextField
                                     {...field}
                                     autoFocus
@@ -358,6 +371,8 @@ const AssetsBrowserPage = () => {
                                     fullWidth
                                     variant="standard"
                                     label={dialogField.label}
+                                    error={fieldState.error !== undefined}
+                                    helperText={fieldState.error?.message || ""}
                                 />
                             )}
                         />
@@ -463,7 +478,7 @@ const AssetsBrowserPage = () => {
                                             window
                                                 .open(
                                                     `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${obj.id}`,
-                                                    "_blank"
+                                                    "_blank",
                                                 )
                                                 ?.focus();
                                     }}
