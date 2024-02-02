@@ -29,7 +29,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RenameIcon from "@mui/icons-material/DriveFileRenameOutline";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -39,7 +39,29 @@ import {
 } from "@/types";
 import { AxiosResponse } from "axios";
 
-// TODO: implement renaming
+const AssetBrowserDialogPayload = z.discriminatedUnion("op", [
+    z.object({
+        op: z.literal("createFolder"),
+        folderName: z.string(),
+    }),
+    z.object({
+        op: z.literal("rename"),
+        targetName: z.string().nonempty(),
+    }),
+]);
+type TAssetBrowserDialogPayload = z.infer<typeof AssetBrowserDialogPayload>;
+const AssetBrowserDialogFields = z.object({
+    title: z.string(),
+    desc: z.string(),
+    fields: z.array(
+        z.object({
+            name: z.string().nonempty(),
+            label: z.string(),
+        })
+    ),
+    op: z.string(),
+});
+type TAssetBrowserDialogFields = z.infer<typeof AssetBrowserDialogFields>;
 
 const RenderBreadcrumbs: React.FC<{
     arr: string[];
@@ -92,29 +114,77 @@ const AssetsBrowserPage = () => {
     };
     const [selectedId, setSelectedId] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    // New Folder Dialog
-    const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
-    const handleNewFolderDialogClose = () => {
-        setNewFolderDialogOpen(false);
+    const { handleSubmit, reset, control, setValue } =
+        useForm<TAssetBrowserDialogPayload>({
+            resolver: zodResolver(AssetBrowserDialogPayload),
+        });
+    // All-purpose Dialog
+    const [dialogDisplayData, setDialogDisplayData] =
+        useState<TAssetBrowserDialogFields>({
+            title: "",
+            desc: "",
+            fields: [],
+            op: "",
+        });
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const handleDialogClose = () => {
+        setDialogDisplayData({ title: "", desc: "", fields: [], op: "" });
+        setDialogOpen(false);
+        reset();
     };
-    const { handleSubmit, reset, control } = useForm({
-        resolver: zodResolver(z.object({ folderName: z.string().min(1) })),
-        defaultValues: { folderName: "" },
-    });
-    const handleNewFolderDialogSubmit = async (data: {
-        folderName: string;
-    }) => {
-        console.log(data);
-        const res = await ServerCreateDirectory(
-            currentLocation,
-            data.folderName
-        );
-        if (!res.success) {
-            toast.error(res.message);
+    // New Folder Hooks
+    const handleNewFolderDialogOpen = () => {
+        setDialogDisplayData({
+            title: "Create Folder",
+            desc: `You are about to create a new folder in current
+        location, ${currentLocation || "Home"}. Please enter the
+        folder name.`,
+            fields: [{ name: "folderName", label: "Folder Name" }],
+            op: "createFolder",
+        });
+        setValue("op", "createFolder");
+        setDialogOpen(true);
+    };
+
+    // Rename Object Hooks
+    const handleRenameDialogOpen = () => {
+        setDialogDisplayData({
+            title: "Rename Object",
+            desc: `You're about to rename the {current object you're selecting}. Please enter the desired name.`,
+            fields: [
+                {
+                    name: "targetName",
+                    label: "Desired Name",
+                },
+                {
+                    name: "test",
+                    label: "test",
+                },
+            ],
+            op: "rename",
+        });
+        setValue("op", "rename");
+        setDialogOpen(true);
+    };
+
+    const handleDialogSubmit: SubmitHandler<
+        TAssetBrowserDialogPayload
+    > = async (data: TAssetBrowserDialogPayload) => {
+        if (data.op === "createFolder") {
+            const res = await ServerCreateDirectory(
+                currentLocation,
+                data.folderName
+            );
+            if (!res.success) {
+                toast.error(res.message);
+            } else {
+                toast.success(res.message);
+            }
         } else {
-            toast.success(res.message);
+            // TODO: implement rename here
+            toast.warn("Rename is currently unimplemented");
         }
-        setNewFolderDialogOpen(false);
+        handleDialogClose();
         reset();
         queryClient.invalidateQueries({
             queryKey: ["s3DirData", currentLocation],
@@ -239,7 +309,12 @@ const AssetsBrowserPage = () => {
                     >
                         <DeleteIcon />
                     </IconButton>
-                    <IconButton size="small">
+                    <IconButton
+                        size="small"
+                        onClick={() => {
+                            handleRenameDialogOpen();
+                        }}
+                    >
                         <RenameIcon />
                     </IconButton>
                 </div>
@@ -254,39 +329,45 @@ const AssetsBrowserPage = () => {
     return (
         <>
             <Dialog
-                open={newFolderDialogOpen}
-                onClose={handleNewFolderDialogClose}
+                open={dialogOpen}
+                onClose={handleDialogClose}
                 PaperProps={{
                     component: "form",
-                    onSubmit: handleSubmit(handleNewFolderDialogSubmit),
+                    onSubmit: handleSubmit(handleDialogSubmit),
                 }}
             >
-                <DialogTitle>Create Folder</DialogTitle>
+                <DialogTitle>{dialogDisplayData.title}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        You are about to create a new folder in current
-                        location, {currentLocation || "Home"}. Please enter the
-                        folder name.
+                        {dialogDisplayData.desc}
                     </DialogContentText>
-                    <Controller
-                        name="folderName"
-                        control={control}
-                        rules={{ required: true }}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                autoFocus
-                                required
-                                margin="dense"
-                                fullWidth
-                                variant="standard"
-                            />
-                        )}
-                    />
+                    {dialogDisplayData.fields.map((dialogField) => (
+                        <Controller
+                            key={dialogField.name}
+                            name={dialogField.name as any}
+                            control={control}
+                            rules={{ required: true }}
+                            shouldUnregister={true}
+                            defaultValue={""}
+                            render={({ field }) => (
+                                <TextField
+                                    {...field}
+                                    autoFocus
+                                    required
+                                    margin="dense"
+                                    fullWidth
+                                    variant="standard"
+                                    label={dialogField.label}
+                                />
+                            )}
+                        />
+                    ))}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleNewFolderDialogClose}>Cancel</Button>
-                    <Button type="submit">Create</Button>
+                    <Button onClick={handleDialogClose} type="button">
+                        Cancel
+                    </Button>
+                    <Button type="submit">Submit</Button>
                 </DialogActions>
             </Dialog>
             <Drawer
@@ -352,7 +433,7 @@ const AssetsBrowserPage = () => {
                         startIcon={<CreateNewFolderIcon />}
                         variant="outlined"
                         onClick={() => {
-                            setNewFolderDialogOpen(true);
+                            handleNewFolderDialogOpen();
                         }}
                     >
                         New Folder
