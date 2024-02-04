@@ -109,6 +109,12 @@ const hierarchy: MenuItem[] = [
                 link: "browser",
                 icon: <FolderIcon />,
             },
+            {
+                name: "OG Image",
+                children: [],
+                link: "ogimage",
+                icon: <FolderIcon />,
+            },
         ],
         icon: <PermMedia />,
     },
@@ -197,7 +203,7 @@ const TreeView: React.FC<{
                             router.push(
                                 `${parentLink}/${
                                     data.link ? data.link : data.name
-                                }`
+                                }`,
                             )
                         }
                     >
