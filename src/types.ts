@@ -1,3 +1,4 @@
+import { isAlpha } from "validator";
 import { z } from "zod";
 
 export const DeleteAssetRequestParams = z.object({
@@ -65,3 +66,58 @@ export const RenameAssetResponse = z.discriminatedUnion("success", [
     }),
 ]);
 export type TRenameAssetResponse = z.infer<typeof RenameAssetResponse>;
+
+export const LoginParams = z.object({
+    username: z
+        .string()
+        .min(6)
+        .max(32)
+        .refine((val) => isAlpha(val), "Username should only be alphabet"),
+    password: z
+        .string()
+        .regex(
+            new RegExp("[A-Za-z0-9@]{8,32}"),
+            "Password should only be alphanumeric and the following symbols: @",
+        )
+        .max(32, "Maximum length is 32 characters")
+        .min(8, "Minimum length is 8 characters"),
+});
+
+export type TLoginParams = z.infer<typeof LoginParams>;
+
+export const SignupRequestBody = z
+    .object({
+        username: z.string().min(6).max(32),
+        password: z
+            .string()
+            .regex(
+                new RegExp("[A-Za-z0-9@]{8,32}"),
+                "Password should only be alphanumeric and the following symbols: @",
+            )
+            .max(32, "Maximum length is 32 characters")
+            .min(8, "Minimum length is 8 characters"),
+        confirmPassword: z
+            .string()
+            .regex(new RegExp("[A-Za-z0-9@]{8,32}"))
+            .max(32, "Maximum length is 32 characters")
+            .min(8, "Minimum length is 8 characters"),
+    })
+    .superRefine((val, ctx) => {
+        if (val.password !== val.confirmPassword) {
+            ctx.addIssue({
+                code: "custom",
+                message: "Passwords don't match",
+                path: ["confirmPassword"],
+            });
+        }
+
+        if (!isAlpha(val.username)) {
+            ctx.addIssue({
+                code: "custom",
+                message: "Username should only be alphabet",
+                path: ["username"],
+            });
+        }
+    });
+
+export type TSignupRequestBody = z.infer<typeof SignupRequestBody>;

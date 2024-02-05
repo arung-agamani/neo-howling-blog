@@ -1,47 +1,97 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useForm, Controller } from "react-hook-form";
 
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import CircularProgress from "@mui/material/CircularProgress";
 
-import "./shadow.css";
+import { LoginParams, SignupRequestBody } from "@/types";
 import axios from "@/utils/axios";
 import { AxiosError } from "axios";
+import "./shadow.css";
 
 export default function Login() {
     const router = useRouter();
     const [mode, setMode] = useState<"login" | "signup">("login");
     const { status } = useSession();
-    const { handleSubmit, control, reset } = useForm();
+    const { handleSubmit, control, reset, setError } = useForm();
     const [loading, isLoading] = useState(false);
     const submit = async (data: any) => {
         isLoading(true);
         if (mode === "login") {
+            const validate = LoginParams.safeParse(data);
+            if (!validate.success) {
+                toast.error("Validation error.");
+                console.log(validate.error.issues);
+                validate.error.issues.forEach((issue) => {
+                    setError(issue.path.join("."), {
+                        type: "validate",
+                        message: issue.message,
+                    });
+                });
+                isLoading(false);
+                return;
+            }
             const res = await signIn("credentials", {
-                username: data.username,
-                password: data.password,
+                username: validate.data.username,
+                password: validate.data.password,
                 redirect: false,
             });
-            reset({
-                username: "",
-                password: "",
-            });
-            if (res && res.ok) router.push("/dashboard/main");
-            else toast.error("Unsuccessful login");
+            // reset({
+            //     username: "",
+            //     password: "",
+            // });
+            if (res) {
+                if (res.ok) router.push("/dashboard/main");
+                else {
+                    switch (res.error) {
+                        case "CredentialsSignin":
+                            // `authorize` callback returns null, means no user found with given creds
+                            // TODO: Try to contribute for docs in NextAuth.js repo
+                            // TODO: Additionally try to define typings as res.error is string
+                            toast.error("Invalid credentials");
+                            setError("username", {
+                                type: "validate",
+                                message:
+                                    "Invalid credentials. Please check your username",
+                            });
+                            setError("password", {
+                                type: "validate",
+                                message:
+                                    "Invalid credentails. Please check your password",
+                            });
+                            break;
+                        default:
+                            toast.error(
+                                "Unhandled SignIn-page error.\nPlease check again your username and password",
+                            );
+                            break;
+                    }
+                }
+            }
             isLoading(false);
         } else {
             try {
+                const validate = SignupRequestBody.safeParse(data);
+                if (!validate.success) {
+                    toast.error("Validation error.");
+                    console.log(validate.error.issues);
+                    // setError("username", { type: "validate", message: validate.error.})
+
+                    isLoading(false);
+                    return;
+                }
                 const res = await axios.post("/api/signupv2", {
-                    username: data.username,
-                    password: data.password,
+                    username: validate.data.username,
+                    password: validate.data.password,
+                    confirmPassword: validate.data.confirmPassword,
                 });
                 isLoading(false);
                 toast.success("User created! Return to login please");
@@ -107,12 +157,19 @@ export default function Login() {
                                         name="username"
                                         control={control}
                                         rules={{ required: true }}
-                                        render={({ field }) => (
+                                        render={({ field, fieldState }) => (
                                             <TextField
                                                 label="Your Dignity"
                                                 type="text"
                                                 variant="filled"
                                                 className="w-full"
+                                                error={
+                                                    fieldState.error !==
+                                                    undefined
+                                                }
+                                                helperText={
+                                                    fieldState.error?.message
+                                                }
                                                 {...field}
                                             />
                                         )}
@@ -123,12 +180,19 @@ export default function Login() {
                                         name="password"
                                         control={control}
                                         rules={{ required: true }}
-                                        render={({ field }) => (
+                                        render={({ field, fieldState }) => (
                                             <TextField
                                                 label="Your Soul"
                                                 type="password"
                                                 variant="filled"
                                                 className="w-full"
+                                                error={
+                                                    fieldState.error !==
+                                                    undefined
+                                                }
+                                                helperText={
+                                                    fieldState.error?.message
+                                                }
                                                 {...field}
                                             />
                                         )}
@@ -156,12 +220,19 @@ export default function Login() {
                                         name="username"
                                         control={control}
                                         rules={{ required: true }}
-                                        render={({ field }) => (
+                                        render={({ field, fieldState }) => (
                                             <TextField
-                                                label="あなたの魂"
+                                                label="Username"
                                                 type="text"
                                                 variant="filled"
                                                 className="w-full"
+                                                error={
+                                                    fieldState.error !==
+                                                    undefined
+                                                }
+                                                helperText={
+                                                    fieldState.error?.message
+                                                }
                                                 {...field}
                                             />
                                         )}
@@ -172,12 +243,42 @@ export default function Login() {
                                         name="password"
                                         control={control}
                                         rules={{ required: true }}
-                                        render={({ field }) => (
+                                        render={({ field, fieldState }) => (
                                             <TextField
-                                                label="あなたの知識"
+                                                label="Password"
                                                 type="password"
                                                 variant="filled"
                                                 className="w-full"
+                                                error={
+                                                    fieldState.error !==
+                                                    undefined
+                                                }
+                                                helperText={
+                                                    fieldState.error?.message
+                                                }
+                                                {...field}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                                <div className="bg-white">
+                                    <Controller
+                                        name="confirmPassword"
+                                        control={control}
+                                        rules={{ required: true }}
+                                        render={({ field, fieldState }) => (
+                                            <TextField
+                                                label="Confirm Password"
+                                                type="password"
+                                                variant="filled"
+                                                className="w-full"
+                                                error={
+                                                    fieldState.error !==
+                                                    undefined
+                                                }
+                                                helperText={
+                                                    fieldState.error?.message
+                                                }
                                                 {...field}
                                             />
                                         )}
@@ -191,6 +292,7 @@ export default function Login() {
                                     <span
                                         className=" text-blue-500 hover:text-blue-300 cursor-pointer"
                                         onClick={() => {
+                                            reset();
                                             setMode("login");
                                         }}
                                     >
