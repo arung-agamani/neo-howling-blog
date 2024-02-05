@@ -28,22 +28,12 @@ import Typography from "@mui/material/Typography";
 
 import UserIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import Article from "@mui/icons-material/Article";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import Delete from "@mui/icons-material/Delete";
-import Drafts from "@mui/icons-material/Drafts";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import FeedbackIcon from "@mui/icons-material/Feedback";
-import FolderIcon from "@mui/icons-material/Folder";
 import Home from "@mui/icons-material/Home";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
-import PermMedia from "@mui/icons-material/PermMedia";
-import PersonIcon from "@mui/icons-material/Person";
-import PostAdd from "@mui/icons-material/PostAdd";
-import SettingsIcon from "@mui/icons-material/Settings";
-import Tag from "@mui/icons-material/Tag";
 
 // function FrozenRouter(props: PropsWithChildren<{}>) {
 //     const context = useContext(LayoutRouterContext);
@@ -58,102 +48,44 @@ import Tag from "@mui/icons-material/Tag";
 
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import { setUser, UserState } from "@/stores/slice/user";
+import { TUserRoles } from "@/types";
 import axios from "@/utils/axios";
 import { signOut as nextSignout, useSession } from "next-auth/react";
 import Loading from "./loading";
+import { hierarchy, TMenuItem } from "./menus";
+import { Role, roles } from "./roles";
 
-type MenuItem = {
-    name: string;
-    children: MenuItem[];
-    link?: string;
-    icon?: any;
-};
-
-const hierarchy: MenuItem[] = [
-    {
-        name: "posts",
-        children: [
-            {
-                name: "create",
-                children: [],
-                link: "edit",
-                icon: <PostAdd />,
-            },
-            {
-                name: "draft",
-                children: [],
-                link: "draft",
-                icon: <Drafts />,
-            },
-            {
-                name: "trash",
-                children: [],
-                link: "trash",
-                icon: <Delete />,
-            },
-        ],
-        icon: <Article />,
-    },
-    {
-        name: "tags",
-        children: [],
-        link: "tags",
-        icon: <Tag />,
-    },
-    {
-        name: "assets",
-        children: [
-            {
-                name: "Browser",
-                children: [],
-                link: "browser",
-                icon: <FolderIcon />,
-            },
-            {
-                name: "OG Image",
-                children: [],
-                link: "ogimage",
-                icon: <FolderIcon />,
-            },
-        ],
-        icon: <PermMedia />,
-    },
-    // {
-    //     name: "test",
-    //     children: [],
-    //     icon: <Tag />,
-    // },
-    {
-        name: "management",
-        link: "management",
-        children: [
-            {
-                name: "parameters",
-                link: "config",
-                icon: <CheckBoxIcon />,
-                children: [],
-            },
-            {
-                name: "users",
-                link: "users",
-                icon: <PersonIcon />,
-                children: [],
-            },
-        ],
-        icon: <SettingsIcon />,
-    },
-];
-
+const dp: Record<string, any[]> = {};
+function roleBfs(start: Role, searchItem: TUserRoles) {
+    if (dp[start.name]) {
+        if (dp[start.name].includes(searchItem)) return true;
+        return false;
+    }
+    const queue = [start];
+    const result = [];
+    while (queue.length) {
+        const current = queue.shift();
+        result.push(current?.name);
+        if (current?.children.length) {
+            queue.push(...current.children);
+        }
+    }
+    dp[start.name] = [...result];
+    if (result.includes(searchItem)) return true;
+    return false;
+}
 const TreeView: React.FC<{
-    data: MenuItem;
+    data: TMenuItem;
     parentLink: string;
     depth: number;
-}> = ({ data, parentLink, depth }) => {
+    role: Role;
+}> = ({ data, parentLink, depth, role }) => {
     const [open, setOpen] = useState(false);
     const router = useRouter();
     const handleClick = () => {
         setOpen(!open);
     };
+    if (!roleBfs(role, data.role.name)) return null;
     return (
         <React.Fragment
             key={`${parentLink}/${data.link ? data.link : data.name}`}
@@ -229,6 +161,7 @@ const TreeView: React.FC<{
                                     data.link ? data.link : data.name
                                 }`}
                                 depth={depth + 1}
+                                role={role}
                             />
                         </div>
                     ))}
@@ -447,6 +380,7 @@ export default function PostLayout({
                                     data={menu}
                                     parentLink={"/dashboard/main"}
                                     depth={1}
+                                    role={roles[session?.user?.role || "guest"]}
                                 />
                             </div>
                         ))}

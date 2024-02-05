@@ -1,8 +1,9 @@
+import { TUserRoles } from "@/types";
 import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
     interface User {
-        role?: string;
+        role?: TUserRoles;
     }
 
     interface Session extends DefaultSession {

@@ -93,13 +93,5 @@ describe("SignupRequestBody Validation Test", () => {
         };
         const validate = SignupRequestBody.safeParse(payload);
         expect(validate.success).toEqual(false);
-        if (!validate.success) {
-            console.log(
-                `validate.error.issues are ${validate.error.issues.length} length`,
-            );
-            validate.error.issues.forEach((issue) => {
-                console.log(issue.message, issue.path);
-            });
-        }
     });
 });

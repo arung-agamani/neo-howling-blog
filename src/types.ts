@@ -121,3 +121,6 @@ export const SignupRequestBody = z
     });
 
 export type TSignupRequestBody = z.infer<typeof SignupRequestBody>;
+
+export const UserRoles = z.enum(["user", "admin", "editor", "guest"]);
+export type TUserRoles = z.infer<typeof UserRoles>;
