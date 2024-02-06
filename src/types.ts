@@ -124,3 +124,30 @@ export type TSignupRequestBody = z.infer<typeof SignupRequestBody>;
 
 export const UserRoles = z.enum(["user", "admin", "editor", "guest"]);
 export type TUserRoles = z.infer<typeof UserRoles>;
+
+export const UserSchema = z.object({
+    username: z.string(),
+    email: z.string(),
+    role: z.string(),
+    dateCreated: z.date(),
+    lastAccess: z.date(),
+});
+
+export type TUserSchema = z.infer<typeof UserSchema>;
+
+export const UpdateUserPayload = z.object({
+    username: z.string(),
+    role: UserRoles,
+});
+export type TUpdateUserPayload = z.infer<typeof UpdateUserPayload>;
+export const UpdateUserResponse = z.discriminatedUnion("success", [
+    z.object({
+        success: z.literal(true),
+        updated: z.number(),
+    }),
+    z.object({
+        success: z.literal(false),
+        message: z.string(),
+    }),
+]);
+export type TUpdateUserResponse = z.infer<typeof UpdateUserResponse>;

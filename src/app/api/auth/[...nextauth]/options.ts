@@ -1,7 +1,8 @@
 import { UserByUsername } from "@/lib/User";
+import { TUserRoles } from "@/types";
+import bcrypt from "bcrypt";
 import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcrypt";
 export const authOptions: AuthOptions = {
     providers: [
         CredentialsProvider({
@@ -23,13 +24,13 @@ export const authOptions: AuthOptions = {
                 if (!user) return null;
                 const match = bcrypt.compareSync(
                     credentials.password,
-                    user.password
+                    user.password,
                 );
                 if (!match) return null;
                 return {
                     ...user,
                     password: null,
-                    role: user.role,
+                    role: user.role as TUserRoles,
                 };
             },
         }),
@@ -42,7 +43,7 @@ export const authOptions: AuthOptions = {
             return token;
         },
         async session({ session, token }) {
-            if (session?.user) session.user.role = token.role;
+            if (session?.user) session.user.role = token.role as TUserRoles;
             return session;
         },
     },
