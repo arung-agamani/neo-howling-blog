@@ -1,4 +1,13 @@
-import { LoginParams, SignupRequestBody } from "./types";
+import {
+    LoginParams,
+    SignupRequestBody,
+    TUpdateUserPayload,
+    TUpdateUserResponse,
+    TUserSchema,
+    UpdateUserPayload,
+    UpdateUserResponse,
+    UserSchema,
+} from "./types";
 
 describe("LoginParams Validation Test", () => {
     it("Passes Validation on Valid Payload", () => {
@@ -92,6 +101,91 @@ describe("SignupRequestBody Validation Test", () => {
                 "ABCD0123@##$$^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^z",
         };
         const validate = SignupRequestBody.safeParse(payload);
+        expect(validate.success).toEqual(false);
+    });
+});
+
+describe("UserSchema Validation", () => {
+    it("Passes validation on valid input", () => {
+        const payload: TUserSchema = {
+            username: "awooawoo",
+            email: "awoo@howlingmoon.dev",
+            role: "guest",
+            dateCreated: new Date(),
+            lastAccess: new Date(),
+        };
+        const validate = UserSchema.safeParse(payload);
+        expect(validate.success).toEqual(true);
+    });
+
+    it("Failed on invalid input", () => {
+        const payload: TUserSchema = {
+            username: "awo12", // username shouldn't has numbers | length smaller than 6
+            email: "haha", // not an email
+            role: "anjay" as any, // not a member of valid roles
+            dateCreated: "this date" as any as Date, // not a valid date object
+            lastAccess: "that date" as any as Date, // not a valid date object
+        };
+        const validate = UserSchema.safeParse(payload);
+        expect(validate.success).toEqual(false);
+        if (!validate.success) {
+            expect(validate.error.issues.length).toEqual(6);
+        }
+    });
+});
+
+describe("UpdateUserPayload Validation", () => {
+    it("Passes validation on valid payload", () => {
+        const payload: TUpdateUserPayload = {
+            username: "aweooaweo",
+            role: "user",
+        };
+        const validate = UpdateUserPayload.safeParse(payload);
+        expect(validate.success).toEqual(true);
+    });
+
+    it("Failed on invalid payload", () => {
+        const payload: TUpdateUserPayload = {
+            username: "aweo1", // no numbers | min 6 (has 5)
+            role: "haha" as any, // invalid member
+        };
+        const validate = UpdateUserPayload.safeParse(payload);
+        expect(validate.success).toEqual(false);
+        if (!validate.success) {
+            expect(validate.error.issues.length).toEqual(3);
+        }
+    });
+});
+
+describe("UpdateUserResponse Validation", () => {
+    it("Passes validation on valid payload on both scenario", () => {
+        const payload1: TUpdateUserResponse = {
+            success: true,
+            updated: 1,
+        };
+        let validate = UpdateUserResponse.safeParse(payload1);
+        expect(validate.success).toEqual(true);
+        const payload2: TUpdateUserResponse = {
+            success: false,
+            message: "anjay",
+        };
+        validate = UpdateUserResponse.safeParse(payload2);
+        expect(validate.success).toEqual(true);
+    });
+
+    it("Failed on malformed shape - Success but no updated field", () => {
+        const payload: any = {
+            success: true,
+            message: "Lulus",
+        };
+        let validate = UpdateUserResponse.safeParse(payload);
+        expect(validate.success).toEqual(false);
+    });
+    it("Failed on malformed shape - Failed but no message field", () => {
+        const payload: any = {
+            success: false,
+        };
+        let validate = UpdateUserResponse.safeParse(payload);
         expect(validate.success).toEqual(false);
     });
 });

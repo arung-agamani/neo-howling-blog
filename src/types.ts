@@ -126,9 +126,13 @@ export const UserRoles = z.enum(["user", "admin", "editor", "guest"]);
 export type TUserRoles = z.infer<typeof UserRoles>;
 
 export const UserSchema = z.object({
-    username: z.string(),
-    email: z.string(),
-    role: z.string(),
+    username: z
+        .string()
+        .min(6)
+        .max(32)
+        .refine((val) => isAlpha(val), "Username should only be alphabet"),
+    email: z.string().email(),
+    role: UserRoles,
     dateCreated: z.date(),
     lastAccess: z.date(),
 });
@@ -136,7 +140,11 @@ export const UserSchema = z.object({
 export type TUserSchema = z.infer<typeof UserSchema>;
 
 export const UpdateUserPayload = z.object({
-    username: z.string(),
+    username: z
+        .string()
+        .min(6)
+        .max(32)
+        .refine((val) => isAlpha(val), "Username should only be alphabet"),
     role: UserRoles,
 });
 export type TUpdateUserPayload = z.infer<typeof UpdateUserPayload>;
