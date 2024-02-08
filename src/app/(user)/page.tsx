@@ -2,9 +2,9 @@
 // "use client";
 import Link from "next/link";
 
-import prisma from "@/utils/prisma";
-import ScrollTop from "@/components/ScrollTop";
 import FloatingContainer from "@/components/FloatingContainer";
+import ScrollTop from "@/components/ScrollTop";
+import prisma from "@/utils/prisma";
 import { headers } from "next/headers";
 
 export default async function Page() {
@@ -29,7 +29,7 @@ export default async function Page() {
     });
 
     return (
-        <div className=" bg-slate-600 dark:bg-gray-900 pt-2 flex flex-col justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16">
+        <div className=" bg-slate-600 dark:bg-gray-900 pt-2 flex flex-col justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16 transition-colors duration-100">
             {/* <p className="max-w-5xl text-xl text-center mx-auto my-2 py-8 px-4 border border-gray-600 rounded">
                 Welcome to Howling Blog! Here you can see some of my thoughts,
                 materialized in the form of blog post.
@@ -47,7 +47,7 @@ export default async function Page() {
                             <Link href={`post/${x.id}`} key={x.id}>
                                 <div
                                     className="pb-4 mx-auto mb-4 bg-white dark:bg-slate-800 lg:rounded-lg 
-                            shadow w-full flex flex-col"
+                            shadow w-full flex flex-col transition-colors duration-200"
                                 >
                                     {/* <img
                                         src={
@@ -57,13 +57,13 @@ export default async function Page() {
                                         alt="This post's banner image"
                                         className="rounded-t-lg w-full h-auto"
                                     /> */}
-                                    <p className="uppercase font-bold text-orange-500 px-8 pt-4">
+                                    <p className="uppercase font-bold text-orange-500 px-8 pt-4 transition-colors duration-200">
                                         {x.tags.join(" ")}
                                     </p>
-                                    <p className="text-black dark:text-gray-50 text-2xl lg:text-4xl font-bold px-8 mt-4">
+                                    <p className="text-black dark:text-gray-50 text-2xl lg:text-4xl font-bold px-8 mt-4 transition-colors duration-200">
                                         {x.title}
                                     </p>
-                                    <p className="text-gray-700 dark:text-gray-300 px-8 py-4 lg:py-8 text-lg lg:text-xl font-light">
+                                    <p className="text-gray-700 dark:text-gray-300 px-8 py-4 lg:py-8 text-lg lg:text-xl font-light transition-colors duration-200">
                                         {x.description}
                                     </p>
                                 </div>

@@ -1,17 +1,16 @@
 /* eslint-disable @next/next/no-img-element */
 // "use client";
 // import { useEffect, useState } from "react";
-import HomeButton from "@/components/HomeButton";
-import ScrollTop from "@/components/ScrollTop";
 import FloatingContainer from "@/components/FloatingContainer";
+import HomeButton from "@/components/HomeButton";
+import PostContainer from "@/components/PostContainer";
+import ScrollTop from "@/components/ScrollTop";
+// import "highlight.js/styles/monokai-sublime.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Link from "next/link";
 import "quill/dist/quill.snow.css";
-import "highlight.js/styles/monokai-sublime.css";
-import "./github-markdown.css";
 import "./code-block.css";
-import PostContainer from "@/components/PostContainer";
+import "./github-markdown.css";
 // import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
 // import "./post.css";
 
@@ -72,12 +71,12 @@ export default async function Page({ params }: { params: Params }) {
     const headerLists = headers();
     headerLists.get("a");
     const data = await fetch(`${baseUrl}/api/post?id=${params.id}`).then(
-        (res) => res.json()
+        (res) => res.json(),
     );
     // console.log(data.blogContent);
 
     return (
-        <div className="container mx-auto max-lg bg-white dark:bg-slate-900 px-4 pt-4 overflow-hidden rounded-b-2xl">
+        <div className="container mx-auto max-lg bg-white dark:bg-slate-900 px-4 pt-4 overflow-hidden rounded-b-2xl transition-colors duration-200">
             <h1 className="text-3xl mx-8 pt-4 text-center">{data.title}</h1>
             <p className="mx-8 my-4 text-center">{data.description}</p>
             {/* <hr className="mx-4" /> */}

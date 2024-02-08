@@ -1,8 +1,7 @@
 import Footer from "@/components/Footer";
-import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
-import { Provider } from "./ThemeProvider";
 import "./globals.css";
+import { Provider } from "./ThemeProvider";
 export const metadata = {
     title: "Howling Blog",
     icons: {
@@ -17,7 +16,7 @@ export default function RootLayout({
 }) {
     return (
         <html suppressHydrationWarning>
-            <body /* className="bg-gray-700" */>
+            <body className="">
                 {/* <Header /> */}
                 <Provider>
                     <Navbar />
