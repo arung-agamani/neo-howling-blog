@@ -6,7 +6,7 @@ import { Unauthorized } from "../responses";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-    if (!(await verifyRole(req, ["admin", "editor"]))) {
+    if (!(await verifyRole(req, ["admin", "editor", "user", "guest"]))) {
         return Unauthorized();
     }
     const totalPost = await prisma.posts.count();
