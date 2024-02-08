@@ -1,5 +1,6 @@
-import { InternalServerError } from "@/app/api/responses";
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { InternalServerError, Unauthorized } from "@/app/api/responses";
+import { verifyRole } from "@/hooks/useRoleAuth";
+import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 
@@ -12,6 +13,9 @@ const client = new S3Client({
 });
 
 export async function GET(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const searchParams = req.nextUrl.searchParams;
 
     const prefix = searchParams.get("prefix") || "";
@@ -35,7 +39,7 @@ export async function GET(req: NextRequest) {
                         name: path.basename(obj.Key!),
                         modDate: obj.LastModified,
                         size: obj.Size,
-                    }))
+                    })),
             );
         }
 
@@ -45,7 +49,7 @@ export async function GET(req: NextRequest) {
                     id: prefix.Prefix!,
                     name: path.basename(prefix.Prefix!),
                     isDir: true,
-                }))
+                })),
             );
         }
 

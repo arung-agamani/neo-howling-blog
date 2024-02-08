@@ -1,9 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ZodError, z } from "zod";
+import {
+    BadRequest,
+    InternalServerError,
+    Unauthorized,
+} from "@/app/api/responses";
+import { verifyRole } from "@/hooks/useRoleAuth";
+import { s3Client } from "@/utils/aws-client";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { BadRequest, InternalServerError } from "@/app/api/responses";
-import { s3Client } from "@/utils/aws-client";
+import { NextRequest, NextResponse } from "next/server";
+import { z, ZodError } from "zod";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +25,9 @@ const UploadInputParams = z.object({
 type UploadInputParams = z.infer<typeof UploadInputParams>;
 
 export async function POST(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     try {
         const body = await req.json();
         const parseRes = UploadInputParams.parse(body);

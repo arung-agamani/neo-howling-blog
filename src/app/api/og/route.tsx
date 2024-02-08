@@ -1,7 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable jsx-a11y/alt-text */
-import { NextRequest } from "next/server";
+import { verifyRole } from "@/hooks/useRoleAuth";
 import { ImageResponse } from "next/og";
+import { NextRequest } from "next/server";
+import { Unauthorized } from "../responses";
 
 export const runtime = "edge";
 
@@ -69,6 +71,9 @@ const OGImage: React.FC<ImageProps> = ({
 };
 
 export async function GET(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const searchParams = req.nextUrl.searchParams;
     const title = searchParams.get("title");
     const imageLeft = searchParams.get("imageLeft");
@@ -84,6 +89,6 @@ export async function GET(req: NextRequest) {
         {
             width: 1200,
             height: 630,
-        }
+        },
     );
 }

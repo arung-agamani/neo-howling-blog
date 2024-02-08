@@ -1,4 +1,9 @@
-import { BadRequest, InternalServerError } from "@/app/api/responses";
+import {
+    BadRequest,
+    InternalServerError,
+    Unauthorized,
+} from "@/app/api/responses";
+import { verifyRole } from "@/hooks/useRoleAuth";
 import { DeleteAssetRequestParams } from "@/types";
 import { s3Client } from "@/utils/aws-client";
 import { DeleteObjectCommand, S3ServiceException } from "@aws-sdk/client-s3";
@@ -7,6 +12,9 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function DELETE(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     try {
         const searchParams = req.nextUrl.searchParams;
         const parseRes = DeleteAssetRequestParams.safeParse({

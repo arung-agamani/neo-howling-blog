@@ -1,10 +1,14 @@
+import { verifyRole } from "@/hooks/useRoleAuth";
 import prisma from "@/utils/prisma";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { BadRequest, InternalServerError } from "../../responses";
+import { BadRequest, InternalServerError, Unauthorized } from "../../responses";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const configs = await prisma.config.findMany();
     return NextResponse.json({
         count: configs.length,
@@ -22,6 +26,9 @@ const UpdateConfigSchema = z.object({
 type UpdateConfigSchema = z.infer<typeof UpdateConfigSchema>;
 
 export async function POST(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const body = await req.json();
     const validate = UpdateConfigSchema.safeParse(body);
 
@@ -51,6 +58,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const body = await req.json();
     const validate = UpdateConfigSchema.safeParse(body);
 
@@ -80,6 +90,9 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const searchParam = req.nextUrl.searchParams;
     const id = searchParam.get("id");
 

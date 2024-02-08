@@ -1,4 +1,5 @@
-import { BadRequest } from "@/app/api/responses";
+import { BadRequest, Unauthorized } from "@/app/api/responses";
+import { verifyRole } from "@/hooks/useRoleAuth";
 import { FlattenErrors } from "@/lib/ZodError";
 import { GeneratePUTSignedURLParams } from "@/types";
 import { s3Client } from "@/utils/aws-client";
@@ -7,6 +8,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     try {
         const body = await req.json();
         const parseRes = GeneratePUTSignedURLParams.safeParse(body);

@@ -27,6 +27,7 @@ export const authOptions: AuthOptions = {
                     user.password,
                 );
                 if (!match) return null;
+                // TODO: Rework role assignment to infer from highest
                 return {
                     ...user,
                     password: null,
@@ -39,11 +40,13 @@ export const authOptions: AuthOptions = {
     debug: process.env.NODE_ENV === "development",
     callbacks: {
         async jwt({ token, user }) {
-            if (user) token.role = user.role;
+            if (user) {
+                token.role = user.role;
+            }
             return token;
         },
         async session({ session, token }) {
-            if (session?.user) session.user.role = token.role as TUserRoles;
+            if (session?.user) session.user.role = token.role;
             return session;
         },
     },
