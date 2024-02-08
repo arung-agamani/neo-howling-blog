@@ -5,6 +5,10 @@ export type Role = {
     children: Role[];
 };
 
+export const noRole: Role = {
+    name: "no-auth",
+    children: [],
+};
 export const guestRole: Role = {
     name: "guest",
     children: [],
@@ -27,4 +31,5 @@ export const roles = {
     user: userRole,
     editor: editorRole,
     admin: adminRole,
+    "no-auth": noRole,
 };
