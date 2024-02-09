@@ -36,9 +36,11 @@ import {
     TGeneratePUTSignedURLResponse,
 } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RenameIcon from "@mui/icons-material/DriveFileRenameOutline";
+
 import { AxiosResponse } from "axios";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -289,6 +291,17 @@ const AssetsBrowserPage = () => {
         noClick: true,
     });
 
+    const copyToClipboard = (data: string) => {
+        navigator.clipboard
+            .writeText(data)
+            .then(() => {
+                toast.info("Copied to clipboard!");
+            })
+            .catch((err) => {
+                toast.error(`Error when copying to clipboard: ${err}`);
+            });
+    };
+
     const DetailPaneData = () => {
         const item = objects && objects.find((x) => x.id === selectedId);
         if (!item) return null;
@@ -312,6 +325,18 @@ const AssetsBrowserPage = () => {
                 >
                     {`https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${item.id}`}
                 </a>
+                <p className="font-semibold text-blue-900">Markdown Format:</p>
+                <div className="col-span-3">
+                    <IconButton
+                        onClick={() => {
+                            copyToClipboard(
+                                `![](https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${item.id})`,
+                            );
+                        }}
+                    >
+                        <ContentCopyIcon />
+                    </IconButton>
+                </div>
                 <p className="font-semibold text-blue-900">Actions</p>
                 <div className="flex justify-around">
                     <IconButton
