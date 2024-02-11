@@ -1,7 +1,10 @@
+import { Suspense } from "react";
+import Loading from "./loading";
+
 export const metadata = {
-    title: "Assets - Dashboard",
+    title: "Assets Page - Dashboard",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-    return children;
+    return <Suspense fallback={<Loading />}>{children}</Suspense>;
 }
