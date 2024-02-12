@@ -1,19 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import React, { useRef, useState } from "react";
+import React from "react";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
-import OpenInNew from "@mui/icons-material/OpenInNew";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import PublishIcon from "@mui/icons-material/Publish";
-import Tooltip from "@mui/material/Tooltip";
 import Skeleton from "@mui/material/Skeleton";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface PostData {
     title: string;
     link: string | null;
@@ -25,7 +18,7 @@ interface PostData {
     datePosted: Date;
     id: string;
     updatedAt?: Date;
-    deleted?: Boolean;
+    deleted?: boolean;
     deletedAt?: Date;
 }
 

@@ -10,7 +10,7 @@ export default async function handle(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    let returnBody: ReturnBody = {
+    const returnBody: ReturnBody = {
         message: "Failed",
         body: "Failed to fetch data.",
     };

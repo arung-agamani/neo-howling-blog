@@ -26,7 +26,7 @@ interface PostData {
   datePosted: Date;
   id: string;
   updatedAt?: Date;
-  deleted?: Boolean;
+  deleted?: boolean;
   deletedAt?: Date;
 }
 
@@ -125,7 +125,7 @@ const PostItem: React.FC<Props> = ({
         isPublished: !post.isPublished,
         op: "publish",
       });
-      let msg = post.isPublished ? "Post unpublished" : "Post published";
+      const msg = post.isPublished ? "Post unpublished" : "Post published";
       toast.success(msg, {
         position: toast.POSITION.TOP_LEFT,
       });

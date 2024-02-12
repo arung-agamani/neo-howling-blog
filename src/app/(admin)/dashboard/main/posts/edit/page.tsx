@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams , useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "@/utils/axios";
@@ -9,7 +9,6 @@ import debounce from "lodash.debounce";
 
 // import "./editor.css";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 
 const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
     ssr: false,

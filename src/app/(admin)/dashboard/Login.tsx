@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { signIn, useSession } from "next-auth/react";
@@ -23,7 +22,7 @@ export default function Login() {
     const { status } = useSession();
     const { handleSubmit, control, reset, setError } = useForm();
     const [loading, isLoading] = useState(false);
-    const submit = async (data: any) => {
+    const submit = async (data: unknown) => {
         isLoading(true);
         if (mode === "login") {
             const validate = LoginParams.safeParse(data);
@@ -88,7 +87,7 @@ export default function Login() {
                     isLoading(false);
                     return;
                 }
-                const res = await axios.post("/api/signupv2", {
+                await axios.post("/api/signupv2", {
                     username: validate.data.username,
                     password: validate.data.password,
                     confirmPassword: validate.data.confirmPassword,
@@ -126,17 +125,17 @@ export default function Login() {
                         <i>Perishing Peculiar Pandora Panopticon</i>
                     </Typography>
                     <Typography variant="body1" className="text-right">
-                        While the world was at it's end, a group of mysterious
+                        {`While the world was at it's end, a group of mysterious
                         spirits approached the neverending stream of wind with
-                        chance of gold threads.
+                        chance of gold threads.`}
                         <br />
                         <br />
-                        It wasn't obvious at first, but soon as they manifested
+                        {`It wasn't obvious at first, but soon as they manifested
                         themselves into a single entity, sacrifices were bound
-                        to happen.
+                        to happen.`}
                         <br />
                         <br />
-                        <i>"See you at the other side, Elfrieden..."</i>
+                        <i>{`"See you at the other side, Elfrieden..."`}</i>
                         <br />
                         <br />
                         Your Soul Holding my heart and my soul in my both hands,
@@ -202,7 +201,7 @@ export default function Login() {
                                     Login
                                 </Button>
                                 <Typography variant="caption">
-                                    Don't have an account?{" "}
+                                    Do not have an account?{" "}
                                     <span
                                         className=" text-blue-500 hover:text-blue-300 cursor-pointer"
                                         onClick={() => {

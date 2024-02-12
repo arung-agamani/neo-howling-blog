@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
+import axios from "@/utils/axios";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider/Divider";
-import axios from "@/utils/axios";
-import { AxiosResponse } from "axios";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import type { AxiosResponse } from "axios";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { z } from "zod";
 import Parameter from "./Parameter";
 
 export interface Config {
@@ -47,7 +47,7 @@ export default function Page() {
     async function fetchConfigs() {
         isLoading(true);
         const { data: axiosResponseData } = await axios.get<
-            {},
+            Record<string, never>,
             AxiosResponse<ConfigAPIGetResponse>
         >("/api/dashboardv2/config", { withCredentials: true });
         setConfigs(axiosResponseData.data);

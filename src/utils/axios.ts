@@ -1,4 +1,4 @@
-import a, { AxiosError } from "axios";
+import a from "axios";
 
 const axios = a.create();
 
@@ -20,7 +20,7 @@ axios.interceptors.response.use(
         } else {
             return Promise.reject(err);
         }
-    }
+    },
 );
 
 export default axios;

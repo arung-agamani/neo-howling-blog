@@ -47,7 +47,7 @@ const Editor: React.FC<Props> = ({
                 const date = new Date();
                 const buf = new Uint8Array(4);
                 const randPrefix = Buffer.from(
-                    crypto.getRandomValues(buf)
+                    crypto.getRandomValues(buf),
                 ).toString("hex");
 
                 try {
@@ -57,15 +57,17 @@ const Editor: React.FC<Props> = ({
                         }/${date.getDate()}/${randPrefix}_${loadedFile?.name}`,
                         {
                             method: "HEAD",
-                        }
+                        },
                     );
                     if (head.ok) {
                         toast.info(
-                            `File ${randPrefix}_${loadedFile?.name} has already been uploaded.`
+                            `File ${randPrefix}_${loadedFile?.name} has already been uploaded.`,
                         );
                         return;
                     }
-                } catch (error) {}
+                } catch (error) {
+                    /* empty */
+                }
                 try {
                     toast.info(`Uploading ${loadedFile?.name}...`);
                     const presignedUrl = await fetch(
@@ -85,7 +87,7 @@ const Editor: React.FC<Props> = ({
                                     day: date.getDate(),
                                 },
                             }),
-                        }
+                        },
                     ).then((res) => res.json());
                     const upload = await fetch(presignedUrl.data, {
                         method: "PUT",
@@ -98,12 +100,12 @@ const Editor: React.FC<Props> = ({
                         toast.error(`Error when uploading ${loadedFile?.name}`);
                     }
                     toast.success(
-                        `File ${loadedFile?.name} has been successfully uploaded`
+                        `File ${loadedFile?.name} has been successfully uploaded`,
                     );
                     resolve(
                         `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
                             date.getMonth() + 1
-                        }/${date.getDate()}/${randPrefix}_${loadedFile?.name}`
+                        }/${date.getDate()}/${randPrefix}_${loadedFile?.name}`,
                     );
                 } catch (error) {
                     toast.error(`Error when uploading ${loadedFile?.name}`);

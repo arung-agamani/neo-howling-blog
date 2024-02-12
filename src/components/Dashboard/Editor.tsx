@@ -1,12 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import {
-    Dispatch,
-    SetStateAction,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import ImageUploader from "quill-image-uploader";
 import QuillMarkdown from "quilljs-markdown";
@@ -41,11 +35,7 @@ Quill.register("modules/QuillMarkdown", QuillMarkdown, true);
 Quill.register("modules/blotFormatter", QuillBlotFormatter);
 
 const Editor: React.FC<Props> = ({
-    page,
-    isModified,
-    isSynced,
     content,
-    setPage,
     setIsModified,
     setIsSynced,
     setContent,
@@ -82,7 +72,7 @@ const Editor: React.FC<Props> = ({
                             const date = new Date();
                             const buf = new Uint8Array(4);
                             const randPrefix = Buffer.from(
-                                crypto.getRandomValues(buf)
+                                crypto.getRandomValues(buf),
                             ).toString("hex");
 
                             try {
@@ -94,15 +84,17 @@ const Editor: React.FC<Props> = ({
                                     }`,
                                     {
                                         method: "HEAD",
-                                    }
+                                    },
                                 );
                                 if (head.ok) {
                                     toast.info(
-                                        `File ${randPrefix}_${loadedFile?.name} has already been uploaded.`
+                                        `File ${randPrefix}_${loadedFile?.name} has already been uploaded.`,
                                     );
                                     return;
                                 }
-                            } catch (error) {}
+                            } catch (error) {
+                                /* empty */
+                            }
                             try {
                                 toast.info(`Uploading ${loadedFile?.name}...`);
                                 const presignedUrl = await fetch(
@@ -122,35 +114,35 @@ const Editor: React.FC<Props> = ({
                                                 day: date.getDate(),
                                             },
                                         }),
-                                    }
+                                    },
                                 ).then((res) => res.json());
                                 const upload = await fetch(presignedUrl.data, {
                                     method: "PUT",
                                     headers: {
                                         "Content-Length": String(
-                                            loadedFile!.size
+                                            loadedFile!.size,
                                         ),
                                     },
                                     body: loadedFile,
                                 }).then((res) => res.ok);
                                 if (!upload) {
                                     toast.error(
-                                        `Error when uploading ${loadedFile?.name}`
+                                        `Error when uploading ${loadedFile?.name}`,
                                     );
                                 }
                                 toast.success(
-                                    `File ${loadedFile?.name} has been successfully uploaded`
+                                    `File ${loadedFile?.name} has been successfully uploaded`,
                                 );
                                 resolve(
                                     `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
                                         date.getMonth() + 1
                                     }/${date.getDate()}/${randPrefix}_${
                                         loadedFile?.name
-                                    }`
+                                    }`,
                                 );
                             } catch (error) {
                                 toast.error(
-                                    `Error when uploading ${loadedFile?.name}`
+                                    `Error when uploading ${loadedFile?.name}`,
                                 );
                                 console.error(error);
                                 reject("Upload failed. Check logs");
@@ -161,7 +153,7 @@ const Editor: React.FC<Props> = ({
             },
             syntax: true,
         }),
-        []
+        [],
     );
 
     const quillRef = useRef<any>(null);
@@ -170,7 +162,7 @@ const Editor: React.FC<Props> = ({
         const toolbarHeight =
             document.getElementsByClassName("ql-toolbar")[0].clientHeight;
         const qlContainer = document.getElementsByClassName(
-            "ql-container"
+            "ql-container",
         )[0] as HTMLDivElement;
         // const appbarHeight =
         //     document.getElementById("app-bar")?.clientHeight || 0;

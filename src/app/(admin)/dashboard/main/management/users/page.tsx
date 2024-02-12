@@ -6,9 +6,9 @@ import { Divider, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import {
     MaterialReactTable,
-    MRT_ColumnDef,
-    MRT_TableOptions,
     useMaterialReactTable,
+    type MRT_ColumnDef,
+    type MRT_TableOptions,
 } from "material-react-table";
 import { useMemo } from "react";
 import { toast } from "react-toastify";

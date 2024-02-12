@@ -41,7 +41,7 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RenameIcon from "@mui/icons-material/DriveFileRenameOutline";
 
-import { AxiosResponse } from "axios";
+import type { AxiosResponse } from "axios";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -206,7 +206,7 @@ const AssetsBrowserPage = () => {
             }
         } else {
             const res = await ServerRenameAsset(
-                objects?.find((x) => x.id === selectedId)?.id!,
+                objects!.find((x) => x.id === selectedId)!.id!,
                 `${currentLocation}${data.targetName}`,
             );
             if (res.success) {

@@ -6,7 +6,7 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 router.get(async (req, res) => {
     let page = 1;
     if (req.query.p) {
-        let p = Array.isArray(req.query.p) ? req.query.p[0] : req.query.p;
+        const p = Array.isArray(req.query.p) ? req.query.p[0] : req.query.p;
         page = isNaN(Number(p)) ? 1 : Number(p);
         if (page <= 0) page = 1;
     }

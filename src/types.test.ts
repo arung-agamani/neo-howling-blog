@@ -3,6 +3,7 @@ import {
     SignupRequestBody,
     TUpdateUserPayload,
     TUpdateUserResponse,
+    TUserRoles,
     TUserSchema,
     UpdateUserPayload,
     UpdateUserResponse,
@@ -122,9 +123,9 @@ describe("UserSchema Validation", () => {
         const payload: TUserSchema = {
             username: "awo12", // username shouldn't has numbers | length smaller than 6
             email: "haha", // not an email
-            role: "anjay" as any, // not a member of valid roles
-            dateCreated: "this date" as any as Date, // not a valid date object
-            lastAccess: "that date" as any as Date, // not a valid date object
+            role: "anjay" as unknown as TUserRoles, // not a member of valid roles
+            dateCreated: "this date" as unknown as Date, // not a valid date object
+            lastAccess: "that date" as unknown as Date, // not a valid date object
         };
         const validate = UserSchema.safeParse(payload);
         expect(validate.success).toEqual(false);
@@ -147,7 +148,7 @@ describe("UpdateUserPayload Validation", () => {
     it("Failed on invalid payload", () => {
         const payload: TUpdateUserPayload = {
             username: "aweo1", // no numbers | min 6 (has 5)
-            role: "haha" as any, // invalid member
+            role: "haha" as never, // invalid member
         };
         const validate = UpdateUserPayload.safeParse(payload);
         expect(validate.success).toEqual(false);
@@ -174,18 +175,18 @@ describe("UpdateUserResponse Validation", () => {
     });
 
     it("Failed on malformed shape - Success but no updated field", () => {
-        const payload: any = {
+        const payload: unknown = {
             success: true,
             message: "Lulus",
         };
-        let validate = UpdateUserResponse.safeParse(payload);
+        const validate = UpdateUserResponse.safeParse(payload);
         expect(validate.success).toEqual(false);
     });
     it("Failed on malformed shape - Failed but no message field", () => {
-        const payload: any = {
+        const payload: unknown = {
             success: false,
         };
-        let validate = UpdateUserResponse.safeParse(payload);
+        const validate = UpdateUserResponse.safeParse(payload);
         expect(validate.success).toEqual(false);
     });
 });
