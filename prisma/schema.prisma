@@ -12,7 +12,8 @@ model blogusers {
   dateCreated DateTime @db.Date
   email       String
   password    String
-  username    String
+  username    String @unique
+
 }
 
 model posts {
@@ -34,6 +35,17 @@ model posts {
   updatedAt        DateTime?
   deleted          Boolean?
   deletedAt        DateTime?
+}
+
+model snippet {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  title String @unique
+  type String
+  content String
+
+  ownerId String @db.ObjectId
+  datePosted DateTime @db.Date
+  owner users @relation(fields: [ownerId], references: [id])
 }
 
 model sessions {
@@ -73,6 +85,8 @@ model users {
   birthday    DateTime? @db.Date @default(now())
   gender      Gender? @default(male)
   phone       String? @default("")
+
+  snippets snippet[]
 }
 
 
@@ -113,3 +127,4 @@ enum RemoteLocation {
   GCS
   Others
 }
+

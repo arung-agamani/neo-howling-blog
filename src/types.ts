@@ -165,3 +165,22 @@ export const UpdateUserResponse = z.discriminatedUnion("success", [
     }),
 ]);
 export type TUpdateUserResponse = z.infer<typeof UpdateUserResponse>;
+
+export const SnippetPayload = z.string().nonempty()
+export type TSnippetPayload = z.infer<typeof SnippetPayload>
+export const SnippetResponse = z.discriminatedUnion("success",[
+    z.object({
+        success: z.literal(true),
+        op: z.enum(["upsert"])
+    }),
+    z.object({
+        success: z.literal(false),
+        message: z.string()
+    })
+])
+export type TSnippetResponse = z.infer<typeof SnippetResponse>
+export const SnippetFrontMatterAttributes = z.object({
+    title: z.string().nonempty(),
+    description: z.string().optional()
+})
+export type TSnippetFrontMatterAttributes = z.infer<typeof SnippetFrontMatterAttributes>

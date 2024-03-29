@@ -55,6 +55,13 @@ export const hierarchy: TMenuItem[] = [
         role: guestRole,
     },
     {
+        name: "snippets",
+        children: [],
+        link: "snippets",
+        icon: <Tag />,
+        role: editorRole
+    },
+    {
         name: "assets",
         children: [
             {
