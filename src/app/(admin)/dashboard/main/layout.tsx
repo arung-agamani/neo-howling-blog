@@ -54,26 +54,8 @@ import { signOut as nextSignout, useSession } from "next-auth/react";
 import Loading from "./loading";
 import { hierarchy, TMenuItem } from "./menus";
 import { Role, roles } from "./roles";
+import { roleBfs } from "@/lib/RBAC";
 
-const dp: Record<string, any[]> = {};
-function roleBfs(start: Role, searchItem: TUserRoles) {
-    if (dp[start.name]) {
-        if (dp[start.name].includes(searchItem)) return true;
-        return false;
-    }
-    const queue = [start];
-    const result = [];
-    while (queue.length) {
-        const current = queue.shift();
-        result.push(current?.name);
-        if (current?.children.length) {
-            queue.push(...current.children);
-        }
-    }
-    dp[start.name] = [...result];
-    if (result.includes(searchItem)) return true;
-    return false;
-}
 const TreeView: React.FC<{
     data: TMenuItem;
     parentLink: string;
