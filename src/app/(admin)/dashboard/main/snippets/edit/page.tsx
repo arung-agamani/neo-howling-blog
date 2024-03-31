@@ -97,9 +97,16 @@ const SnippetEditPage = () => {
                     thematicBreakPlugin(),
                     markdownShortcutPlugin(),
                     frontmatterPlugin(),
-                    codeBlockPlugin({ defaultCodeBlockLanguage: "js" }),
+                    codeBlockPlugin({ defaultCodeBlockLanguage: "" }),
                     codeMirrorPlugin({
-                        codeBlockLanguages: { js: "JavaScript" },
+                        codeBlockLanguages: {
+                            js: "JavaScript",
+                            css: "CSS",
+                            txt: "Plain Text",
+                            tsx: "TypeScript",
+                            html: "HTML",
+                            "": "Unspecified",
+                        },
                     }),
                     toolbarPlugin({
                         toolbarContents: () => (
