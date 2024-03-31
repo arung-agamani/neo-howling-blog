@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import React from "react";
 import AddIcon from "@mui/icons-material/AddBox";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "@/utils/axios";
 
 // Icons
@@ -22,6 +22,8 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { deleteSnippet } from "@/lib/server-actions/Snippet";
+import { toast } from "react-toastify";
 
 interface SnippetListItem {
     id: string;
@@ -35,6 +37,7 @@ interface SnippetListItem {
 }
 
 const SnippetsPage = () => {
+    const queryClient = useQueryClient();
     const { data } = useQuery({
         queryKey: ["snippets"],
         queryFn: async () => {
@@ -43,6 +46,15 @@ const SnippetsPage = () => {
         },
         initialData: [],
     });
+
+    const deleteHandler = async (id: string) => {
+        const res = await deleteSnippet(id);
+        if (!res.success) toast.error(res.message);
+        else toast.success(res.message);
+        queryClient.refetchQueries({
+            queryKey: ["snippets"],
+        });
+    };
     return (
         <Paper className="px-4 py-2 w-full h-full">
             <Typography variant="h4">Snippets</Typography>
@@ -105,13 +117,24 @@ const SnippetsPage = () => {
                             </Typography>
                         </CardContent>
                         <CardActions>
-                            <Tooltip title="Edit this snippet">
-                                <IconButton>
-                                    <EditIcon />
-                                </IconButton>
-                            </Tooltip>
+                            <Link
+                                href={{
+                                    pathname: "/dashboard/main/snippets/edit",
+                                    query: {
+                                        id: snippet.id,
+                                    },
+                                }}
+                            >
+                                <Tooltip title="Edit this snippet">
+                                    <IconButton>
+                                        <EditIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Link>
                             <Tooltip title="Delete this snippet">
-                                <IconButton>
+                                <IconButton
+                                    onClick={() => deleteHandler(snippet.id)}
+                                >
                                     <DeleteIcon />
                                 </IconButton>
                             </Tooltip>

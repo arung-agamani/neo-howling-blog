@@ -10,13 +10,32 @@ export async function ListSnippets() {
             owner: {
                 select: {
                     id: true,
-                    username: true
-                }
+                    username: true,
+                },
             },
-            datePosted: true
+            datePosted: true,
         },
         orderBy: {
-            datePosted: "desc"
-        }
-    })
+            datePosted: "desc",
+        },
+    });
+}
+
+export async function GetSnippet(id: string) {
+    return await prisma.snippet.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            content: true,
+            owner: {
+                select: {
+                    id: true,
+                    username: true,
+                },
+            },
+            datePosted: true,
+        },
+    });
 }
