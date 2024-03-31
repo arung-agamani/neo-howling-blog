@@ -58,6 +58,7 @@ export async function processMarkdown(data: TSnippetPayload): Promise<TSnippetRe
             },
             create: {
                 title: fmAttributes.title,
+                description: fmAttributes.description || "",
                 type: 'md',
                 content: fmData.body,
                 datePosted: new Date(),
