@@ -22,6 +22,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { deleteSnippet } from "@/lib/server-actions/Snippet";
 import { toast } from "react-toastify";
 
@@ -117,6 +118,17 @@ const SnippetsPage = () => {
                             </Typography>
                         </CardContent>
                         <CardActions>
+                            <Link
+                                href={{
+                                    pathname: `/snippet/${snippet.id}`,
+                                }}
+                            >
+                                <Tooltip title="View this snippet">
+                                    <IconButton>
+                                        <VisibilityIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Link>
                             <Link
                                 href={{
                                     pathname: "/dashboard/main/snippets/edit",
