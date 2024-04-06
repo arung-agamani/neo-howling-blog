@@ -1,5 +1,5 @@
 import PostContainer from "@/components/PostContainer";
-import { GetSnippet } from "@/lib/Snippet";
+import { GetSnippet, GetSnippetBySlug } from "@/lib/Snippet";
 import { remark } from "remark";
 import html from "remark-html";
 import fm from "front-matter";
@@ -15,7 +15,7 @@ import "../../post/[id]/github-markdown.css";
 import { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Params }) {
-    const data = await GetSnippet(params.slug);
+    const data = await GetSnippetBySlug(params.slug);
     if (!data)
         return {
             title: "404 Not Found",
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function Page({ params }: { params: Params }) {
-    const data = await GetSnippet(params.slug);
+    const data = await GetSnippetBySlug(params.slug);
     if (!data)
         return (
             <div className="container mx-auto max-lg bg-white dark:bg-slate-900 px-4 pt-4 overflow-hidden rounded-b-2xl transition-colors duration-200">

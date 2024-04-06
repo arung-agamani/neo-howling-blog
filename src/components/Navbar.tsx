@@ -30,7 +30,7 @@ export default function Navbar() {
                             <TabLink target="#" label="Tags" />
                         </div>
                         <div>
-                            <TabLink target="#" label="Snippets" />
+                            <TabLink target="/snippet" label="Snippets" />
                         </div>
                     </div>
                     {/* <span className="flex-grow"></span> */}

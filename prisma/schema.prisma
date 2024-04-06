@@ -43,6 +43,7 @@ model snippet {
   description String
   type String
   content String
+  slug String
 
   ownerId String @db.ObjectId
   datePosted DateTime @db.Date

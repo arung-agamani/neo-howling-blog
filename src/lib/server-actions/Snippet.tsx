@@ -15,6 +15,7 @@ import prisma from "@/utils/prisma";
 import { roleBfs } from "../RBAC";
 import { roles } from "@/app/(admin)/dashboard/main/roles";
 import assert from "assert";
+import { slugFromTitle } from "@/utils/slug";
 
 export async function processMarkdown(
     data: TSnippetPayload,
@@ -76,6 +77,7 @@ export async function processMarkdown(
                 content: validate.data,
                 datePosted: new Date(),
                 ownerId: user.id,
+                slug: slugFromTitle(fmAttributes.title),
             },
             update: {
                 title: fmAttributes.title,

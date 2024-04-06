@@ -39,3 +39,25 @@ export async function GetSnippet(id: string) {
         },
     });
 }
+
+export async function GetSnippetBySlug(slug: string) {
+    return await prisma.snippet.findFirst({
+        where: {
+            slug,
+        },
+        select: {
+            id: true,
+            title: true,
+            description: true,
+            content: true,
+            slug: true,
+            datePosted: true,
+            owner: {
+                select: {
+                    id: true,
+                    username: true,
+                },
+            },
+        },
+    });
+}

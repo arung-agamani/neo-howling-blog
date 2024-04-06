@@ -4,7 +4,7 @@ import React from "react";
 
 const Footer = () => {
     return (
-        <div
+        <footer
             className="bg-black flex flex-col w-full mx-auto text-gray-300 py-8 px-4 lg:px-16
             
         "
@@ -42,7 +42,7 @@ const Footer = () => {
                     </a>
                 </div>
             </div>
-        </div>
+        </footer>
     );
 };
 
