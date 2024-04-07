@@ -29,8 +29,13 @@ export async function generateMetadata({ params }: { params: Params }) {
         openGraph: {
             title: data.title,
             description: data.description,
-            url: `https://blog.howlingmoon.dev/snippet/${params.slug}`,
+            url: `/snippet/${params.slug}`,
             type: "article",
+            images: [
+                {
+                    url: `/api/og-snippet?title=${encodeURIComponent(data.title)}&description=${encodeURIComponent(data.description)}&author=${encodeURIComponent(data.owner.username)}`,
+                },
+            ],
         },
     } satisfies Metadata;
 }

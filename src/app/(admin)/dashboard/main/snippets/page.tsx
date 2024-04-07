@@ -35,6 +35,7 @@ interface SnippetListItem {
         username: string;
     };
     datePosted: string;
+    slug: string;
 }
 
 const SnippetsPage = () => {
@@ -120,7 +121,7 @@ const SnippetsPage = () => {
                         <CardActions>
                             <Link
                                 href={{
-                                    pathname: `/snippet/${snippet.id}`,
+                                    pathname: `/snippet/${snippet.slug}`,
                                 }}
                             >
                                 <Tooltip title="View this snippet">

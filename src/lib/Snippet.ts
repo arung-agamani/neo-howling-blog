@@ -7,6 +7,7 @@ export async function ListSnippets() {
             title: true,
             description: true,
             content: true,
+            slug: true,
             owner: {
                 select: {
                     id: true,
