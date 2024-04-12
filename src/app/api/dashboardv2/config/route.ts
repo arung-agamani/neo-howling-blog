@@ -1,6 +1,6 @@
 import { verifyRole } from "@/hooks/useRoleAuth";
 import prisma from "@/utils/prisma";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { BadRequest, InternalServerError, Unauthorized } from "../../responses";
@@ -110,7 +110,7 @@ export async function DELETE(req: NextRequest) {
             data: deleteRes,
         });
     } catch (error) {
-        if (error instanceof PrismaClientKnownRequestError) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
             return InternalServerError({
                 message: "Database error",
                 error,

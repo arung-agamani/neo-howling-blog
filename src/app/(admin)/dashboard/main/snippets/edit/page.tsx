@@ -105,6 +105,8 @@ const SnippetEditPage = () => {
                             txt: "Plain Text",
                             tsx: "TypeScript",
                             html: "HTML",
+                            yaml: "YAML",
+                            sql: "SQL",
                             "": "Unspecified",
                         },
                     }),

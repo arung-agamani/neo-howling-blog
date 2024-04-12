@@ -14,7 +14,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/utils/prisma";
 import { roleBfs } from "../RBAC";
 import { roles } from "@/app/(admin)/dashboard/main/roles";
-import assert from "assert";
 import { slugFromTitle } from "@/utils/slug";
 
 export async function processMarkdown(
