@@ -75,9 +75,16 @@ const SnippetsPage = () => {
                     </Paper>
                 </Link>
             </div>
-            <div>
+            <div className="grid grid-flow-row grid-cols-4 gap-4">
                 {data?.map((snippet) => (
-                    <Card key={snippet.id} elevation={1} className="">
+                    <Card
+                        key={snippet.id}
+                        elevation={2}
+                        className=""
+                        sx={{
+                            backgroundColor: "#fffcff",
+                        }}
+                    >
                         <CardHeader
                             title={
                                 <div className="flex gap-2">
@@ -88,7 +95,7 @@ const SnippetsPage = () => {
                                             className="pl-1"
                                         >
                                             {new Date(
-                                                snippet.datePosted,
+                                                snippet.datePosted
                                             ).toLocaleString()}
                                         </Typography>
                                     </div>
