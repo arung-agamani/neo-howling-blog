@@ -77,7 +77,7 @@ export const LoginParams = z.object({
         .string()
         .regex(
             new RegExp("[A-Za-z0-9@]{8,32}"),
-            "Password should only be alphanumeric and the following symbols: @",
+            "Password should only be alphanumeric and the following symbols: @"
         )
         .max(32, "Maximum length is 32 characters")
         .min(8, "Minimum length is 8 characters"),
@@ -92,7 +92,7 @@ export const SignupRequestBody = z
             .string()
             .regex(
                 new RegExp("[A-Za-z0-9@]{8,32}"),
-                "Password should only be alphanumeric and the following symbols: @",
+                "Password should only be alphanumeric and the following symbols: @"
             )
             .max(32, "Maximum length is 32 characters")
             .min(8, "Minimum length is 8 characters"),
@@ -166,21 +166,30 @@ export const UpdateUserResponse = z.discriminatedUnion("success", [
 ]);
 export type TUpdateUserResponse = z.infer<typeof UpdateUserResponse>;
 
-export const SnippetPayload = z.string().nonempty()
-export type TSnippetPayload = z.infer<typeof SnippetPayload>
-export const SnippetResponse = z.discriminatedUnion("success",[
+export const SnippetPayload = z.string().nonempty();
+export type TSnippetPayload = z.infer<typeof SnippetPayload>;
+export const SnippetResponse = z.discriminatedUnion("success", [
     z.object({
         success: z.literal(true),
-        op: z.enum(["upsert"])
+        op: z.enum(["upsert"]),
     }),
     z.object({
         success: z.literal(false),
-        message: z.string()
-    })
-])
-export type TSnippetResponse = z.infer<typeof SnippetResponse>
+        message: z.string(),
+        errors: z.any().optional(),
+    }),
+]);
+export type TSnippetResponse = z.infer<typeof SnippetResponse>;
 export const SnippetFrontMatterAttributes = z.object({
-    title: z.string().nonempty(),
-    description: z.string().optional()
-})
-export type TSnippetFrontMatterAttributes = z.infer<typeof SnippetFrontMatterAttributes>
+    title: z
+        .string()
+        .max(64, "Maximum length of title is 64 characters")
+        .nonempty(),
+    description: z
+        .string()
+        .max(128, "Maximum length of description is 128 characters")
+        .optional(),
+});
+export type TSnippetFrontMatterAttributes = z.infer<
+    typeof SnippetFrontMatterAttributes
+>;

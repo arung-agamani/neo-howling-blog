@@ -15,10 +15,11 @@ import prisma from "@/utils/prisma";
 import { roleBfs } from "../RBAC";
 import { roles } from "@/app/(admin)/dashboard/main/roles";
 import { slugFromTitle } from "@/utils/slug";
+import { FlattenErrors } from "../ZodError";
 
 export async function processMarkdown(
     data: TSnippetPayload,
-    id: string | null | undefined,
+    id: string | null | undefined
 ): Promise<TSnippetResponse> {
     const session = await getServerSession(authOptions);
     if (
@@ -57,11 +58,12 @@ export async function processMarkdown(
         }
         const fmData = fm<TSnippetFrontMatterAttributes>(validate.data);
         const fmAttributes = fmData.attributes;
-        if (!SnippetFrontMatterAttributes.safeParse(fmAttributes).success) {
+        const fmValidate = SnippetFrontMatterAttributes.safeParse(fmAttributes);
+        if (!fmValidate.success) {
             return {
                 success: false,
-                message:
-                    "Front-matter attributes are invalid. Make sure 'title' is populated",
+                message: "Front-matter attributes are invalid.",
+                errors: FlattenErrors(fmValidate.error),
             };
         }
         if (!id) id = "000000000000000000000000";
