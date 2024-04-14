@@ -11,6 +11,7 @@ import {
     codeBlockPlugin,
     codeMirrorPlugin,
     toolbarPlugin,
+    diffSourcePlugin,
     ConditionalContents,
     ChangeCodeMirrorLanguage,
     InsertCodeBlock,
@@ -27,6 +28,7 @@ import {
     InsertFrontmatter,
     linkPlugin,
     ButtonWithTooltip,
+    DiffSourceToggleWrapper,
 } from "@mdxeditor/editor";
 
 import "@mdxeditor/editor/style.css";
@@ -54,6 +56,11 @@ const SnippetEditPage = () => {
             else toast.success("Snippet created");
         } else {
             toast.error(processRes.message);
+            if (processRes.errors) {
+                for (const [key, value] of Object.entries(processRes.errors)) {
+                    toast.error(`'${value}'`);
+                }
+            }
         }
     };
 
@@ -73,7 +80,7 @@ const SnippetEditPage = () => {
                 editorRef.current.setMarkdown(res.data.content);
             } catch (error) {
                 editorRef.current.setMarkdown(
-                    `# Error when retrieving markdown content`,
+                    `# Error when retrieving markdown content`
                 );
             } finally {
                 setLoading(false);
@@ -82,7 +89,7 @@ const SnippetEditPage = () => {
     }, []);
     return (
         <Paper className="px-4 py-2 w-full h-full">
-            <Typography variant="h4">Edit Snippet</Typography>
+            <Typography variant="h4">Snippet Editor</Typography>
             <Divider />
             <MDXEditor
                 ref={editorRef}
@@ -97,6 +104,7 @@ const SnippetEditPage = () => {
                     thematicBreakPlugin(),
                     markdownShortcutPlugin(),
                     frontmatterPlugin(),
+                    diffSourcePlugin(),
                     codeBlockPlugin({ defaultCodeBlockLanguage: "" }),
                     codeMirrorPlugin({
                         codeBlockLanguages: {
@@ -113,46 +121,56 @@ const SnippetEditPage = () => {
                     toolbarPlugin({
                         toolbarContents: () => (
                             <>
-                                <UndoRedo />
-                                <ButtonWithTooltip
-                                    title="Save"
-                                    onClick={() => saveHandler()}
-                                >
-                                    Save
-                                </ButtonWithTooltip>
-                                <Separator />
-                                <BoldItalicUnderlineToggles />
-                                <CodeToggle />
-                                <ListsToggle />
-                                <BlockTypeSelect />
-                                <Separator />
-                                <CreateLink />
-                                <InsertImage />
-                                <InsertFrontmatter />
-                                <ConditionalContents
-                                    options={[
-                                        {
-                                            when: (editor) =>
-                                                editor?.editorType ===
-                                                "codeblock",
-                                            contents: () => (
-                                                <ChangeCodeMirrorLanguage />
-                                            ),
-                                        },
-                                        {
-                                            fallback: () => (
-                                                <>
-                                                    <InsertCodeBlock />
-                                                </>
-                                            ),
-                                        },
-                                    ]}
-                                />
+                                <DiffSourceToggleWrapper>
+                                    <UndoRedo />
+                                    <ButtonWithTooltip
+                                        title="Save"
+                                        onClick={() => saveHandler()}
+                                    >
+                                        Save
+                                    </ButtonWithTooltip>
+                                    <Separator />
+                                    <BoldItalicUnderlineToggles />
+                                    <CodeToggle />
+                                    <ListsToggle />
+                                    <BlockTypeSelect />
+                                    <Separator />
+                                    <CreateLink />
+                                    <InsertImage />
+                                    <InsertFrontmatter />
+                                    <ConditionalContents
+                                        options={[
+                                            {
+                                                when: (editor) =>
+                                                    editor?.editorType ===
+                                                    "codeblock",
+                                                contents: () => (
+                                                    <ChangeCodeMirrorLanguage />
+                                                ),
+                                            },
+                                            {
+                                                fallback: () => (
+                                                    <>
+                                                        <InsertCodeBlock />
+                                                    </>
+                                                ),
+                                            },
+                                        ]}
+                                    />
+                                </DiffSourceToggleWrapper>
                             </>
                         ),
                     }),
                 ]}
             />
+            <Divider />
+            <Typography
+                variant="caption"
+                component="p"
+                className="text-center my-2 opacity-60"
+            >
+                Compose above this line
+            </Typography>
         </Paper>
     );
 };
