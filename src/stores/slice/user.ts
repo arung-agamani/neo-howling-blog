@@ -11,6 +11,8 @@ enum Roles {
 const User = z.object({
     username: z.string(),
     role: z.nativeEnum(Roles),
+    name: z.string(),
+    birthday: z.coerce.date(),
 });
 
 type User = z.infer<typeof User>;
@@ -18,6 +20,8 @@ type User = z.infer<typeof User>;
 const userInitialState: User = {
     username: "test",
     role: Roles.VIEWER,
+    name: "",
+    birthday: new Date(),
 };
 
 export const userSlice = createSlice({
@@ -27,6 +31,8 @@ export const userSlice = createSlice({
         setUser: (state, { payload }: PayloadAction<User>) => {
             state.username = payload.username;
             state.role = payload.role;
+            state.name = payload.name;
+            state.birthday = payload.birthday;
         },
     },
 });

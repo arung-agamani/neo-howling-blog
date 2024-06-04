@@ -1,5 +1,5 @@
 import { BadRequest, InternalServerError } from "@/app/api/responses";
-import { UpdatePost, UpdatePostSchema } from "@/lib/Post";
+import { UpdatePost, type UpdatePostSchema } from "@/lib/Post";
 import { NextRequest, NextResponse } from "next/server";
 
 import { z } from "zod";

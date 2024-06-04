@@ -48,13 +48,14 @@ import MenuIcon from "@mui/icons-material/Menu";
 
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import { setUser, UserState } from "@/stores/slice/user";
-import { TUserRoles } from "@/types";
+import { THelloResponse, TUserRoles } from "@/types";
 import axios from "@/utils/axios";
 import { signOut as nextSignout, useSession } from "next-auth/react";
 import Loading from "./loading";
 import { hierarchy, TMenuItem } from "./menus";
 import { Role, roles } from "./roles";
 import { roleBfs } from "@/lib/RBAC";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const TreeView: React.FC<{
     data: TMenuItem;
@@ -117,7 +118,7 @@ const TreeView: React.FC<{
                             router.push(
                                 `${parentLink}/${
                                     data.link ? data.link : data.name
-                                }`,
+                                }`
                             )
                         }
                     >
@@ -163,18 +164,29 @@ export default function PostLayout({
     const [open, isOpen] = useState(true);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const openProfileMenu = Boolean(anchorEl);
-    const dispatch = useAppDispatch();
     const user = useAppSelector(UserState);
     const router = useRouter();
     const { data: session, status } = useSession();
+    const queryClient = useQueryClient();
+    queryClient.prefetchQuery({
+        queryKey: ["currentAuthenticatedUser"],
+        queryFn: async () => {
+            const res = await axios.get("/api/hellov2", {
+                withCredentials: true,
+            });
+            const data = res.data as THelloResponse;
+            return data.user;
+        },
+    });
+
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push("/dashboard");
         } else if (status === "authenticated") {
-            axios.get("/api/hellov2", { withCredentials: true }).then((res) => {
-                const user = res.data.user;
-                dispatch(setUser(user));
-            });
+            // axios.get("/api/hellov2", { withCredentials: true }).then((res) => {
+            //     const user = res.data.user;
+            //     dispatch(setUser(user));
+            // });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status]);

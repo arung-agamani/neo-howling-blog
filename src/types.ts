@@ -193,3 +193,16 @@ export const SnippetFrontMatterAttributes = z.object({
 export type TSnippetFrontMatterAttributes = z.infer<
     typeof SnippetFrontMatterAttributes
 >;
+
+export const HelloResponse = z.object({
+    user: z.object({
+        id: z.string(),
+        username: z.string(),
+        role: z.string(),
+        name: z.string().optional(),
+        birthday: z.coerce.date(),
+        gender: z.string().optional(),
+        phone: z.string().optional(),
+    }),
+});
+export type THelloResponse = z.infer<typeof HelloResponse>;
