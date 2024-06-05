@@ -46,16 +46,16 @@ import MenuIcon from "@mui/icons-material/Menu";
 //     );
 // }
 
-import { useAppDispatch, useAppSelector } from "@/stores/hooks";
-import { setUser, UserState } from "@/stores/slice/user";
-import { THelloResponse, TUserRoles } from "@/types";
+import { useAppSelector } from "@/stores/hooks";
+import { UserState } from "@/stores/slice/user";
+import { emptyHelloResponse, HelloResponse } from "@/types";
 import axios from "@/utils/axios";
 import { signOut as nextSignout, useSession } from "next-auth/react";
 import Loading from "./loading";
 import { hierarchy, TMenuItem } from "./menus";
 import { Role, roles } from "./roles";
 import { roleBfs } from "@/lib/RBAC";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 const TreeView: React.FC<{
     data: TMenuItem;
@@ -174,8 +174,11 @@ export default function PostLayout({
             const res = await axios.get("/api/hellov2", {
                 withCredentials: true,
             });
-            const data = res.data as THelloResponse;
-            return data.user;
+            const validated = HelloResponse.safeParse(res.data);
+            if (!validated.success) {
+                return emptyHelloResponse.user;
+            }
+            return validated.data.user;
         },
     });
 

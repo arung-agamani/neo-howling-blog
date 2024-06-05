@@ -206,3 +206,11 @@ export const HelloResponse = z.object({
     }),
 });
 export type THelloResponse = z.infer<typeof HelloResponse>;
+export const emptyHelloResponse: THelloResponse = {
+    user: {
+        id: "",
+        username: "",
+        role: "",
+        birthday: new Date(),
+    },
+};

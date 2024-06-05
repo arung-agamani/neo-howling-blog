@@ -5,7 +5,7 @@ import Paper from "@mui/material/Paper";
 import Divider from "@mui/material/Divider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "@/utils/axios";
-import { THelloResponse } from "@/types";
+import { emptyHelloResponse, HelloResponse } from "@/types";
 import { Button } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 
@@ -19,8 +19,11 @@ export default function Page() {
             const res = await axios.get("/api/hellov2", {
                 withCredentials: true,
             });
-            const data = res.data as THelloResponse;
-            return data.user;
+            const validated = HelloResponse.safeParse(res.data);
+            if (!validated.success) {
+                return emptyHelloResponse.user;
+            }
+            return validated.data.user;
         },
     });
 
