@@ -1,8 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useSearchParams , useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Chip from "@mui/material/Chip";
+import Button from "@mui/material/Button";
 import { toast } from "react-toastify";
 import axios from "@/utils/axios";
 import debounce from "lodash.debounce";
@@ -216,30 +218,48 @@ export default function Page() {
                         />
                     </div>
 
-                    {isModified ? (
-                        <span className="font-bold px-2 py-2 text-center bg-red-500">
-                            Modified
-                        </span>
-                    ) : (
-                        <span className="font-bold px-2 py-2 text-center bg-green-500">
-                            Not modified
-                        </span>
-                    )}
-                    {isSynced ? (
-                        <span className="font-bold px-2 py-2 text-center bg-green-500">
-                            Synced
-                        </span>
-                    ) : (
-                        <span className="font-bold px-2 py-2 text-center bg-red-500">
-                            Not synced
-                        </span>
-                    )}
-                    <button
-                        className="px-2 py-2 bg-blue-400 hover:bg-blue-200 w-full text-white"
-                        onClick={saveHandler}
-                    >
-                        Save
-                    </button>
+                    <div className="flex flex-col gap-2 mb-4 mx-4">
+                        {isModified ? (
+                            <Chip
+                                label="Modified"
+                                color="error"
+                                className="font-bold px-2 py-2 text-center"
+                            />
+                        ) : (
+                            <Chip
+                                label="Not Modified"
+                                color="success"
+                                className="font-bold px-2 py-2 text-center"
+                            />
+                        )}
+                        {isSynced ? (
+                            <Chip
+                                label="Synced"
+                                color="success"
+                                className="font-bold px-2 py-2 text-center"
+                            />
+                        ) : (
+                            <Chip
+                                label="Not Synced"
+                                color="error"
+                                className="font-bold px-2 py-2 text-center"
+                            />
+                        )}
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            fullWidth
+                            onClick={saveHandler}
+                            sx={{
+                                padding: "0.5rem 1rem",
+                                fontWeight: "bold",
+                                textTransform: "none",
+                            }}
+                        >
+                            Save
+                        </Button>
+                    </div>
                 </div>
             </div>
         </>
