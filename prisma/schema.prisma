@@ -8,7 +8,7 @@ datasource db {
 }
 model blogusers {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  v           Int      @map("__v")
+  v           Int?      @map("__v")
   dateCreated DateTime @db.Date
   email       String
   password    String
@@ -60,15 +60,15 @@ model sessions {
 
 model tags {
   id    String   @id @default(auto()) @map("_id") @db.ObjectId
-  v     Int      @map("__v")
+  v     Int?      @map("__v")
   count Int
-  name  String
+  name  String @unique
   posts String[]
 }
 
 model userauths {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  v           Int      @map("__v")
+  v           Int?      @map("__v")
   accessToken String
   lastAccess  DateTime @db.Date
   userId      String
