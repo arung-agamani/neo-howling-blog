@@ -36,16 +36,16 @@ export async function GET(req: NextRequest) {
             description: true,
         },
     });
-    const tags = await prisma.tags.groupBy({
-        by: ["name"],
-        _sum: {
+    // Change: fetch tags with name and count directly
+    const tags = await prisma.tags.findMany({
+        select: {
+            name: true,
             count: true,
         },
         orderBy: {
-            _sum: {
-                count: "desc",
-            },
+            count: "desc",
         },
+        take: 10,
     });
     const untaggedPosts = await prisma.posts.findMany({
         where: {

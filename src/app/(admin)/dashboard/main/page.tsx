@@ -1,22 +1,20 @@
 "use client";
 
 import axios from "@/utils/axios";
-import { AxiosError } from "axios";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-
-import Container from "@mui/material/Container";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import PostItem from "@/components/Dashboard/PostItem";
-import PostItemSkeleton from "@/components/Dashboard/PostItemSkeleton";
 import Divider from "@mui/material/Divider";
 import Skeleton from "@mui/material/Skeleton";
 import { useAppSelector } from "@/stores/hooks";
 import { useQuery } from "@tanstack/react-query";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import Box from "@mui/material/Box";
 
 interface UserCred {
     user: {
@@ -33,9 +31,7 @@ interface RecentPost {
 
 interface Tag {
     name: string;
-    _sum: {
-        count: number;
-    };
+    count: number;
 }
 
 interface Stats {
@@ -56,6 +52,7 @@ export default function Page() {
         },
         staleTime: 60000,
     });
+
     if (!isSuccess)
         return (
             <Grid
@@ -73,81 +70,298 @@ export default function Page() {
                 <title>Dashboard - Loading...</title>
             </Grid>
         );
+
     return (
         <div className="px-4 py-4">
             <title>Dashboard - Howling Blog</title>
-            <Paper elevation={2} className="px-4 py-4">
-                <Typography variant="h4">Hello, {user.username}!</Typography>
+            {/* Dashboard Overview - full width row */}
+            <Paper elevation={2} className="px-4 py-4" sx={{ mb: 3 }}>
+                <Typography variant="h4" sx={{ mb: 1 }}>
+                    Hello, {user.username}!
+                </Typography>
                 <Typography variant="body1">
                     Last Login: {new Date().toLocaleString()}
                 </Typography>
-                <Typography variant="body1">
+                <Typography variant="body1" sx={{ mb: 2 }}>
                     You have {stats.total} posts,{" "}
                     {stats.total - stats.unpublished} published,{" "}
                     {stats.unpublished} draft
                 </Typography>
             </Paper>
-
-            <br />
-            <Stack spacing={2}>
-                <Paper elevation={2} className="px-4 py-4">
-                    <Typography variant="h5">Recent Post</Typography>
-                    <Divider />
-                    <div className="grid grid-cols-5 gap-4 py-2">
-                        {stats.total === -1
-                            ? [0, 1, 2, 3, 4].map((i) => {
-                                  return <PostItemSkeleton key={i} />;
-                              })
-                            : stats.recentPosts.map((post) => {
-                                  return (
-                                      <PostItem
+            {/* Main columns */}
+            <Box sx={{ display: "flex", gap: 3 }}>
+                {/* Left Column: Recent Posts */}
+                <Box sx={{ flex: 1, minWidth: 320 }}>
+                    <Paper elevation={2} className="px-4 py-4" sx={{ mb: 2 }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                mb: 2,
+                            }}
+                        >
+                            <Typography variant="h5">Recent Posts</Typography>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: "#1976d2",
+                                    cursor: "pointer",
+                                    textDecoration: "underline",
+                                    fontWeight: 500,
+                                }}
+                                onClick={() =>
+                                    (window.location.href =
+                                        "/dashboard/main/posts")
+                                }
+                            >
+                                View all
+                            </Typography>
+                        </Box>
+                        <Divider />
+                        <List>
+                            {stats.total === -1
+                                ? [0, 1, 2, 3, 4].map((i) => (
+                                      <ListItem
+                                          key={i}
+                                          sx={{
+                                              borderBottom: "1px solid #eee",
+                                              px: 0,
+                                              py: 1.5,
+                                          }}
+                                          disablePadding
+                                      >
+                                          <Box sx={{ width: "100%" }}>
+                                              <Skeleton
+                                                  variant="text"
+                                                  width="80%"
+                                                  height={28}
+                                              />
+                                              <Skeleton
+                                                  variant="text"
+                                                  width="60%"
+                                                  height={20}
+                                              />
+                                          </Box>
+                                      </ListItem>
+                                  ))
+                                : stats.recentPosts.map((post) => (
+                                      <ListItem
                                           key={post.id}
-                                          post={post as any}
-                                      />
-                                  );
-                              })}
-                    </div>
-                </Paper>
-                <Paper elevation={2} className="px-4 py-4">
-                    {/* <Typography variant="h4">Tags</Typography>
-                    <div className="grid grid-cols-5">
-                        {stats.tags.slice(0, 10).map((tag) => {
-                            return (
-                                <div
+                                          sx={{
+                                              borderBottom: "1px solid #eee",
+                                              px: 0,
+                                              py: 1.5,
+                                              alignItems: "flex-start",
+                                              "&:last-child": {
+                                                  borderBottom: 0,
+                                              },
+                                          }}
+                                          disablePadding
+                                      >
+                                          <Box sx={{ width: "100%" }}>
+                                              <Typography
+                                                  variant="subtitle1"
+                                                  fontWeight={600}
+                                                  sx={{
+                                                      mb: 0.5,
+                                                      fontSize: 17,
+                                                      color: "#1976d2",
+                                                      cursor: "pointer",
+                                                      "&:hover": {
+                                                          textDecoration:
+                                                              "underline",
+                                                      },
+                                                  }}
+                                                  onClick={() =>
+                                                      (window.location.href = `/dashboard/main/posts/edit?id=${post.id}`)
+                                                  }
+                                              >
+                                                  {post.title}
+                                              </Typography>
+                                              <Typography
+                                                  variant="body2"
+                                                  color="text.secondary"
+                                                  sx={{ fontSize: 14 }}
+                                              >
+                                                  {post.description}
+                                              </Typography>
+                                          </Box>
+                                      </ListItem>
+                                  ))}
+                        </List>
+                    </Paper>
+                </Box>
+                {/* Tags-related Column */}
+                <Box sx={{ flex: 1, minWidth: 280 }}>
+                    <Paper elevation={2} className="px-4 py-4" sx={{ mb: 2 }}>
+                        <Typography variant="h6" sx={{ mb: 1 }}>
+                            Untagged Posts
+                        </Typography>
+                        <Divider />
+                        <List dense>
+                            {stats.total === -1
+                                ? [0, 1, 2, 3, 4].map((i) => (
+                                      <ListItem key={i}>
+                                          <Skeleton
+                                              variant="text"
+                                              width={180}
+                                          />
+                                      </ListItem>
+                                  ))
+                                : stats.untaggedPosts.map((post) => (
+                                      <ListItem key={post.id}>
+                                          <ListItemText
+                                              primary={post.title}
+                                              primaryTypographyProps={{
+                                                  noWrap: true,
+                                                  fontSize: 15,
+                                              }}
+                                          />
+                                      </ListItem>
+                                  ))}
+                        </List>
+                    </Paper>
+                    <Paper elevation={2} className="px-4 py-4">
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                mb: 1,
+                            }}
+                        >
+                            <Typography variant="h6">Top Tags</Typography>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: "#1976d2",
+                                    cursor: "pointer",
+                                    textDecoration: "underline",
+                                    fontWeight: 500,
+                                }}
+                                onClick={() =>
+                                    (window.location.href =
+                                        "/dashboard/main/tags")
+                                }
+                            >
+                                View all
+                            </Typography>
+                        </Box>
+                        <Divider />
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 1,
+                                mt: 2,
+                            }}
+                        >
+                            {stats.tags.slice(0, 10).map((tag) => (
+                                <Box
                                     key={tag.name}
-                                    className="mr-2 border border-slate-900 hover:border-slate-800 hover:bg-blue-700 px-2 py-2 mb-2"
+                                    sx={{
+                                        border: "1px solid #1976d2",
+                                        borderRadius: 2,
+                                        px: 1.5,
+                                        py: 0.5,
+                                        bgcolor: "#e3f2fd",
+                                        minWidth: 80,
+                                        textAlign: "center",
+                                        cursor: "pointer",
+                                        "&:hover": { bgcolor: "#bbdefb" },
+                                    }}
+                                    onClick={() =>
+                                        (window.location.href = `/dashboard/main/tags?tag=${encodeURIComponent(
+                                            tag.name
+                                        )}`)
+                                    }
                                 >
-                                    <p className="text-xl">{tag.name}</p>
-                                    <p className="text-md">
-                                        Total: {tag._sum.count}
-                                    </p>
-                                    <p>
-                                        <span className="underline text-blue-300 hover:text-blue-50 cursor-pointer">
-                                            Open
-                                        </span>
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div> */}
-                    <Typography variant="h5">Untagged Post</Typography>
-                    <Divider />
-                    <div className="grid grid-cols-5 gap-4 py-2">
-                        {stats.total === -1
-                            ? [0, 1, 2, 3, 4].map((i) => {
-                                  return <PostItemSkeleton key={i} />;
-                              })
-                            : stats.untaggedPosts.map((post) => {
-                                  return (
-                                      <PostItem
-                                          key={post.id}
-                                          post={post as any}
-                                      />
-                                  );
-                              })}
-                    </div>
-                </Paper>
-            </Stack>
+                                    <Typography
+                                        variant="body2"
+                                        fontWeight={600}
+                                    >
+                                        {tag.name}
+                                    </Typography>
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                    >
+                                        {tag.count} posts
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Box>
+                    </Paper>
+                </Box>
+                {/* Future Features Column */}
+                <Box sx={{ flex: 1, minWidth: 280 }}>
+                    <Paper elevation={2} className="px-4 py-4" sx={{ mb: 2 }}>
+                        <Typography variant="h6" sx={{ mb: 2 }}>
+                            Dashboard Features
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <Card>
+                                    <CardContent>
+                                        <Typography variant="subtitle1">
+                                            Site Views
+                                        </Typography>
+                                        <Skeleton
+                                            variant="rectangular"
+                                            width={120}
+                                            height={32}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Card>
+                                    <CardContent>
+                                        <Typography variant="subtitle1">
+                                            Comments
+                                        </Typography>
+                                        <Skeleton
+                                            variant="rectangular"
+                                            width={120}
+                                            height={32}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Card>
+                                    <CardContent>
+                                        <Typography variant="subtitle1">
+                                            Scheduled Posts
+                                        </Typography>
+                                        <Skeleton
+                                            variant="rectangular"
+                                            width={120}
+                                            height={32}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Card>
+                                    <CardContent>
+                                        <Typography variant="subtitle1">
+                                            Plugin Updates
+                                        </Typography>
+                                        <Skeleton
+                                            variant="rectangular"
+                                            width={120}
+                                            height={32}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Box>
+            </Box>
         </div>
     );
 }

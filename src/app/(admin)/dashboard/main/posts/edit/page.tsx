@@ -2,15 +2,16 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Chip from "@mui/material/Chip";
 import Button from "@mui/material/Button";
 import { toast } from "react-toastify";
 import axios from "@/utils/axios";
-import debounce from "lodash.debounce";
 
 // import "./editor.css";
 import dynamic from "next/dynamic";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
 
 const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
     ssr: false,
@@ -31,6 +32,7 @@ export default function Page() {
     const [loading, setLoading] = useState<boolean>(true);
     const [isModified, setIsModified] = useState(false);
     const [isSynced, setIsSynced] = useState(false);
+    const [rightPanelOpen, setRightPanelOpen] = useState(true);
     const titleInputRef = useRef<HTMLTextAreaElement>(null);
     const descInputRef = useRef<HTMLTextAreaElement>(null);
     const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
@@ -169,98 +171,153 @@ export default function Page() {
                         }}
                     />
                 </div>
-                <div className="py-2 bg-white text-black sticky h-full top-0 flex flex-col w-full max-w-xs">
-                    <div className="mx-2 pb-4">
-                        <label className="text-xl">Title</label>
-                        <textarea
-                            name="title"
-                            className="border border-slate-400 rounded-lg px-2 py-1 w-full"
-                            ref={titleInputRef}
-                            defaultValue={page.title}
-                            wrap="soft"
-                        />
-                        <label className="text-xl">Description</label>
-                        <textarea
-                            name="description"
-                            className="border border-slate-400 rounded-lg px-2 py-1 w-full"
-                            ref={descInputRef}
-                            defaultValue={page.description}
-                            wrap="soft"
-                        />
-                        <label htmlFor="" className="text-xl">
-                            Banner
-                        </label>
-                        <textarea
-                            name="bannerUrl"
-                            id=""
-                            className="border border-slate-400 rounded-lg px-2 py-1 w-full"
-                            ref={bannerUrlRef}
-                            wrap="soft"
-                            defaultValue={page.bannerUrl}
-                            onChange={previewBannerUrl}
-                        />
-                        <label htmlFor="" className="text-xl">
-                            Tags
-                        </label>
-                        <textarea
-                            name="tags"
-                            className="border border-slate-400 rounded-lg px-2 py-1 w-full"
-                            ref={tagsRef}
-                            wrap="soft"
-                            defaultValue={page.tags?.join(",")}
-                        />
-                        <img
-                            src=""
-                            alt=""
-                            id="bannerPreview"
-                            ref={imagePrevRef}
-                            className="hidden"
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-2 mb-4 mx-4">
-                        {isModified ? (
-                            <Chip
-                                label="Modified"
-                                color="error"
-                                className="font-bold px-2 py-2 text-center"
-                            />
-                        ) : (
-                            <Chip
-                                label="Not Modified"
-                                color="success"
-                                className="font-bold px-2 py-2 text-center"
-                            />
-                        )}
-                        {isSynced ? (
-                            <Chip
-                                label="Synced"
-                                color="success"
-                                className="font-bold px-2 py-2 text-center"
-                            />
-                        ) : (
-                            <Chip
-                                label="Not Synced"
-                                color="error"
-                                className="font-bold px-2 py-2 text-center"
-                            />
-                        )}
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            size="large"
-                            fullWidth
-                            onClick={saveHandler}
-                            sx={{
-                                padding: "0.5rem 1rem",
-                                fontWeight: "bold",
-                                textTransform: "none",
-                            }}
-                        >
-                            Save
-                        </Button>
-                    </div>
+                {/* Collapse/Expand Button */}
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        background: "#fff",
+                        borderLeft: "1px solid #eee",
+                        minWidth: "24px",
+                        cursor: "pointer",
+                        userSelect: "none",
+                    }}
+                >
+                    <button
+                        aria-label={
+                            rightPanelOpen ? "Collapse panel" : "Expand panel"
+                        }
+                        onClick={() => setRightPanelOpen((v) => !v)}
+                        style={{
+                            background: "none",
+                            border: "none",
+                            padding: "8px",
+                            cursor: "pointer",
+                            fontSize: "1.2rem",
+                        }}
+                    >
+                        {rightPanelOpen ? "⮞" : "⮜"}
+                    </button>
                 </div>
+                {/* Right Panel */}
+                {rightPanelOpen && (
+                    <div
+                        className="sticky h-full top-0 flex flex-col w-full max-w-xs bg-white"
+                        id="right-panel"
+                        style={{
+                            paddingTop: 16,
+                            paddingBottom: 16,
+                            color: "inherit",
+                            minWidth: 0,
+                        }}
+                    >
+                        <Box className="mx-2 pb-4" sx={{ flex: 1 }}>
+                            <TextField
+                                label="Title"
+                                name="title"
+                                inputRef={titleInputRef}
+                                defaultValue={page.title}
+                                multiline
+                                minRows={2}
+                                fullWidth
+                                margin="dense"
+                                variant="outlined"
+                                onChange={() => setIsModified(true)}
+                            />
+                            <TextField
+                                label="Description"
+                                name="description"
+                                inputRef={descInputRef}
+                                defaultValue={page.description}
+                                multiline
+                                minRows={2}
+                                fullWidth
+                                margin="dense"
+                                variant="outlined"
+                                onChange={() => setIsModified(true)}
+                            />
+                            <TextField
+                                label="Banner"
+                                name="bannerUrl"
+                                inputRef={bannerUrlRef}
+                                defaultValue={page.bannerUrl}
+                                multiline
+                                minRows={2}
+                                fullWidth
+                                margin="dense"
+                                variant="outlined"
+                                onChange={(e) => {
+                                    previewBannerUrl();
+                                    setIsModified(true);
+                                }}
+                            />
+                            <TextField
+                                label="Tags"
+                                name="tags"
+                                inputRef={tagsRef}
+                                defaultValue={page.tags?.join(",")}
+                                multiline
+                                minRows={2}
+                                fullWidth
+                                margin="dense"
+                                variant="outlined"
+                                onChange={() => setIsModified(true)}
+                            />
+                            <img
+                                src=""
+                                alt=""
+                                id="bannerPreview"
+                                ref={imagePrevRef}
+                                className="hidden"
+                                style={{ marginTop: 8 }}
+                            />
+                        </Box>
+                        <Box className="flex flex-col gap-2 mb-4 mx-4">
+                            {isModified ? (
+                                <Chip
+                                    label="Modified"
+                                    color="error"
+                                    className="font-bold px-2 py-2 text-center"
+                                />
+                            ) : (
+                                <Chip
+                                    label="Not Modified"
+                                    color="success"
+                                    className="font-bold px-2 py-2 text-center"
+                                />
+                            )}
+                            {isSynced ? (
+                                <Chip
+                                    label="Synced"
+                                    color="success"
+                                    className="font-bold px-2 py-2 text-center"
+                                />
+                            ) : (
+                                <Chip
+                                    label="Not Synced"
+                                    color="error"
+                                    className="font-bold px-2 py-2 text-center"
+                                />
+                            )}
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                size="large"
+                                fullWidth
+                                onClick={saveHandler}
+                                sx={{
+                                    padding: "0.5rem 1rem",
+                                    fontWeight: "bold",
+                                    textTransform: "none",
+                                }}
+                            >
+                                Save
+                            </Button>
+                        </Box>
+                    </div>
+                )}
             </div>
         </>
     );

@@ -1,9 +1,18 @@
-import prisma from "@/utils/prisma";
+"use client";
+import { useQuery } from "@tanstack/react-query";
 import { Divider, Typography } from "@mui/material";
 import ReprocessTagsButton from "./ReprocessTagsButton";
 import TagsTable from "./Table";
-export default async function TagsPage() {
-    const tags = await prisma.tags.findMany({});
+
+export default function TagsPage() {
+    const { data: tags = [], isLoading } = useQuery({
+        queryKey: ["tags"],
+        queryFn: async () => {
+            const res = await fetch("/api/dashboardv2/tag");
+            if (!res.ok) throw new Error("Failed to fetch tags");
+            return res.json();
+        },
+    });
 
     return (
         <div className="bg-white w-full h-full p-8">
@@ -13,7 +22,11 @@ export default async function TagsPage() {
                 <ReprocessTagsButton />
             </div>
             <div className="mt-4">
-                <TagsTable tags={tags} />
+                {isLoading ? (
+                    <Typography>Loading...</Typography>
+                ) : (
+                    <TagsTable tags={tags} />
+                )}
             </div>
         </div>
     );

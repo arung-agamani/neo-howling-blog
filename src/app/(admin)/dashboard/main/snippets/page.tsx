@@ -1,28 +1,25 @@
 "use client";
 
 import {
-    Card,
-    CardActions,
-    CardContent,
-    CardHeader,
+    Paper,
+    Typography,
     Divider,
     IconButton,
-    Paper,
     Tooltip,
-    Typography,
+    Box,
+    Button,
+    List,
+    ListItem,
+    ListItemText,
 } from "@mui/material";
 import Link from "next/link";
 import React from "react";
 import AddIcon from "@mui/icons-material/AddBox";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "@/utils/axios";
-
-// Icons
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "@/utils/axios";
 import { deleteSnippet } from "@/lib/server-actions/Snippet";
 import { toast } from "react-toastify";
 
@@ -57,111 +54,141 @@ const SnippetsPage = () => {
             queryKey: ["snippets"],
         });
     };
+
     return (
-        <Paper className="px-4 py-2 w-full h-full">
-            <Typography variant="h4">Snippets</Typography>
-            <Divider />
-            <div className="py-4">
+        <Paper className="px-4 py-4 w-full h-full">
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    mb: 2,
+                }}
+            >
+                <Typography variant="h4">Snippets</Typography>
                 <Link href="/dashboard/main/snippets/edit">
-                    <Paper elevation={3}>
-                        <div className="p-4 flex">
-                            <IconButton>
-                                <AddIcon />
-                            </IconButton>
-                            <Typography variant="h4" color="text.primary">
-                                New Snippet
-                            </Typography>
-                        </div>
-                    </Paper>
-                </Link>
-            </div>
-            <div className="grid grid-flow-row grid-cols-4 gap-4">
-                {data?.map((snippet) => (
-                    <Card
-                        key={snippet.id}
-                        elevation={2}
-                        className=""
-                        sx={{
-                            backgroundColor: "#fffcff",
-                        }}
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        size="small"
                     >
-                        <CardHeader
-                            title={
-                                <div className="flex gap-2">
-                                    <div className="flex items-center">
-                                        <CalendarMonthIcon />
-                                        <Typography
-                                            variant="body2"
-                                            className="pl-1"
+                        New Snippet
+                    </Button>
+                </Link>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            <List>
+                {data.length === 0 ? (
+                    <Typography variant="body1" sx={{ mt: 2 }}>
+                        No snippets found.
+                    </Typography>
+                ) : (
+                    data.map((snippet) => (
+                        <ListItem
+                            key={snippet.id}
+                            alignItems="flex-start"
+                            sx={{
+                                borderRadius: 2,
+                                boxShadow: 1,
+                                bgcolor: "#fafbff",
+                                mb: 2,
+                                px: 2,
+                                py: 2,
+                                border: "1px solid #e3e6f0",
+                                transition:
+                                    "box-shadow 0.2s, border-color 0.2s",
+                                "&:hover": {
+                                    boxShadow: 4,
+                                    borderColor: "#1976d2",
+                                    bgcolor: "#f0f7ff",
+                                },
+                                display: "flex",
+                                alignItems: "flex-start",
+                            }}
+                            secondaryAction={
+                                <Box>
+                                    <Tooltip title="View this snippet">
+                                        <IconButton
+                                            component={Link}
+                                            href={`/snippet/${snippet.slug}`}
+                                            size="small"
                                         >
+                                            <VisibilityIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Edit this snippet">
+                                        <IconButton
+                                            component={Link}
+                                            href={{
+                                                pathname:
+                                                    "/dashboard/main/snippets/edit",
+                                                query: { id: snippet.id },
+                                            }}
+                                            size="small"
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Delete this snippet">
+                                        <IconButton
+                                            onClick={() =>
+                                                deleteHandler(snippet.id)
+                                            }
+                                            size="small"
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Box>
+                            }
+                        >
+                            <ListItemText
+                                primary={
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}
+                                    >
+                                        <Typography
+                                            variant="subtitle1"
+                                            fontWeight={600}
+                                            sx={{
+                                                color: "#1976d2",
+                                                fontSize: 18,
+                                            }}
+                                        >
+                                            {snippet.title}
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                            sx={{ ml: 1 }}
+                                        >
+                                            by {snippet.owner.username} •{" "}
                                             {new Date(
                                                 snippet.datePosted
-                                            ).toLocaleString()}
+                                            ).toLocaleDateString()}
                                         </Typography>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <AccountCircleIcon />
-                                        <Typography
-                                            variant="body2"
-                                            className="pl-1"
-                                        >
-                                            {snippet.owner.username}
-                                        </Typography>
-                                    </div>
-                                </div>
-                            }
-                        />
-                        <CardContent
-                            sx={{ paddingTop: "0", paddingBottom: "0" }}
-                        >
-                            <Typography variant="h4">
-                                {snippet.title}
-                            </Typography>
-                            <Typography
-                                variant="body1"
-                                className="text-gray-500"
-                            >
-                                {snippet.description ||
-                                    "No descriptions available"}
-                            </Typography>
-                        </CardContent>
-                        <CardActions>
-                            <Link
-                                href={{
-                                    pathname: `/snippet/${snippet.slug}`,
-                                }}
-                            >
-                                <Tooltip title="View this snippet">
-                                    <IconButton>
-                                        <VisibilityIcon />
-                                    </IconButton>
-                                </Tooltip>
-                            </Link>
-                            <Link
-                                href={{
-                                    pathname: "/dashboard/main/snippets/edit",
-                                    query: {
-                                        id: snippet.id,
-                                    },
-                                }}
-                            >
-                                <Tooltip title="Edit this snippet">
-                                    <IconButton>
-                                        <EditIcon />
-                                    </IconButton>
-                                </Tooltip>
-                            </Link>
-                            <Tooltip title="Delete this snippet">
-                                <IconButton
-                                    onClick={() => deleteHandler(snippet.id)}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Tooltip>
-                        </CardActions>
-                    </Card>
-                ))}
-            </div>
+                                    </Box>
+                                }
+                                secondary={
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{ mt: 0.5 }}
+                                    >
+                                        {snippet.description ||
+                                            "No descriptions available"}
+                                    </Typography>
+                                }
+                            />
+                        </ListItem>
+                    ))
+                )}
+            </List>
         </Paper>
     );
 };

@@ -9,6 +9,17 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ListPostsResponse } from "@/lib/Post";
 import Link from "next/link";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Typography,
+    CircularProgress,
+} from "@mui/material";
 
 interface Props {
     tags: Tags[];
@@ -47,36 +58,32 @@ const TagsTable: React.FC<Props> = ({ tags }) => {
         columns,
         data: tags,
         enableBottomToolbar: false,
-        enableTopToolbar: false,
+        enableTopToolbar: true,
         enableEditing: false,
         initialState: {
-            sorting: [{ id: "count", desc: true }], // Default sort by count in descending order
-            expanded: true, // Set all rows to be expanded by default
+            sorting: [{ id: "count", desc: true }],
+            expanded: true,
         },
         paginationDisplayMode: "pages",
         renderDetailPanel: ({ row }) => (
             <div className="p-4">
-                <p className="font-bold">Posts with this tag:</p>
-                <ul className="list-disc pl-6">
-                    {row.original.posts.length > 0 ? (
-                        <table className="table-auto border-collapse border border-gray-300 w-full text-left">
-                            <thead>
-                                <tr>
-                                    <th className="border border-gray-300 px-4 py-2">
-                                        Title
-                                    </th>
-                                    <th className="border border-gray-300 px-4 py-2">
-                                        Date Posted
-                                    </th>
-                                    <th className="border border-gray-300 px-4 py-2">
-                                        Date Updated
-                                    </th>
-                                    <th className="border border-gray-300 px-4 py-2">
-                                        Published
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                <Typography variant="h6" gutterBottom>
+                    Posts with this tag:
+                </Typography>
+                {postsQuery.isLoading ? (
+                    <CircularProgress />
+                ) : row.original.posts.length > 0 ? (
+                    <TableContainer component={Paper}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Title</TableCell>
+                                    <TableCell>Date Posted</TableCell>
+                                    <TableCell>Date Updated</TableCell>
+                                    <TableCell>Published</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
                                 {row.original.posts
                                     .map((post) => {
                                         const postDetails =
@@ -93,8 +100,8 @@ const TagsTable: React.FC<Props> = ({ tags }) => {
                                             : 0
                                     )
                                     .map((postDetails, index) => (
-                                        <tr key={index}>
-                                            <td className="border border-gray-300 px-4 py-2">
+                                        <TableRow key={index}>
+                                            <TableCell>
                                                 <Link
                                                     href={`/dashboard/main/posts/edit?id=${postDetails?.id}`}
                                                     className="text-blue-500 hover:underline"
@@ -102,8 +109,8 @@ const TagsTable: React.FC<Props> = ({ tags }) => {
                                                     {postDetails?.title ||
                                                         "Unknown Post"}
                                                 </Link>
-                                            </td>
-                                            <td className="border border-gray-300 px-4 py-2">
+                                            </TableCell>
+                                            <TableCell>
                                                 {postDetails?.datePosted
                                                     ? new Date(
                                                           postDetails.datePosted
@@ -120,27 +127,29 @@ const TagsTable: React.FC<Props> = ({ tags }) => {
                                                           postDetails.datePosted
                                                       ).toLocaleDateString()
                                                     : "N/A"}
-                                            </td>
-                                            <td className="border border-gray-300 px-4 py-2">
+                                            </TableCell>
+                                            <TableCell>
                                                 {postDetails?.updatedAt
                                                     ? new Date(
                                                           postDetails.updatedAt
                                                       ).toLocaleDateString()
                                                     : "N/A"}
-                                            </td>
-                                            <td className="border border-gray-300 px-4 py-2">
+                                            </TableCell>
+                                            <TableCell>
                                                 {postDetails?.isPublished
                                                     ? "Yes"
                                                     : "No"}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p className="text-gray-500">No posts available</p>
-                    )}
-                </ul>
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                ) : (
+                    <Typography color="textSecondary">
+                        No posts available
+                    </Typography>
+                )}
             </div>
         ),
     });
