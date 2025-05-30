@@ -45,6 +45,8 @@ import type { AxiosResponse } from "axios";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 
+const ASSET_HOST = "https://cdn.howlingmoon.dev"
+
 const AssetBrowserDialogPayload = z.discriminatedUnion("op", [
     z.object({
         op: z.literal("createFolder"),
@@ -318,19 +320,27 @@ const AssetsBrowserPage = () => {
                     {mime.lookup(item.name || "")}
                 </p>
                 <p className="font-semibold text-blue-900">Link:</p>
-                <a
-                    className="break-words col-span-3 hyperlink"
-                    href={`https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${item.id}`}
-                    target="_blank"
-                >
-                    {`https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${item.id}`}
-                </a>
+                <div className="col-span-3">
+                    <a
+                        className="break-words hyperlink"
+                        href={`${ASSET_HOST}/${item.id}`}
+                        target="_blank"
+                    >
+                        {`${ASSET_HOST}/${item.id}`}
+                    </a><IconButton
+                        onClick={() => {
+                            copyToClipboard(`${ASSET_HOST}/${item.id}`);
+                        }}
+                    >
+                        <ContentCopyIcon />
+                    </IconButton>
+                </div>
                 <p className="font-semibold text-blue-900">Markdown Format:</p>
                 <div className="col-span-3">
                     <IconButton
                         onClick={() => {
                             copyToClipboard(
-                                `![](https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${item.id})`,
+                                `![](${ASSET_HOST}/${item.id})`,
                             );
                         }}
                     >
@@ -359,6 +369,26 @@ const AssetsBrowserPage = () => {
             </React.Fragment>
         );
     };
+
+    const RenderFilePreview = () => {
+        const item = objects && objects.find((x) => x.id === selectedId);
+        if (!item) return null;
+        const mimeType = mime.lookup(item.name || "")
+        if (mimeType && mimeType.startsWith("image/")) {
+            return (
+                <img
+                    src={`${ASSET_HOST}/${item.id}`}
+                    className="py-2"
+                    alt={`Preview image`}
+                />
+            );
+        }
+        return (
+            <p className="text-gray-500">
+                No preview available for this file type.
+            </p>
+        );
+    }
 
     useEffect(() => {
         setCurrentLocation(searchParams.get("cd") || "");
@@ -433,14 +463,8 @@ const AssetsBrowserPage = () => {
                             }
                         </p>
                         <hr />
-                        <img
-                            src={`https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${
-                                objects.find((x: any) => x.id === selectedId)
-                                    ?.id
-                            }`}
-                            className="py-2"
-                            alt={`Preview image`}
-                        />
+                        <RenderFilePreview />
+
                         <div className="grid grid-cols-4 gap-1">
                             <DetailPaneData />
                         </div>
@@ -485,11 +509,10 @@ const AssetsBrowserPage = () => {
                             {objects.map((obj: any) => (
                                 <div
                                     key={obj.id}
-                                    className={`px-2 py-4 rounded-lg border flex gap-2 ${
-                                        selectedId === obj.id
-                                            ? "bg-slate-100"
-                                            : ""
-                                    } hover:cursor-pointer hover:bg-slate-200 transition-colors duration-75`}
+                                    className={`px-2 py-4 rounded-lg border flex gap-2 ${selectedId === obj.id
+                                        ? "bg-slate-100"
+                                        : ""
+                                        } hover:cursor-pointer hover:bg-slate-200 transition-colors duration-75`}
                                     onClickCapture={() => {
                                         setSelectedId(obj.id);
                                         if (!obj.isDir) {
@@ -502,7 +525,7 @@ const AssetsBrowserPage = () => {
                                         else
                                             window
                                                 .open(
-                                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${obj.id}`,
+                                                    `${ASSET_HOST}/${obj.id}`,
                                                     "_blank",
                                                 )
                                                 ?.focus();
