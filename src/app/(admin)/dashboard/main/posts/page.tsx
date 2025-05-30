@@ -2,7 +2,7 @@
 import Link from "next/link";
 import PostItem from "@/components/Dashboard/PostItem";
 import axios from "@/utils/axios";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -13,8 +13,9 @@ import Pagination from "@mui/material/Pagination";
 import Grid from "@mui/material/Grid";
 import Modal from "@mui/material/Modal";
 import CircularProgress from "@mui/material/CircularProgress";
-import PostItemSkeleton from "@/components/Dashboard/PostItemSkeleton";
 import Button from "@mui/material/Button";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePostsQuery } from "../../queries";
 
 const PAGE_SIZE = 12;
 
@@ -31,12 +32,18 @@ const style = {
 };
 
 export default function Page() {
-    const [posts, setPosts] = useState<any[]>([]);
+    const queryClient = useQueryClient()
     const [page, setPage] = useState<number>(1);
     const [paginatedPost, setPaginatedPost] = useState<any[]>([]);
     const [selectedPostId, setSelectedPostId] = useState<string>("");
     const [modalOpen, setModalOpen] = useState<boolean>(false);
-    const [loading, setLoading] = useState(true);
+
+    const { data, isFetching } = usePostsQuery()
+
+    const posts = useMemo(() => {
+        if (!data) return [];
+        return data.filter((x: any) => x.deleted !== true);
+    }, [data])
 
     /** Modal Logic */
     const toggleModal = (val: boolean) => setModalOpen(val);
@@ -52,7 +59,7 @@ export default function Page() {
         const id = selectedPostId;
         try {
             const deleteRes = await axios.delete(
-                `/api/dashboardv2/post/delete?id=${id}&hard`
+                `/api/v1/posts/${id}?hard`
             );
             toast.success("Post deleted!", {
                 position: toast.POSITION.TOP_LEFT,
@@ -73,19 +80,8 @@ export default function Page() {
     };
 
     const fetchPosts = async () => {
-        try {
-            const postsRes = await axios.get("/api/dashboardv2/post/list");
-            setPosts(postsRes.data.filter((x: any) => x.deleted !== true));
-            setLoading(false);
-        } catch (error) {
-            console.log("Error on fetching posts");
-            toast.error("Error on fetching posts");
-        }
-    };
-
-    useEffect(() => {
-        fetchPosts();
-    }, []);
+        await queryClient.invalidateQueries({ queryKey: ["posts"] });
+    }
 
     useEffect(() => {
         const sel = (posts as Array<any>).slice(
@@ -95,7 +91,7 @@ export default function Page() {
         setPaginatedPost(sel);
     }, [posts, page]);
 
-    if (loading)
+    if (isFetching)
         return (
             <Grid
                 container
@@ -119,7 +115,7 @@ export default function Page() {
                     <Typography>
                         Title:{" "}
                         {selectedPostId &&
-                            posts.find((x) => x.id === selectedPostId).title}
+                            posts.find((x: any) => x.id === selectedPostId).title}
                     </Typography>
                     <Typography variant="h5">
                         Are you sure to delete this post?{" "}

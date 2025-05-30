@@ -74,7 +74,7 @@ const PostItem: React.FC<Props> = ({
   const deleteHandler = async (id: string) => {
     try {
       const deleteRes = await axios.delete(
-        `/api/dashboardv2/post/delete?id=${id}`
+        `/api/v1/posts/${id}`
       );
       toast.success("Post deleted!", {
         position: toast.POSITION.TOP_LEFT,
@@ -99,9 +99,9 @@ const PostItem: React.FC<Props> = ({
     }
     try {
       const deleteRes = await axios.delete(
-        `/api/dashboardv2/post/delete?id=${id}&hard`
+        `/api/v1/posts/${id}?hard`
       );
-      toast.success("Post deleted!", {
+      toast.success("Post hard deleted!", {
         position: toast.POSITION.TOP_LEFT,
       });
       if (reloadPosts) {
@@ -120,7 +120,7 @@ const PostItem: React.FC<Props> = ({
 
   const publishHandler = async () => {
     try {
-      const publishRes = await axios.post(`/api/dashboardv2/post/update`, {
+      const publishRes = await axios.patch(`/api/v1/posts/${post.id}`, {
         id: post.id,
         isPublished: !post.isPublished,
         op: "publish",

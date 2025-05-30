@@ -11,6 +11,9 @@ export async function GET() {
             datePosted: true,
             updatedAt: true,
         },
+        orderBy: {
+            datePosted: "desc",
+        },
     });
-    return NextResponse.json({ posts });
+    return NextResponse.json({ success: true, errors: [], data: posts });
 }
