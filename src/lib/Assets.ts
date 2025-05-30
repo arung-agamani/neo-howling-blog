@@ -13,7 +13,7 @@ const BUCKET = process.env.BUCKET_NAME;
 export async function ServerUpload(
     prefix: string,
     fileName: string,
-    mime: string,
+    mime: string
 ) {
     console.log(`Incoming upload ${prefix}${fileName} with mimetype ${mime}`);
     try {
@@ -69,7 +69,7 @@ export async function ServerRenameAsset(source: string, target: string) {
         console.log(`BUCKET is ${BUCKET}\n${source}\n${target}`);
         const copyCommand = new CopyObjectCommand({
             Bucket: BUCKET,
-            CopySource: `${BUCKET}/${source}`,
+            CopySource: encodeURI(`${BUCKET}/${source}`),
             Key: target,
         });
         await s3Client.send(copyCommand);
