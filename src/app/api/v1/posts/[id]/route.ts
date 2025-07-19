@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
 import { z } from "zod";
-import { BadRequest, InternalServerError } from "@/app/api/responses";
+import {
+    BadRequest,
+    InternalServerError,
+    Unauthorized,
+} from "@/app/api/responses";
 import {
     DeletePost,
     HardDeletePost,
     UpdatePost,
     UpdatePostSchema,
 } from "@/lib/Post";
+import { verifyRole } from "@/hooks/useRoleAuth";
 
 const DeleteRequestParams = z.object({
     id: z.string(),
@@ -31,6 +36,8 @@ const UpdatePostSchema = z.object({
     op: z.enum(["update", "publish", "feature"]),
 }) satisfies z.ZodType<UpdatePostSchema>;
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     req: NextRequest,
     { params }: { params: { id: string; hard?: string } }
@@ -45,6 +52,9 @@ export async function GET(
             author: true,
             datePosted: true,
             updatedAt: true,
+            bannerUrl: true,
+            description: true,
+            tags: true,
         },
     });
 
@@ -52,10 +62,13 @@ export async function GET(
         return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ post });
+    return NextResponse.json(post);
 }
 
 export async function PATCH(req: NextRequest) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const body = await req.json();
     const validate = UpdatePostSchema.safeParse(body);
     if (!validate.success) return BadRequest({ errors: validate.error.issues });
@@ -97,6 +110,9 @@ export async function DELETE(
     req: NextRequest,
     { params }: { params: { id: string; hard?: string } }
 ) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const searchParams = req.nextUrl.searchParams;
     const id = params.id;
     const hard = searchParams.get("hard");

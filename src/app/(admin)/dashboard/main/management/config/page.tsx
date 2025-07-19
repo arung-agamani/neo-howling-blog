@@ -49,7 +49,7 @@ export default function Page() {
         const { data: axiosResponseData } = await axios.get<
             Record<string, never>,
             AxiosResponse<ConfigAPIGetResponse>
-        >("/api/dashboardv2/config", { withCredentials: true });
+        >("/api/v1/config", { withCredentials: true });
         setConfigs(axiosResponseData.data);
         isLoading(false);
     }
@@ -64,7 +64,7 @@ export default function Page() {
         const res = await axios.put<
             Config,
             AxiosResponse<ConfigAPIPostResponse>
-        >("/api/dashboardv2/config", data, { withCredentials: true });
+        >("/api/v1/config", data, { withCredentials: true });
         toast.info(res.data.message);
         await fetchConfigs();
         toast.info("Config refetched");

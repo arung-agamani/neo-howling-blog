@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/utils/prisma";
+import { verifyRole } from "@/hooks/useRoleAuth";
+import { Unauthorized } from "@/app/api/responses";
 
 export async function GET(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const userId = params.id;
     const user = await prisma.users.findUnique({
         where: { id: userId },
@@ -32,6 +37,9 @@ export async function PATCH(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
     const userId = params.id;
     const data = await req.json();
 

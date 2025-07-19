@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -21,6 +21,7 @@
     "@mdxeditor/editor": "^2.16.0",
     "@mui/icons-material": "^5.15.7",
     "@mui/material": "^5.15.7",
+    "@mui/material-nextjs": "^5.0.0",
     "@mui/x-date-pickers": "^6.19.3",
     "@next/bundle-analyzer": "^14.1.0",
     "@prisma/client": "^5.12.1",

@@ -45,9 +45,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 //         </LayoutRouterContext.Provider>
 //     );
 // }
-
-import { useAppSelector } from "@/stores/hooks";
-import { UserState } from "@/stores/slice/user";
 import { emptyHelloResponse, HelloResponse } from "@/types";
 import axios from "@/utils/axios";
 import { signOut as nextSignout, useSession } from "next-auth/react";
@@ -55,7 +52,8 @@ import Loading from "./loading";
 import { hierarchy, TMenuItem } from "./menus";
 import { Role, roles } from "./roles";
 import { roleBfs } from "@/lib/RBAC";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useCurrentUserQuery } from "../queries";
 
 const TreeView: React.FC<{
     data: TMenuItem;
@@ -116,8 +114,7 @@ const TreeView: React.FC<{
                         }}
                         onClick={() =>
                             router.push(
-                                `${parentLink}/${
-                                    data.link ? data.link : data.name
+                                `${parentLink}/${data.link ? data.link : data.name
                                 }`
                             )
                         }
@@ -131,18 +128,16 @@ const TreeView: React.FC<{
             )}
             {data.children && (
                 <Collapse in={open} unmountOnExit timeout="auto">
-                    {data.children.map((child, index) => (
+                    {data.children.map((child) => (
                         <div
                             className="ml-4 mt-2"
-                            key={`${parentLink}/${
-                                data.link ? data.link : data.name
-                            }/${child.link ? child.link : child.name}`}
+                            key={`${parentLink}/${data.link ? data.link : data.name
+                                }/${child.link ? child.link : child.name}`}
                         >
                             <TreeView
                                 data={child}
-                                parentLink={`${parentLink}/${
-                                    data.link ? data.link : data.name
-                                }`}
+                                parentLink={`${parentLink}/${data.link ? data.link : data.name
+                                    }`}
                                 depth={depth + 1}
                                 role={role}
                             />
@@ -164,43 +159,16 @@ export default function PostLayout({
     const [open, isOpen] = useState(true);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const openProfileMenu = Boolean(anchorEl);
-    const user = useAppSelector(UserState);
     const router = useRouter();
+    const { data: user, isSuccess: userQuerySuccess } = useCurrentUserQuery()
     const { data: session, status } = useSession();
-    const queryClient = useQueryClient();
-    queryClient.prefetchQuery({
-        queryKey: ["currentAuthenticatedUser"],
-        queryFn: async () => {
-            const res = await axios.get("/api/hellov2", {
-                withCredentials: true,
-            });
-            const validated = HelloResponse.safeParse(res.data);
-            if (!validated.success) {
-                return emptyHelloResponse.user;
-            }
-            return validated.data.user;
-        },
-    });
-
-    useEffect(() => {
-        if (status === "unauthenticated") {
-            router.push("/dashboard");
-        } else if (status === "authenticated") {
-            // axios.get("/api/hellov2", { withCredentials: true }).then((res) => {
-            //     const user = res.data.user;
-            //     dispatch(setUser(user));
-            // });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [status]);
 
     const signout = async () => {
         await nextSignout({ redirect: false });
         router.push("/dashboard");
     };
 
-    if (status === "loading") return null;
-    if (status === "unauthenticated") return null;
+    if (status === "loading" || status === "unauthenticated" || !userQuerySuccess) return null;
     return (
         <>
             <AppBar

@@ -20,7 +20,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "@/utils/axios";
-import { deleteSnippet } from "@/lib/server-actions/Snippet";
 import { toast } from "react-toastify";
 
 interface SnippetListItem {
@@ -40,19 +39,22 @@ const SnippetsPage = () => {
     const { data } = useQuery({
         queryKey: ["snippets"],
         queryFn: async () => {
-            const { data } = await axios.get("/api/dashboardv2/snippet/list");
+            const { data } = await axios.get("/api/v1/snippets");
             return data as SnippetListItem[];
         },
         initialData: [],
     });
 
     const deleteHandler = async (id: string) => {
-        const res = await deleteSnippet(id);
-        if (!res.success) toast.error(res.message);
-        else toast.success(res.message);
-        queryClient.refetchQueries({
-            queryKey: ["snippets"],
-        });
+        try {
+            await axios.delete(`/api/v1/snippets/${id}`);
+            toast.success("Snippet deleted");
+            queryClient.refetchQueries({
+                queryKey: ["snippets"],
+            });
+        } catch (error) {
+            toast.error("Failed to delete snippet");
+        }
     };
 
     return (

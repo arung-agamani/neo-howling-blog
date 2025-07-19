@@ -18,18 +18,6 @@ interface Params {
     id: string;
 }
 
-interface PostResult {
-    datePosted: string;
-    tags: string[];
-    _id: string;
-    title: string;
-    author: string;
-    description: string;
-    bannerUrl: string;
-    isBannerDark: boolean;
-    blogContent: string;
-}
-
 const baseUrl =
     process.env.NODE_ENV === "development"
         ? "http://localhost:3000"
@@ -38,7 +26,7 @@ const baseUrl =
 // const baseUrl = "http://localhost:3001";
 
 export async function generateMetadata({ params }: { params: Params }) {
-    const data = await fetch(`${baseUrl}/api/post?id=${params.id}&h=1`, {
+    const data = await fetch(`${baseUrl}/api/v1/posts/${params.id}`, {
         // next: { revalidate: 10 },
         cache: "no-cache",
     }).then((res) => {
@@ -70,11 +58,10 @@ export const revalidate = 2;
 export default async function Page({ params }: { params: Params }) {
     const headerLists = headers();
     headerLists.get("a");
-    const data = await fetch(`${baseUrl}/api/post?id=${params.id}`).then(
+    const data = await fetch(`${baseUrl}/api/v1/posts/${params.id}`).then(
         (res) => res.json(),
     );
     // console.log(data.blogContent);
-
     return (
         <div className="container mx-auto max-lg bg-white dark:bg-slate-900 px-4 pt-4 overflow-hidden rounded-b-2xl transition-colors duration-200">
             <h1 className="text-3xl mx-8 pt-4 text-center">{data.title}</h1>

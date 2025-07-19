@@ -16,7 +16,7 @@ export default function Page() {
     const { data: user, isSuccess } = useQuery({
         queryKey: ["currentAuthenticatedUser"],
         queryFn: async () => {
-            const res = await axios.get("/api/hellov2", {
+            const res = await axios.get("/api/v1/auth/me", {
                 withCredentials: true,
             });
             const validated = HelloResponse.safeParse(res.data);
@@ -32,7 +32,7 @@ export default function Page() {
         const payload: any = { id: user.id };
         payload[id] = value;
         try {
-            await axios.post("/api/dashboardv2/user/update", payload);
+            await axios.patch("/api/v1/users/" + user.id, payload);
             toast.success(`Data \`${id}\` updated`);
             queryClient.invalidateQueries({
                 queryKey: ["currentAuthenticatedUser"],

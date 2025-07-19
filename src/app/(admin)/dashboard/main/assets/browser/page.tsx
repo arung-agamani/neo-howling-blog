@@ -77,7 +77,7 @@ type TAssetBrowserDialogFields = z.infer<typeof AssetBrowserDialogFields>;
 const RenderBreadcrumbs: React.FC<{
     arr: string[];
     idx: number;
-    setLocation: any;
+    setLocation: React.Dispatch<React.SetStateAction<string>>;
 }> = ({ arr, idx, setLocation }) => {
     if (idx === arr.length || !arr[idx]) return null;
     return (
@@ -110,7 +110,7 @@ const AssetsBrowserPage = () => {
     const searchParams = useSearchParams()!;
     const queryClient = useQueryClient();
     const cd = searchParams?.get("cd");
-    const [currentLocation, setCurrentLocation] = useState(
+    const [currentLocation, setCurrentLocation] = useState<string>(
         (Array.isArray(cd) ? cd[0] : cd) || "",
     );
     const handleLocationNavigate = (loc: string) => {
@@ -125,22 +125,21 @@ const AssetsBrowserPage = () => {
     };
     const [selectedId, setSelectedId] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { handleSubmit, reset, control, setValue, getFieldState } =
+    const { handleSubmit, reset, control, setValue } =
         useForm<TAssetBrowserDialogPayload>({
             resolver: zodResolver(AssetBrowserDialogPayload),
         });
 
     // Directory Navigation
     const fetchDirectoryListing = async () => {
-        const res = await axios.get("/api/dashboardv2/assets/list", {
+        const res = await axios.get("/api/v1/assets", {
             params: {
                 prefix: !(currentLocation === "" || currentLocation === "/")
                     ? currentLocation
                     : undefined,
             },
         });
-
-        return res.data as TDirectoryListingItem[];
+        return res.data?.files as TDirectoryListingItem[];
     };
     const { data: objects, isSuccess } = useQuery({
         queryKey: ["s3DirData", currentLocation],
@@ -233,7 +232,7 @@ const AssetsBrowserPage = () => {
                     TGeneratePUTSignedURLParams,
                     AxiosResponse<TGeneratePUTSignedURLResponse>
                 >(
-                    "/api/dashboardv2/assets/upload-raw",
+                    "/api/v1/assets",
                     {
                         prefix: currentLocation,
                         filename: file.name,
@@ -245,7 +244,7 @@ const AssetsBrowserPage = () => {
                 );
                 if (res.data.success) {
                     try {
-                        const uploadRes = await axios.put(
+                        await axios.put(
                             res.data.signedUrl,
                             file,
                             {
@@ -412,11 +411,11 @@ const AssetsBrowserPage = () => {
                     {dialogDisplayData.fields.map((dialogField) => (
                         <Controller
                             key={dialogField.name}
-                            name={dialogField.name as any}
+                            name={dialogField.name as keyof TAssetBrowserDialogPayload}
                             control={control}
                             rules={{ required: true }}
                             shouldUnregister={true}
-                            defaultValue={""}
+                            defaultValue={undefined}
                             render={({ field, fieldState }) => (
                                 <TextField
                                     {...field}
@@ -458,7 +457,7 @@ const AssetsBrowserPage = () => {
                     <div className="p-4">
                         <p className="break-words text-2xl">
                             {
-                                objects.find((x: any) => x.id === selectedId)
+                                objects.find((x) => x.id === selectedId)
                                     ?.name
                             }
                         </p>
@@ -484,13 +483,11 @@ const AssetsBrowserPage = () => {
                     >
                         Home
                     </div>
-                    {
-                        <RenderBreadcrumbs
-                            arr={currentLocation.split("/")}
-                            idx={0}
-                            setLocation={handleLocationNavigate}
-                        />
-                    }
+                    <RenderBreadcrumbs
+                        arr={currentLocation.split("/")}
+                        idx={0}
+                        setLocation={() => handleLocationNavigate(currentLocation.split("/")[0])}
+                    />
                 </div>
                 <div>
                     <Button
@@ -506,7 +503,7 @@ const AssetsBrowserPage = () => {
                 {isSuccess ? (
                     objects.length > 0 ? (
                         <div className="grid grid-cols-4 gap-4 my-4">
-                            {objects.map((obj: any) => (
+                            {objects.map((obj) => (
                                 <div
                                     key={obj.id}
                                     className={`px-2 py-4 rounded-lg border flex gap-2 ${selectedId === obj.id

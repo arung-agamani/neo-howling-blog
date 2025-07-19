@@ -24,5 +24,5 @@ export default withAuth(async function middleware(request) {
 });
 
 export const config = {
-    matcher: ["/dashboard/(.*)", "/api/dashboardv2(.*)"],
+    matcher: ["/dashboard/(.*)"],
 };

@@ -34,7 +34,7 @@ const Parameter: React.FC<{ config: Config }> = ({ config }) => {
 
     const submit = async (data: any) => {
         try {
-            const res = await axios.post("/api/dashboardv2/config", data, {
+            const res = await axios.post("/api/v1/config", data, {
                 withCredentials: true,
             });
             toast.info(`${data.key} has been updated`);
@@ -50,7 +50,7 @@ const Parameter: React.FC<{ config: Config }> = ({ config }) => {
 
     const deleteParam = async () => {
         try {
-            const res = await axios.delete("/api/dashboardv2/config", {
+            const res = await axios.delete("/api/v1/config", {
                 withCredentials: true,
                 params: {
                     id: config.id,
@@ -81,9 +81,8 @@ const Parameter: React.FC<{ config: Config }> = ({ config }) => {
                     <TextField
                         {...field}
                         label="Key"
-                        className={`w-full ${
-                            getFieldState("key").isDirty ? "glow" : ""
-                        }`}
+                        className={`w-full ${getFieldState("key").isDirty ? "glow" : ""
+                            }`}
                     />
                 )}
                 disabled={formDisabled}
@@ -97,9 +96,8 @@ const Parameter: React.FC<{ config: Config }> = ({ config }) => {
                     <TextField
                         {...field}
                         label="Value"
-                        className={`w-full ${
-                            getFieldState("value").isDirty ? "glow" : ""
-                        }`}
+                        className={`w-full ${getFieldState("value").isDirty ? "glow" : ""
+                            }`}
                     />
                 )}
                 disabled={formDisabled}

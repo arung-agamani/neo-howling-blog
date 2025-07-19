@@ -7,7 +7,6 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Skeleton from "@mui/material/Skeleton";
-import { useAppSelector } from "@/stores/hooks";
 import { useQuery } from "@tanstack/react-query";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -15,6 +14,7 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import Box from "@mui/material/Box";
+import { useCurrentUserQuery } from "../queries";
 
 interface UserCred {
     user: {
@@ -43,17 +43,18 @@ interface Stats {
 }
 
 export default function Page() {
-    const user = useAppSelector((state) => state.user);
+    // const user = useAppSelector((state) => state.user);
+    const { data: user, isSuccess: currentUserQuerySuccess } = useCurrentUserQuery()
     const { data: stats, isSuccess } = useQuery({
         queryKey: ["statsData"],
         queryFn: async () => {
-            const { data } = await axios.get("/api/dashboardv2");
+            const { data } = await axios.get("/api/v1/dashboard/stats");
             return data.stats as Stats;
         },
         staleTime: 60000,
     });
 
-    if (!isSuccess)
+    if (!isSuccess || !currentUserQuerySuccess || !user) {
         return (
             <Grid
                 container
@@ -70,6 +71,7 @@ export default function Page() {
                 <title>Dashboard - Loading...</title>
             </Grid>
         );
+    }
 
     return (
         <div className="px-4 py-4">
@@ -111,8 +113,8 @@ export default function Page() {
                                     fontWeight: 500,
                                 }}
                                 onClick={() =>
-                                    (window.location.href =
-                                        "/dashboard/main/posts")
+                                (window.location.href =
+                                    "/dashboard/main/posts")
                                 }
                             >
                                 View all
@@ -122,73 +124,73 @@ export default function Page() {
                         <List>
                             {stats.total === -1
                                 ? [0, 1, 2, 3, 4].map((i) => (
-                                      <ListItem
-                                          key={i}
-                                          sx={{
-                                              borderBottom: "1px solid #eee",
-                                              px: 0,
-                                              py: 1.5,
-                                          }}
-                                          disablePadding
-                                      >
-                                          <Box sx={{ width: "100%" }}>
-                                              <Skeleton
-                                                  variant="text"
-                                                  width="80%"
-                                                  height={28}
-                                              />
-                                              <Skeleton
-                                                  variant="text"
-                                                  width="60%"
-                                                  height={20}
-                                              />
-                                          </Box>
-                                      </ListItem>
-                                  ))
+                                    <ListItem
+                                        key={i}
+                                        sx={{
+                                            borderBottom: "1px solid #eee",
+                                            px: 0,
+                                            py: 1.5,
+                                        }}
+                                        disablePadding
+                                    >
+                                        <Box sx={{ width: "100%" }}>
+                                            <Skeleton
+                                                variant="text"
+                                                width="80%"
+                                                height={28}
+                                            />
+                                            <Skeleton
+                                                variant="text"
+                                                width="60%"
+                                                height={20}
+                                            />
+                                        </Box>
+                                    </ListItem>
+                                ))
                                 : stats.recentPosts.map((post) => (
-                                      <ListItem
-                                          key={post.id}
-                                          sx={{
-                                              borderBottom: "1px solid #eee",
-                                              px: 0,
-                                              py: 1.5,
-                                              alignItems: "flex-start",
-                                              "&:last-child": {
-                                                  borderBottom: 0,
-                                              },
-                                          }}
-                                          disablePadding
-                                      >
-                                          <Box sx={{ width: "100%" }}>
-                                              <Typography
-                                                  variant="subtitle1"
-                                                  fontWeight={600}
-                                                  sx={{
-                                                      mb: 0.5,
-                                                      fontSize: 17,
-                                                      color: "#1976d2",
-                                                      cursor: "pointer",
-                                                      "&:hover": {
-                                                          textDecoration:
-                                                              "underline",
-                                                      },
-                                                  }}
-                                                  onClick={() =>
-                                                      (window.location.href = `/dashboard/main/posts/edit?id=${post.id}`)
-                                                  }
-                                              >
-                                                  {post.title}
-                                              </Typography>
-                                              <Typography
-                                                  variant="body2"
-                                                  color="text.secondary"
-                                                  sx={{ fontSize: 14 }}
-                                              >
-                                                  {post.description}
-                                              </Typography>
-                                          </Box>
-                                      </ListItem>
-                                  ))}
+                                    <ListItem
+                                        key={post.id}
+                                        sx={{
+                                            borderBottom: "1px solid #eee",
+                                            px: 0,
+                                            py: 1.5,
+                                            alignItems: "flex-start",
+                                            "&:last-child": {
+                                                borderBottom: 0,
+                                            },
+                                        }}
+                                        disablePadding
+                                    >
+                                        <Box sx={{ width: "100%" }}>
+                                            <Typography
+                                                variant="subtitle1"
+                                                fontWeight={600}
+                                                sx={{
+                                                    mb: 0.5,
+                                                    fontSize: 17,
+                                                    color: "#1976d2",
+                                                    cursor: "pointer",
+                                                    "&:hover": {
+                                                        textDecoration:
+                                                            "underline",
+                                                    },
+                                                }}
+                                                onClick={() =>
+                                                    (window.location.href = `/dashboard/main/posts/edit?id=${post.id}`)
+                                                }
+                                            >
+                                                {post.title}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{ fontSize: 14 }}
+                                            >
+                                                {post.description}
+                                            </Typography>
+                                        </Box>
+                                    </ListItem>
+                                ))}
                         </List>
                     </Paper>
                 </Box>
@@ -202,24 +204,24 @@ export default function Page() {
                         <List dense>
                             {stats.total === -1
                                 ? [0, 1, 2, 3, 4].map((i) => (
-                                      <ListItem key={i}>
-                                          <Skeleton
-                                              variant="text"
-                                              width={180}
-                                          />
-                                      </ListItem>
-                                  ))
+                                    <ListItem key={i}>
+                                        <Skeleton
+                                            variant="text"
+                                            width={180}
+                                        />
+                                    </ListItem>
+                                ))
                                 : stats.untaggedPosts.map((post) => (
-                                      <ListItem key={post.id}>
-                                          <ListItemText
-                                              primary={post.title}
-                                              primaryTypographyProps={{
-                                                  noWrap: true,
-                                                  fontSize: 15,
-                                              }}
-                                          />
-                                      </ListItem>
-                                  ))}
+                                    <ListItem key={post.id}>
+                                        <ListItemText
+                                            primary={post.title}
+                                            primaryTypographyProps={{
+                                                noWrap: true,
+                                                fontSize: 15,
+                                            }}
+                                        />
+                                    </ListItem>
+                                ))}
                         </List>
                     </Paper>
                     <Paper elevation={2} className="px-4 py-4">
@@ -241,8 +243,8 @@ export default function Page() {
                                     fontWeight: 500,
                                 }}
                                 onClick={() =>
-                                    (window.location.href =
-                                        "/dashboard/main/tags")
+                                (window.location.href =
+                                    "/dashboard/main/tags")
                                 }
                             >
                                 View all
@@ -272,9 +274,9 @@ export default function Page() {
                                         "&:hover": { bgcolor: "#bbdefb" },
                                     }}
                                     onClick={() =>
-                                        (window.location.href = `/dashboard/main/tags?tag=${encodeURIComponent(
-                                            tag.name
-                                        )}`)
+                                    (window.location.href = `/dashboard/main/tags?tag=${encodeURIComponent(
+                                        tag.name
+                                    )}`)
                                     }
                                 >
                                     <Typography

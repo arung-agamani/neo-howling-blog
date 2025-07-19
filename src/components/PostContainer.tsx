@@ -10,7 +10,7 @@ interface Props {
 const PostContainer: React.FC<Props> = ({ content }) => {
     const { theme } = useTheme();
     const [mounted, setMounted] = useState(false);
-
+    console.log(content)
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -31,9 +31,8 @@ const PostContainer: React.FC<Props> = ({ content }) => {
             <div
                 suppressHydrationWarning
                 dangerouslySetInnerHTML={{ __html: content }}
-                className={`mx-2 p-4 lg:mx-10 mt-10 font-sans font-normal markdown-body transition-colors duration-200 ${
-                    theme === "dark" ? "mark-dark" : ""
-                } bg-white dark:bg-slate-900`}
+                className={`mx-2 p-4 lg:mx-10 mt-10 font-sans font-normal markdown-body transition-colors duration-200 ${theme === "dark" ? "mark-dark" : ""
+                    } bg-white dark:bg-slate-900`}
             />
         </>
     );

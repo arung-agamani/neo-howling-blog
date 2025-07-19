@@ -33,7 +33,6 @@ import {
 
 import "@mdxeditor/editor/style.css";
 import "../../../../../(user)/post/[id]/github-markdown.css";
-import { processMarkdown } from "@/lib/server-actions/Snippet";
 import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/utils/axios";
@@ -50,14 +49,25 @@ const SnippetEditPage = () => {
 
         const rawMarkdown = editorRef.current.getMarkdown();
         const id = searchParams?.get("id");
-        const processRes = await processMarkdown(rawMarkdown, id);
-        if (processRes.success) {
-            if (id) toast.success("Snippet updated");
-            else toast.success("Snippet created");
-        } else {
-            toast.error(processRes.message);
-            if (processRes.errors) {
-                for (const [key, value] of Object.entries(processRes.errors)) {
+
+        try {
+            if (id) {
+                // Update existing snippet
+                await axios.patch(`/api/v1/snippets/${id}`, {
+                    content: rawMarkdown,
+                });
+                toast.success("Snippet updated");
+            } else {
+                // Create new snippet
+                await axios.post("/api/v1/snippets", {
+                    content: rawMarkdown,
+                });
+                toast.success("Snippet created");
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to save snippet");
+            if (error.response?.data?.errors) {
+                for (const [, value] of Object.entries(error.response.data.errors)) {
                     toast.error(`'${value}'`);
                 }
             }
@@ -72,11 +82,7 @@ const SnippetEditPage = () => {
             if (!editorRef.current) return;
 
             try {
-                const res = await axios.get("/api/dashboardv2/snippet/get", {
-                    params: {
-                        id,
-                    },
-                });
+                const res = await axios.get("/api/v1/snippets/" + id);
                 editorRef.current.setMarkdown(res.data.content);
             } catch (error) {
                 editorRef.current.setMarkdown(
