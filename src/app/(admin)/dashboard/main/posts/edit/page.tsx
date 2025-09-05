@@ -49,11 +49,7 @@ export default function Page() {
             if (!id) return setLoading(false);
 
             try {
-                const res = await axios.get("/api/dashboardv2/post/get", {
-                    params: {
-                        id,
-                    },
-                });
+                const res = await axios.get("/api/v1/posts/" + id);
                 setContent(res.data.blogContent);
                 console.log(res.data);
                 setPage(res.data);
@@ -94,7 +90,7 @@ export default function Page() {
         if (!id) op = "create";
         if (op === "update") {
             try {
-                const res = await axios.post("/api/dashboardv2/post/update", {
+                const res = await axios.patch("/api/v1/posts/" + id, {
                     id,
                     op: "update",
                     blogContent: content,
@@ -117,13 +113,10 @@ export default function Page() {
             }
         } else if (op === "create") {
             try {
-                const res = await axios.post("/api/dashboardv2/post/create", {
+                const res = await axios.post("/api/v1/posts", {
                     author: "Shirayuki Haruka",
-                    op,
                     blogContent: content,
-                    datePosted: new Date(),
                     description: descInputRef.current?.value,
-                    link: "",
                     tags: [],
                     title: titleInputRef.current?.value,
                 });

@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
                         name: path.basename(obj.Key!),
                         modDate: obj.LastModified,
                         size: obj.Size,
+                        isDir: false,
                     }))
             );
         }
@@ -61,6 +62,7 @@ export async function GET(req: NextRequest) {
                 ...s3Prefixes.map((prefix) => ({
                     id: prefix.Prefix!,
                     name: path.basename(prefix.Prefix!),
+                    isDir: true,
                 }))
             );
         }

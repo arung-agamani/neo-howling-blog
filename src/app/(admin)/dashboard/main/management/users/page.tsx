@@ -1,5 +1,4 @@
 "use client";
-import { updateUser } from "@/lib/server-actions/User";
 import { TUserSchema } from "@/types";
 import axios from "@/utils/axios";
 import { Divider, Typography } from "@mui/material";
@@ -17,7 +16,7 @@ export default function UserAdministrationPage() {
     const { data } = useQuery({
         queryKey: ["users"],
         queryFn: async () => {
-            const { data } = await axios.get("/api/dashboardv2/user/list");
+            const { data } = await axios.get("/api/v1/users");
             return data.users;
         },
         initialData: [],
@@ -49,13 +48,17 @@ export default function UserAdministrationPage() {
     const handleEditUser: MRT_TableOptions<TUserSchema>["onEditingRowSave"] =
         async ({ values, table }) => {
             console.log(values);
-            const res = await updateUser(values);
-            if (!res.success) {
-                toast.error(res.message);
-                return;
-            } else {
-                toast.success("User info edited");
-                table.setEditingRow(null);
+            try {
+                const { data } = await axios.put(`/api/v1/users/${values.id}`, values);
+                if (data.success) {
+                    toast.success("User info edited");
+                    table.setEditingRow(null);
+                } else {
+                    toast.error(data.message || "Failed to update user");
+                }
+            } catch (error) {
+                console.error("Error updating user:", error);
+                toast.error("Failed to update user");
             }
         };
 

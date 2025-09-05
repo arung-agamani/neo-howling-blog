@@ -35,8 +35,8 @@ const TagsTable: React.FC<Props> = ({ tags }) => {
     const postsQuery = useQuery({
         queryKey: ["posts"],
         queryFn: async () => {
-            const res = await fetch("/api/dashboardv2/post/list");
-            const data = (await res.json()) as ListPostsResponse;
+            const res = await fetch("/api/v1/posts");
+            const data = (await res.json()).data as ListPostsResponse;
             return data;
         },
     });
@@ -96,7 +96,7 @@ const TagsTable: React.FC<Props> = ({ tags }) => {
                                     .sort((a, b) =>
                                         a?.datePosted && b?.datePosted
                                             ? new Date(b.datePosted).getTime() -
-                                              new Date(a.datePosted).getTime()
+                                            new Date(a.datePosted).getTime()
                                             : 0
                                     )
                                     .map((postDetails, index) => (
@@ -113,26 +113,26 @@ const TagsTable: React.FC<Props> = ({ tags }) => {
                                             <TableCell>
                                                 {postDetails?.datePosted
                                                     ? new Date(
-                                                          postDetails.datePosted
-                                                      ).toLocaleString(
-                                                          undefined,
-                                                          {
-                                                              hour: "2-digit",
-                                                              minute: "2-digit",
-                                                              second: "2-digit",
-                                                          }
-                                                      ) +
-                                                      " " +
-                                                      new Date(
-                                                          postDetails.datePosted
-                                                      ).toLocaleDateString()
+                                                        postDetails.datePosted
+                                                    ).toLocaleString(
+                                                        undefined,
+                                                        {
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                            second: "2-digit",
+                                                        }
+                                                    ) +
+                                                    " " +
+                                                    new Date(
+                                                        postDetails.datePosted
+                                                    ).toLocaleDateString()
                                                     : "N/A"}
                                             </TableCell>
                                             <TableCell>
                                                 {postDetails?.updatedAt
                                                     ? new Date(
-                                                          postDetails.updatedAt
-                                                      ).toLocaleDateString()
+                                                        postDetails.updatedAt
+                                                    ).toLocaleDateString()
                                                     : "N/A"}
                                             </TableCell>
                                             <TableCell>

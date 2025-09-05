@@ -44,30 +44,38 @@ export default async function Page() {
                 <div className="flex flex-col flex-grow max-w-5xl mx-auto">
                     {posts.length > 0 &&
                         posts.map((x: any) => (
-                            <Link href={`post/${x.id}`} key={x.id}>
-                                <div
-                                    className="pb-4 mx-auto mb-4 bg-white dark:bg-slate-800 lg:rounded-lg 
-                            shadow w-full flex flex-col transition-colors duration-200"
-                                >
-                                    {/* <img
-                                        src={
-                                            x.bannerUrl ||
-                                            "https://files.howlingmoon.dev/blog/7-5/1596671970721-no-banner-card-compressed.jpg"
-                                        }
-                                        alt="This post's banner image"
-                                        className="rounded-t-lg w-full h-auto"
-                                    /> */}
-                                    <p className="uppercase font-bold text-orange-500 px-8 pt-4 transition-colors duration-200">
-                                        {x.tags.join(" ")}
-                                    </p>
+                            <div
+                                key={x.id}
+                                className="pb-4 mx-auto mb-4 bg-white dark:bg-slate-800 lg:rounded-lg 
+                    shadow w-full flex flex-col transition-colors duration-200"
+                            >
+                                {x.tags
+                                    ? x.tags.filter((y: string) => y.length)
+                                          .length > 0 && (
+                                          <div className="uppercase font-bold text-orange-500 px-8 pt-4 transition-colors duration-200">
+                                              {x.tags.map((tag: string) => (
+                                                  <Link
+                                                      href={`/tag/${tag
+                                                          .trim()
+                                                          .toLowerCase()}`}
+                                                      key={tag}
+                                                      className="hover:underline hover:text-orange-700 mr-2"
+                                                  >
+                                                      {tag.trim()}
+                                                  </Link>
+                                              ))}
+                                          </div>
+                                      )
+                                    : null}
+                                <Link href={`post/${x.id}`}>
                                     <p className="text-black dark:text-gray-50 text-2xl lg:text-4xl font-bold px-8 mt-4 transition-colors duration-200">
                                         {x.title}
                                     </p>
                                     <p className="text-gray-700 dark:text-gray-300 px-8 py-4 lg:py-8 text-lg lg:text-xl font-light transition-colors duration-200">
                                         {x.description}
                                     </p>
-                                </div>
-                            </Link>
+                                </Link>
+                            </div>
                         ))}
                     <Link href={"/page/2"}>
                         <div className="justify-center hover:cursor-pointer">

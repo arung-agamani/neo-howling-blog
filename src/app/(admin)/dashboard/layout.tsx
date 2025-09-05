@@ -3,7 +3,6 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
-import ReduxProvider from "@/stores/ReduxProvider";
 import Script from "next/script";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -36,9 +35,9 @@ export default function PostLayout({
             <body className="">
                 <ToastContainer autoClose={3000} pauseOnFocusLoss={false} />
                 <SessionProvider>
-                    <ThemeRegistry options={{ key: "mui" }}>
+                    <ThemeRegistry>
                         <QueryProviders>
-                            <ReduxProvider>{children}</ReduxProvider>
+                            {children}
                         </QueryProviders>
                     </ThemeRegistry>
                 </SessionProvider>

@@ -11,7 +11,7 @@ const ReprocessTagsButton: React.FC = () => {
     const handleReprocessTags = async () => {
         setIsProcessing(true);
         try {
-            const response = await fetch("/api/dashboardv2/tag/process", {
+            const response = await fetch("/api/v1/tags/process", {
                 method: "POST",
             });
             if (!response.ok) {

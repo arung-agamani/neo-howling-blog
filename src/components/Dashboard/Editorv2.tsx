@@ -52,8 +52,7 @@ const Editor: React.FC<Props> = ({
 
                 try {
                     const head = await fetch(
-                        `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
-                            date.getMonth() + 1
+                        `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${date.getMonth() + 1
                         }/${date.getDate()}/${randPrefix}_${loadedFile?.name}`,
                         {
                             method: "HEAD",
@@ -71,7 +70,7 @@ const Editor: React.FC<Props> = ({
                 try {
                     toast.info(`Uploading ${loadedFile?.name}...`);
                     const presignedUrl = await fetch(
-                        `${window.location.origin}/api/dashboardv2/assets/upload`,
+                        `${window.location.origin}/api/v1/assets`,
                         {
                             method: "POST",
                             headers: {
@@ -103,8 +102,7 @@ const Editor: React.FC<Props> = ({
                         `File ${loadedFile?.name} has been successfully uploaded`,
                     );
                     resolve(
-                        `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
-                            date.getMonth() + 1
+                        `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${date.getMonth() + 1
                         }/${date.getDate()}/${randPrefix}_${loadedFile?.name}`,
                     );
                 } catch (error) {

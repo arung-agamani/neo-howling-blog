@@ -14,7 +14,12 @@ export default function QueryProviders({
     children: React.ReactNode;
 }) {
     const [queryClient] = useState(() => new QueryClient());
-
+    queryClient.setDefaultOptions({
+        queries: {
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
+        }
+    })
     return (
         <QueryClientProvider client={queryClient}>
             <HydrationBoundary>{children}</HydrationBoundary>

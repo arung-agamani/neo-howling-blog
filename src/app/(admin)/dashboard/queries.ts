@@ -1,3 +1,4 @@
+import { emptyHelloResponse, HelloResponse } from "@/types";
 import axios from "@/utils/axios";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -16,5 +17,24 @@ export const usePostsQuery = () => {
             }
         },
         placeholderData: [],
+    });
+};
+
+export const useCurrentUserQuery = () => {
+    return useQuery({
+        queryKey: ["user", "me"],
+        queryFn: async () => {
+            const res = await axios.get("/api/v1/auth/me", {
+                withCredentials: true,
+            });
+            const validated = HelloResponse.safeParse(res.data);
+            if (!validated.success) {
+                return emptyHelloResponse.user;
+            }
+            return validated.data.user;
+        },
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        refetchOnMount: false,
     });
 };

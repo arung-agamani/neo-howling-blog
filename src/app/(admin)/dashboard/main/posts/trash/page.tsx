@@ -27,8 +27,8 @@ export default function Page() {
 
   const fetchPosts = async () => {
     try {
-      const postsRes = await axios.get("/api/dashboardv2/post/list");
-      setPosts(postsRes.data.filter((x: any) => x.deleted === true));
+      const postsRes = await axios.get("/api/v1/posts");
+      setPosts(postsRes.data.data.filter((x: any) => x.deleted === true));
     } catch (error) {
       console.log("Error on fetching posts");
       toast.error("Error on fetching posts");
@@ -97,13 +97,13 @@ export default function Page() {
       <div className="grid grid-cols-4 gap-2 px-2">
         {paginatedPost
           ? paginatedPost
-              .filter((x: any) => x.deleted === true)
-              .map((post: any) => (
-                <PostItem key={post.id} post={post} reloadPosts={fetchPosts} />
-              ))
+            .filter((x: any) => x.deleted === true)
+            .map((post: any) => (
+              <PostItem key={post.id} post={post} reloadPosts={fetchPosts} />
+            ))
           : [0, 1, 2, 3, 4].map((i) => {
-              return <PostItemSkeleton key={i} />;
-            })}
+            return <PostItemSkeleton key={i} />;
+          })}
       </div>
     </>
   );

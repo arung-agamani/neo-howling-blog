@@ -8,7 +8,7 @@ export default function TagsPage() {
     const { data: tags = [], isLoading } = useQuery({
         queryKey: ["tags"],
         queryFn: async () => {
-            const res = await fetch("/api/dashboardv2/tag");
+            const res = await fetch("/api/v1/tags");
             if (!res.ok) throw new Error("Failed to fetch tags");
             return res.json();
         },
