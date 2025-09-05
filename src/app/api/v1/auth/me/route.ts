@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import prisma from "@/utils/prisma";
 
 export async function GET(req: NextRequest) {
     // Use NextAuth to get the session
