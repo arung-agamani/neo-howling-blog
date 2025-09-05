@@ -10,6 +10,7 @@ import { CreatePost, CreatePostPayload } from "@/lib/Post";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const CreatePostSchema = z.object({
     author: z.string(),

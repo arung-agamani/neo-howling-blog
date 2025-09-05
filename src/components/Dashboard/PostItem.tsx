@@ -99,7 +99,7 @@ const PostItem: React.FC<Props> = ({
     }
     try {
       const deleteRes = await axios.delete(
-        `/api/v1/posts/${id}?hard`
+        `/api/v1/posts/${id}?hard=true`
       );
       toast.success("Post hard deleted!", {
         position: toast.POSITION.TOP_LEFT,
