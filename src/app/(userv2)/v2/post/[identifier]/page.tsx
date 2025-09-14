@@ -1,0 +1,104 @@
+import Link from "next/link";
+import prisma from "@/utils/prisma"
+import { Blockquote, Heading, Lead, Text, List, OrderedList, ListItem } from "@/components/Typography";
+import { unified } from "unified";
+import rehypeParse from "rehype-parse"
+import React from "react";
+import rehypeReact from "rehype-react";
+import { Fragment, jsx, jsxs } from "react/jsx-runtime"
+
+const makeHeading = (level: 1 | 2 | 3 | 4 | 5 | 6 | undefined = 1) => {
+    return ({ children }: { children: React.ReactNode }) => {
+        return <Heading level={level} className="mt-4 mb-2">{children}</Heading>
+    }
+}
+
+const CustomParagraph = ({ children }: { children: React.ReactNode }) => {
+    return <Text className="mb-4 leading-relaxed">{children}</Text>
+}
+
+const CustomUnorderedList = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <ul className="my-6 ml-6 space-y-2 list-disc marker:text-blue-500 dark:marker:text-blue-400 
+                       text-slate-900 dark:text-slate-100">
+            {children}
+        </ul>
+    )
+}
+
+const CustomOrderedList = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <ol className="my-6 ml-6 space-y-2 list-decimal marker:text-blue-500 dark:marker:text-blue-400 
+                       marker:font-semibold text-slate-900 dark:text-slate-100">
+            {children}
+        </ol>
+    )
+}
+
+const CustomListItem = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <li className="pl-2 leading-relaxed hover:text-blue-600 dark:hover:text-blue-300 
+                       transition-colors duration-200">
+            {children}
+        </li>
+    )
+}
+
+// Custom blockquote component
+const CustomBlockquote = ({ children }: { children: React.ReactNode }) => {
+    return <Blockquote className="my-6">{children}</Blockquote>
+}
+
+const componentMap: any = {
+    h1: makeHeading(3),
+    h2: makeHeading(4),
+    h3: makeHeading(5),
+    h4: makeHeading(6),
+    h5: makeHeading(6),
+    h6: makeHeading(6),
+    p: CustomParagraph,
+    ul: CustomUnorderedList,
+    ol: CustomOrderedList,
+    li: CustomListItem,
+    blockquote: CustomBlockquote,
+    img: (props: any) => <img {...props} className="my-4 mx-auto" alt={props.alt || "Post image"} />
+}
+
+export default async function PostDetailPage({
+    params
+}: { params: Promise<{ identifier: string }> }) {
+    const { identifier } = await params;
+    const postData = await prisma.posts.findFirst({
+        where: {
+            id: identifier
+        }
+    })
+
+    const processor = unified()
+        .use(rehypeParse, { fragment: true })
+        .use(rehypeReact, { Fragment: Fragment, jsx: jsx, jsxs: jsxs, components: componentMap });
+
+    const content = processor.processSync(postData?.blogContent || "<p>No content available.</p>").result;
+    return (
+        <div>
+            <div className="p-6 bg-white/85 dark:bg-slate-800/55 shadow">
+                <nav aria-label="breadcrumb">
+                    <ol className="flex space-x-2 text-sm">
+                        <li>
+                            <Link href="/v2" className="text-blue-600 dark:text-blue-400 hover:underline">Home</Link>
+                        </li>
+                        <li>
+                            <span className="text-gray-400 dark:text-gray-500">/</span>
+                        </li>
+                        <li aria-current="page" className="text-gray-700 dark:text-gray-200 font-semibold">
+                            {identifier}
+                        </li>
+                    </ol>
+                </nav>
+                <Heading className="mt-4 mb-2">{postData?.title}</Heading>
+                <Lead className="mb-4">{postData?.description}</Lead>
+                {content}
+            </div>
+        </div>
+    )
+}
