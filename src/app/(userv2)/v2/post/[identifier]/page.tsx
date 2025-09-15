@@ -1,11 +1,11 @@
+import React from "react";
 import Link from "next/link";
 import prisma from "@/utils/prisma"
-import { Blockquote, Heading, Lead, Text, List, OrderedList, ListItem, Muted } from "@/components/Typography";
+import { Blockquote, Heading, Lead, Text, Muted } from "@/components/Typography";
+import { Fragment, jsx, jsxs } from "react/jsx-runtime"
 import { unified } from "unified";
 import rehypeParse from "rehype-parse"
-import React from "react";
 import rehypeReact from "rehype-react";
-import { Fragment, jsx, jsxs } from "react/jsx-runtime"
 
 const makeHeading = (level: 1 | 2 | 3 | 4 | 5 | 6 | undefined = 1) => {
     const c = ({ children }: { children: React.ReactNode }) => {

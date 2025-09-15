@@ -22,11 +22,11 @@ import "../../post/[id]/github-markdown.css";
 import { Metadata } from "next";
 
 const processor = unified()
-    .use(remarkParse)
+    .use(remarkParse as any)
     .use(remarkRehype)
     .use(rehypeSanitize)
     .use(rehypeHightlight)
-    .use(rehypeStringify);
+    .use(rehypeStringify as any);
 
 export async function generateMetadata({ params }: { params: Params }) {
     const data = await GetSnippetBySlug(params.slug);
