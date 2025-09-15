@@ -1,7 +1,7 @@
 "use client"
 
 import { Lead } from '@/components/Typography'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { ApiV1Response, Post } from './APIContract'
 import PostList from '@/components/UserPageV2/PostList'
 import { useAtom } from 'jotai'

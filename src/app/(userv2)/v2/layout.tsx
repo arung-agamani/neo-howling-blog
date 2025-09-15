@@ -7,6 +7,7 @@ import TopDivWrapper from '@/components/UserPageV2/TopDivWrapper'
 import './globals.css'
 import { Provider } from './ThemeProvider'
 import { JotaiProvider } from "@/components/UserPageV2/JotaiProvider"
+import BapakBapak from '@/components/UserPageV2/BapakBapak'
 interface Props { }
 
 const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
@@ -33,9 +34,13 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
                                     <div className='sticky top-[15%]'>
                                         <Heading level={6} className='mt-2 border-b-2 border-slate-800 dark:border-white'>Which Team Are You?</Heading>
                                         <DarkModeToggler />
+                                        <Heading level={6} className='mt-2 border-b-2 border-slate-800 dark:border-white'>
+                                            (Indonesian) Bapak-Bapak Joke
+                                        </Heading>
+                                        <BapakBapak />
                                         <Heading level={6} className='mt-2 border-b-0 border-slate-800 dark:border-white'>Github</Heading>
                                         <GithubCard />
-                                        <Heading level={6} className='mt-2 border-b-2 border-slate-800 dark:border-white'>Did You Know?</Heading>
+                                        <Heading level={6} className='mt-2 border-b-2 border-slate-800 dark:border-white'>Uninteresting Fact</Heading>
                                         <Blockquote className='mt-2'>This blog is made with Next.js, TailwindCSS, Prisma, and currently hosted in Vercel. The source code is available on <Link href="https://github.com/arung-agamani/neo-howling-blog" external>GitHub</Link>.</Blockquote>
                                     </div>
                                 </div>
