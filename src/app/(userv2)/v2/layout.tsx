@@ -21,13 +21,12 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
                 <JotaiProvider>
                     <TopDivWrapper>
                         <div className='bg-orange-950/50 min-h-screen'>
-                            <div id="header" className="mx-auto container pt-4" >
-                                <Heading className='text-white'>Howling Blog V3</Heading>
-                                <Lead className='mt-2 text-white mb-8'>It&apos;s the third time I&apos;m changing the view, man</Lead>
-
+                            <div id="header" className="mx-auto container pt-4 px-2 sm:px-0" >
+                                <Heading className='text-white text-center sm:text-left'>Howling Blog V3</Heading>
+                                <Lead className='mt-2 text-white mb-8 text-center sm:text-left'>It&apos;s the third time I&apos;m changing the view, man</Lead>
                             </div>
-                            <div className="flex container mx-auto gap-x-2">
-                                <div className="flex flex-col xl:flex-grow">
+                            <div className="flex mx-auto gap-x-2 max-w-[1536px]">
+                                <div className="flex flex-col xl:flex-grow mx-auto">
                                     {children}
                                 </div>
                                 <div className="hidden xl:block min-w-[512px] max-w-lg bg-white/70 dark:bg-slate-800/30 p-4">

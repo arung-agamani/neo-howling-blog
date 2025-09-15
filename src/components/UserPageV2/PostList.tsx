@@ -13,15 +13,15 @@ const PostList: React.FC<Props> = ({ posts }) => {
     return (
         <>
             {posts.map((post) => (
-                <div className='post-container py-4 dark:bg-slate-800/30 bg-white/70 px-4' key={post.id}>
+                <div className='post-container flex flex-col py-4 max-w-sm xs:max-w-3xl lg:max-w-none dark:bg-slate-800/30 bg-white/70 px-4' key={post.id}>
                     <Heading level={4}>
                         <Link href={`/v2/post/${post.id}`} className='hover:underline'>
                             {post.title}
                         </Link>
                     </Heading>
-                    <Lead>{post.description}</Lead>
+                    <Lead className='text-wrap break-all '>{post.description}</Lead>
                     <Small>Date Posted: {new Date(post.datePosted).toLocaleString('en')}</Small>
-                    <div className="tags gap-x-4 flex mt-4">
+                    <div className="tags gap-x-4 flex mt-4 flex-wrap gap-y-2">
                         {
                             Array.from(new Set(post.tags)).map((tag) => (
                                 <Badge key={tag}>{startCase(tag)}</Badge>
