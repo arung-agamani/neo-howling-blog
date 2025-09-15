@@ -1,20 +1,24 @@
 "use client"
 
-import { Badge, Blockquote, Heading, Lead, Link, Small, Text } from '@/components/Typography'
-import { useTheme } from 'next-themes'
+import { Lead } from '@/components/Typography'
 import React, { useState, useEffect } from 'react'
 import { ApiV1Response, Post } from './APIContract'
 import PostList from '@/components/UserPageV2/PostList'
+import { useAtom } from 'jotai'
+import { APIResultPostsAtom } from '@/components/UserPageV2/JotaiAtoms/PostAtom'
+
+// TODO: turn this into server component since the dependency to hooks aint there anyway
+
 const Page = () => {
-    const theme = useTheme()
-    const [isClient, setIsClient] = useState(false)
-    const [apiRes, setApiRes] = useState<[Post[], boolean]>([[], false])
+    const [apiRes, setApiRes] = useAtom(APIResultPostsAtom)
     useEffect(() => {
         (async () => {
             // simulate error
             // setApiRes([[], true])
             // return
-
+            if (apiRes[0].length > 0 || apiRes[1]) {
+                return;
+            }
             const res = await fetch('/api/v1/posts')
             const data = await res.json() as ApiV1Response<Post[]>
             if (data.success) {
@@ -23,16 +27,10 @@ const Page = () => {
                 setApiRes([[], true])
             }
         })()
-
-        setIsClient(true)
     }, [])
-
 
     const [posts, apiError] = apiRes
 
-    if (!isClient) {
-        return null
-    }
     return (
         <>
             {posts.length === 0 && !apiError && <div>

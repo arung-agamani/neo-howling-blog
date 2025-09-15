@@ -1,6 +1,6 @@
 import Link from "next/link";
 import prisma from "@/utils/prisma"
-import { Blockquote, Heading, Lead, Text, List, OrderedList, ListItem } from "@/components/Typography";
+import { Blockquote, Heading, Lead, Text, List, OrderedList, ListItem, Muted } from "@/components/Typography";
 import { unified } from "unified";
 import rehypeParse from "rehype-parse"
 import React from "react";
@@ -8,9 +8,10 @@ import rehypeReact from "rehype-react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime"
 
 const makeHeading = (level: 1 | 2 | 3 | 4 | 5 | 6 | undefined = 1) => {
-    return ({ children }: { children: React.ReactNode }) => {
+    const c = ({ children }: { children: React.ReactNode }) => {
         return <Heading level={level} className="mt-4 mb-2">{children}</Heading>
     }
+    return c;
 }
 
 const CustomParagraph = ({ children }: { children: React.ReactNode }) => {
@@ -96,7 +97,9 @@ export default async function PostDetailPage({
                     </ol>
                 </nav>
                 <Heading className="mt-4 mb-2">{postData?.title}</Heading>
-                <Lead className="mb-4">{postData?.description}</Lead>
+                <Lead>{postData?.description}</Lead>
+                <Muted>Published at: {new Date(postData?.datePosted || '').toLocaleString('en')} </Muted>
+                <div className="dark:border-b-slate-700 border-b-slate-300 border-b" />
                 {content}
             </div>
         </div>
