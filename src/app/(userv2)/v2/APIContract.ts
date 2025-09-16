@@ -11,6 +11,14 @@ export interface Post {
     deleted: boolean | null;
 }
 
+export interface RecommendedPost {
+    id: string;
+    title: string;
+    description: string;
+    bannerUrl: string | null;
+    datePosted: Date;
+}
+
 export interface ApiV1Response<T = unknown> {
     success: boolean;
     errors: string[];

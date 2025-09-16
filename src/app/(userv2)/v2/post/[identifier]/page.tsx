@@ -6,6 +6,7 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime"
 import { unified } from "unified";
 import rehypeParse from "rehype-parse"
 import rehypeReact from "rehype-react";
+import RecommendedPosts from "@/components/UserPageV2/RecommendedPost";
 
 const makeHeading = (level: 1 | 2 | 3 | 4 | 5 | 6 | undefined = 1) => {
     const c = ({ children }: { children: React.ReactNode }) => {
@@ -101,6 +102,8 @@ export default async function PostDetailPage({
                 <Muted>Published at: {new Date(postData?.datePosted || '').toLocaleString('en')} </Muted>
                 <div className="dark:border-b-slate-700 border-b-slate-300 border-b" />
                 {content}
+                <hr />
+                <RecommendedPosts postId={identifier} />
             </div>
         </div>
     )

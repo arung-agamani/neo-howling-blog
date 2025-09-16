@@ -8,6 +8,7 @@ import './globals.css'
 import { Provider } from './ThemeProvider'
 import { JotaiProvider } from "@/components/UserPageV2/JotaiProvider"
 import BapakBapak from '@/components/UserPageV2/BapakBapak'
+import NextLink from 'next/link'
 interface Props { }
 
 const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
@@ -23,8 +24,8 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
                     <TopDivWrapper>
                         <div className='bg-orange-950/50 min-h-screen'>
                             <div id="header" className="mx-auto container pt-4 px-2 sm:px-0" >
-                                <Heading className='text-white text-center sm:text-left'>Howling Blog V3</Heading>
-                                <Lead className='mt-2 text-white mb-8 text-center sm:text-left'>It&apos;s the third time I&apos;m changing the view, man</Lead>
+                                <NextLink className='no-underline' href="/v2"><Heading className='text-white text-center sm:text-left'>Howling Blog --Reborn--</Heading></NextLink>
+                                <Lead className='mt-2 text-white mb-8 text-center sm:text-left'>The more ✨kawaii✨ edition, UwU</Lead>
                             </div>
                             <div className="flex mx-auto gap-x-2 max-w-[1536px]">
                                 <div className="flex flex-col xl:flex-grow mx-auto">

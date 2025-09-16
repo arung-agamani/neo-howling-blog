@@ -22,7 +22,73 @@ const CreatePostSchema = z.object({
 }) satisfies z.ZodType<CreatePostPayload>;
 
 // GET /api/v1/posts (list all posts)
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const searchParams = req.nextUrl.searchParams;
+    // "related" query param is post ID to find related posts
+    const related = searchParams.get("related");
+    if (related) {
+        // validate if related is a valid mongodb ObjectId
+        if (!/^[a-fA-F0-9]{24}$/.test(related)) {
+            return BadRequest({ message: "Invalid post ID" });
+        }
+        // search for related posts based on tags
+        const post = await prisma.posts.findUnique({
+            where: { id: related },
+            select: { tags: true },
+        });
+        if (!post) {
+            return BadRequest({ message: "Post not found" });
+        }
+        const tags = post.tags;
+        if (tags.length === 0) {
+            // get latest 5 posts if no tags
+            const latestPosts = await prisma.posts.findMany({
+                where: {
+                    isPublished: true,
+                    deleted: false,
+                    id: { not: related },
+                },
+                take: 5,
+                orderBy: { datePosted: "desc" },
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    bannerUrl: true,
+                    datePosted: true,
+                },
+            });
+            return NextResponse.json({
+                success: true,
+                errors: [],
+                data: latestPosts,
+            });
+        }
+        const relatedPosts = await prisma.posts.findMany({
+            where: {
+                isPublished: true,
+                deleted: false,
+                id: { not: related },
+                tags: { hasSome: tags },
+            },
+            take: 5,
+            orderBy: { datePosted: "desc" },
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                bannerUrl: true,
+                datePosted: true,
+            },
+        });
+        return NextResponse.json({
+            success: true,
+            errors: [],
+            data: relatedPosts,
+        });
+    }
+
+    // default behavior: return all posts
     const posts = await prisma.posts.findMany({
         select: {
             id: true,
