@@ -6,6 +6,7 @@ import { ApiV1Response, Post } from './APIContract'
 import PostList from '@/components/UserPageV2/PostList'
 import { useAtom } from 'jotai'
 import { APIResultPostsAtom } from '@/components/UserPageV2/JotaiAtoms/PostAtom'
+import PageReadySignal from '@/components/UserPageV2/PageReadySignal'
 
 // TODO: turn this into server component since the dependency to hooks aint there anyway
 
@@ -32,7 +33,7 @@ const Page = () => {
     const [posts, apiError] = apiRes
 
     return (
-        <>
+        <PageReadySignal>
             {posts.length === 0 && !apiError && <div>
                 <Lead className='text-white text-center mb-4'>Loading...</Lead>
                 <img src="https://cdn.howlingmoon.dev/sirkel.id/kururin-kuru-kuru.gif" height={200} alt="Loading..." className='mx-auto' />
@@ -42,7 +43,7 @@ const Page = () => {
                 <img src="https://cdn.howlingmoon.dev/sirkel.id/89325870.gif" height={200} alt="Loading..." className='mx-auto' />
             </div>}
             <PostList posts={posts.filter(x => x.isPublished)} />
-        </>
+        </PageReadySignal>
     )
 }
 

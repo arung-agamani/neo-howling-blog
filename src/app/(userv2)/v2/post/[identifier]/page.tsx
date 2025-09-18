@@ -7,6 +7,8 @@ import { unified } from "unified";
 import rehypeParse from "rehype-parse"
 import rehypeReact from "rehype-react";
 import RecommendedPosts from "@/components/UserPageV2/RecommendedPost";
+import { Metadata } from "next";
+import PageReadySignal from "@/components/UserPageV2/PageReadySignal";
 
 const makeHeading = (level: 1 | 2 | 3 | 4 | 5 | 6 | undefined = 1) => {
     const c = ({ children }: { children: React.ReactNode }) => {
@@ -66,6 +68,35 @@ const componentMap: any = {
     img: (props: any) => <img {...props} className="my-4 mx-auto" alt={props.alt || "Post image"} />
 }
 
+export async function generateMetadata({ params }: { params: { identifier: string } }) {
+    const { identifier } = params;
+    const postData = await prisma.posts.findFirst({
+        where: {
+            id: identifier
+        }
+    })
+
+    const metadata: Metadata = {
+        title: postData?.title || "Post not found",
+        description: postData?.description || "The requested post could not be found.",
+        metadataBase: new URL("https://blog.howlingmoon.dev"),
+        openGraph: {
+            title: postData?.title || "Post not found",
+            description: postData?.description || "The requested post could not be found.",
+            url: `https://blog.howlingmoon.dev/v2/post/${identifier}`,
+            images: [
+                {
+                    url: postData?.bannerUrl || "https://cdn.howlingmoon.dev/123623765.jpg",
+                },
+            ],
+            type: "article",
+        },
+    }
+
+    return metadata;
+}
+
+
 export default async function PostDetailPage({
     params
 }: { params: Promise<{ identifier: string }> }) {
@@ -82,7 +113,7 @@ export default async function PostDetailPage({
 
     const content = processor.processSync(postData?.blogContent || "<p>No content available.</p>").result;
     return (
-        <div>
+        <PageReadySignal>
             <div className="p-6 bg-white/85 dark:bg-slate-800/55 shadow">
                 <nav aria-label="breadcrumb">
                     <ol className="flex space-x-2 text-sm">
@@ -105,6 +136,6 @@ export default async function PostDetailPage({
                 <hr />
                 <RecommendedPosts postId={identifier} />
             </div>
-        </div>
+        </PageReadySignal>
     )
 }

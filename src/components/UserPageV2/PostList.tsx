@@ -1,6 +1,6 @@
 import { Post } from '@/app/(userv2)/v2/APIContract'
 import startCase from 'lodash.startcase'
-import Link from 'next/link'
+import Link from '@/components/UserPageV2/LoaderLink'
 import React from 'react'
 import { Heading, Lead, Small, Badge } from '../Typography'
 

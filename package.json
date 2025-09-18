@@ -36,7 +36,7 @@
         "cross-env": "^7.0.3",
         "eslint": "8.33.0",
         "eslint-config-next": "^13.3.1",
-        "framer-motion": "^10.16.2",
+        "framer-motion": "^12.23.15",
         "front-matter": "^4.0.2",
         "highlight.js": "^11.9.0",
         "jotai": "^2.14.0",

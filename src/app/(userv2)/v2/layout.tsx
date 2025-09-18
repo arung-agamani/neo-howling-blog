@@ -9,7 +9,15 @@ import { Provider } from './ThemeProvider'
 import { JotaiProvider } from "@/components/UserPageV2/JotaiProvider"
 import BapakBapak from '@/components/UserPageV2/BapakBapak'
 import NextLink from 'next/link'
+import MainContentWrapper from './MainContentWrapper'
 interface Props { }
+
+export const metadata = {
+    title: "Howling Blog",
+    icons: {
+        icon: "/favicon.png",
+    },
+};
 
 const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
     return (<html>
@@ -28,10 +36,12 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
                                 <Lead className='mt-2 text-white mb-8 text-center sm:text-left'>The more ✨kawaii✨ edition, UwU</Lead>
                             </div>
                             <div className="flex mx-auto gap-x-2 max-w-[1536px]">
-                                <div className="flex flex-col xl:flex-grow mx-auto">
-                                    {children}
+                                <div className="flex-[3] flex-col mx-auto">
+                                    <MainContentWrapper>
+                                        {children}
+                                    </MainContentWrapper>
                                 </div>
-                                <div className="hidden xl:block min-w-[512px] max-w-lg bg-white/70 dark:bg-slate-800/30 p-4">
+                                <div className="hidden lg:flex flex-[1] max-w-lg bg-white/70 dark:bg-slate-800/30 p-4">
                                     <div className='sticky top-[15%]'>
                                         <Heading level={6} className='mt-2 border-b-2 border-slate-800 dark:border-white'>Which Team Are You?</Heading>
                                         <DarkModeToggler />
