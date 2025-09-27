@@ -41,7 +41,7 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
                                         {children}
                                     </MainContentWrapper>
                                 </div>
-                                <div className="hidden lg:flex flex-[1] max-w-lg bg-white/70 dark:bg-slate-800/30 p-4">
+                                <div className="hidden lg:flex flex-[1] max-w-lg bg-white/70 contrast:bg-white dark:bg-slate-800/30 dark:contrast:bg-slate-800 p-4">
                                     <div className='sticky top-[15%]'>
                                         <Heading level={6} className='mt-2 border-b-2 border-slate-800 dark:border-white'>Which Team Are You?</Heading>
                                         <DarkModeToggler />

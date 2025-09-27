@@ -13,7 +13,7 @@ const PostList: React.FC<Props> = ({ posts }) => {
     return (
         <>
             {posts.map((post) => (
-                <div className='post-container flex flex-col py-4 max-w-sm xs:max-w-3xl lg:max-w-none dark:bg-slate-800/30 bg-white/70 px-4' key={post.id}>
+                <div className='post-container flex flex-col py-4 max-w-sm xs:max-w-3xl lg:max-w-none dark:bg-slate-800/30 dark:contrast:bg-slate-800 bg-white/70 contrast:bg-white px-4' key={post.id}>
                     <Heading level={4}>
                         <Link href={`/v2/post/${post.id}`} className='hover:underline'>
                             {post.title}

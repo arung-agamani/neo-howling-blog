@@ -114,7 +114,7 @@ export default async function PostDetailPage({
     const content = processor.processSync(postData?.blogContent || "<p>No content available.</p>").result;
     return (
         <PageReadySignal>
-            <div className="p-6 bg-white/85 dark:bg-slate-800/55 shadow">
+            <div className="p-6 bg-white/85 contrast:bg-white dark:bg-slate-800/55 dark:contrast:bg-slate-800 shadow">
                 <nav aria-label="breadcrumb">
                     <ol className="flex space-x-2 text-sm">
                         <li>
