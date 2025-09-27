@@ -1,20 +1,20 @@
 "use client";
 
-import { 
-  Heading, 
-  Text, 
-  Lead, 
+import {
+  Heading,
+  Text,
+  Lead,
   Large,
   Small,
   Muted,
-  Blockquote, 
-  Code, 
-  List, 
+  Blockquote,
+  Code,
+  List,
   OrderedList,
-  ListItem, 
+  ListItem,
   Link,
   Badge,
-  Divider 
+  Divider
 } from '@/components/Typography';
 
 export default function TypographyShowcase() {
@@ -50,7 +50,7 @@ export default function TypographyShowcase() {
             <Heading level={5}>Heading Level 5</Heading>
             <Heading level={6}>Heading Level 6</Heading>
           </div>
-          
+
           <div className="mt-8">
             <Small className="mb-4 block">Gradient Variants:</Small>
             <div className="space-y-4">
@@ -65,12 +65,12 @@ export default function TypographyShowcase() {
         {/* Text Components */}
         <section className="mb-12">
           <Heading level={2} className="mb-6">Text Components</Heading>
-          
+
           <div className="space-y-6">
             <div>
               <Small className="mb-2 block font-semibold">Lead Text:</Small>
               <Lead>
-                This is lead text, perfect for introductory paragraphs that need to stand out 
+                This is lead text, perfect for introductory paragraphs that need to stand out
                 from regular body text. It&apos;s larger and has more relaxed line spacing.
               </Lead>
             </div>
@@ -83,7 +83,7 @@ export default function TypographyShowcase() {
             <div>
               <Small className="mb-2 block font-semibold">Regular Text:</Small>
               <Text>
-                This is regular body text. It&apos;s comfortable to read and provides good 
+                This is regular body text. It&apos;s comfortable to read and provides good
                 contrast in both light and dark modes. Perfect for articles and long-form content.
               </Text>
             </div>
@@ -142,7 +142,7 @@ export default function TypographyShowcase() {
         {/* Blockquotes */}
         <section className="mb-12">
           <Heading level={2} className="mb-6">Blockquotes</Heading>
-          
+
           <Blockquote className="mb-6">
             Typography is the craft of endowing human language with a durable visual form.
           </Blockquote>
@@ -157,15 +157,15 @@ export default function TypographyShowcase() {
         {/* Code Examples */}
         <section className="mb-12">
           <Heading level={2} className="mb-6">Code</Heading>
-          
+
           <Text className="mb-4">
-            You can use inline code like <Code>useState</Code> or <Code>useEffect</Code> 
+            You can use inline code like <Code>useState</Code> or <Code>useEffect</Code>
             within your text content.
           </Text>
 
           <Small className="mb-2 block">Code Block Example:</Small>
           <Code block>
-{`import React, { useState } from 'react';
+            {`import React, { useState } from 'react';
 import { Heading, Text } from '@/components/Typography';
 
 function Component() {
@@ -188,7 +188,7 @@ function Component() {
         {/* Lists */}
         <section className="mb-12">
           <Heading level={2} className="mb-6">Lists</Heading>
-          
+
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <Small className="mb-4 block font-semibold">Unordered List:</Small>
@@ -223,25 +223,25 @@ function Component() {
         {/* Links */}
         <section className="mb-12">
           <Heading level={2} className="mb-6">Links</Heading>
-          
+
           <div className="space-y-4">
             <Text>
-              Here&apos;s a <Link href="#default">default link</Link> within body text that 
+              Here&apos;s a <Link href="#default">default link</Link> within body text that
               demonstrates the hover effects and styling.
             </Text>
-            
+
             <Text>
-              You can also use <Link href="#subtle" variant="subtle">subtle links</Link> that 
+              You can also use <Link href="#subtle" variant="subtle">subtle links</Link> that
               are less prominent but still accessible.
             </Text>
-            
+
             <Text>
-              For special calls-to-action, try <Link href="#accent" variant="accent">accent links</Link> 
+              For special calls-to-action, try <Link href="#accent" variant="accent">accent links</Link>
               that really stand out.
             </Text>
-            
+
             <Text>
-              External links <Link href="https://example.com" external>open in new tabs</Link> 
+              External links <Link href="https://example.com" external>open in new tabs</Link>
               automatically when marked as external.
             </Text>
           </div>
@@ -252,7 +252,7 @@ function Component() {
         {/* Badges */}
         <section className="mb-12">
           <Heading level={2} className="mb-6">Badges</Heading>
-          
+
           <div className="space-y-4">
             <div>
               <Small className="mb-2 block">Default Badges:</Small>
@@ -281,7 +281,7 @@ function Component() {
         {/* Alignment Examples */}
         <section className="mb-12">
           <Heading level={2} className="mb-6">Text Alignment</Heading>
-          
+
           <div className="space-y-6">
             <div>
               <Small className="mb-2 block">Left Aligned (Default):</Small>
@@ -308,10 +308,10 @@ function Component() {
 
         {/* Footer */}
         <Divider />
-        
+
         <div className="text-center">
           <Muted>
-            Typography showcase for the Neo Howling Blog design system. Built with React, 
+            Typography showcase for the Neo Howling Blog design system. Built with React,
             TypeScript, and Tailwind CSS.
           </Muted>
         </div>

@@ -10,7 +10,6 @@ interface Props {
 const PostContainer: React.FC<Props> = ({ content }) => {
     const { theme } = useTheme();
     const [mounted, setMounted] = useState(false);
-    console.log(content)
     useEffect(() => {
         setMounted(true);
     }, []);

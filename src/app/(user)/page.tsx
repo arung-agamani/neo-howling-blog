@@ -30,13 +30,7 @@ export default async function Page() {
 
     return (
         <div className=" bg-slate-600 dark:bg-gray-900 pt-2 flex flex-col justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16 transition-colors duration-100">
-            {/* <p className="max-w-5xl text-xl text-center mx-auto my-2 py-8 px-4 border border-gray-600 rounded">
-                Welcome to Howling Blog! Here you can see some of my thoughts,
-                materialized in the form of blog post.
-                <br />
-                Use the navigation bar above and floating buttons on bottom left
-                of the screen for navigation
-            </p> */}
+
             <p className="text-3xl lg:text-5xl text-white px-2 mb-4 font-thin lg:text-left text-center self-center">
                 Recent Posts
             </p>
@@ -51,21 +45,21 @@ export default async function Page() {
                             >
                                 {x.tags
                                     ? x.tags.filter((y: string) => y.length)
-                                          .length > 0 && (
-                                          <div className="uppercase font-bold text-orange-500 px-8 pt-4 transition-colors duration-200">
-                                              {x.tags.map((tag: string) => (
-                                                  <Link
-                                                      href={`/tag/${tag
-                                                          .trim()
-                                                          .toLowerCase()}`}
-                                                      key={tag}
-                                                      className="hover:underline hover:text-orange-700 mr-2"
-                                                  >
-                                                      {tag.trim()}
-                                                  </Link>
-                                              ))}
-                                          </div>
-                                      )
+                                        .length > 0 && (
+                                        <div className="uppercase font-bold text-orange-500 px-8 pt-4 transition-colors duration-200">
+                                            {x.tags.map((tag: string) => (
+                                                <Link
+                                                    href={`/tag/${tag
+                                                        .trim()
+                                                        .toLowerCase()}`}
+                                                    key={tag}
+                                                    className="hover:underline hover:text-orange-700 mr-2"
+                                                >
+                                                    {tag.trim()}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )
                                     : null}
                                 <Link href={`post/${x.id}`}>
                                     <p className="text-black dark:text-gray-50 text-2xl lg:text-4xl font-bold px-8 mt-4 transition-colors duration-200">
