@@ -8,14 +8,9 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/utils/index";
 import { usePathname } from "next/navigation";
-import { Home, Users, FileText, Settings, Menu } from "lucide-react";
-import {
-    Dialog,
-    DialogTrigger,
-    DialogContent,
-    DialogClose,
-} from "@/components/ui/dialog";
+import { Home, Users, FileText, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import UserProfile from "./UserProfile";
 
 // Sidebar navigation items config
 const sidebarNav = [
@@ -197,16 +192,18 @@ export default function Sidebar() {
                         </Button>
                     </div>
                     <SidebarNav onNavigate={handleNavigate} />
+                    <UserProfile onLogout={handleNavigate} />
                 </div>
             </div>
             {/* Sidebar for desktop */}
-            <aside className="h-screen w-full md:w-64 bg-white border-r flex-shrink-0 flex-col hidden md:flex">
+            <aside className="sticky top-0 h-screen w-full md:w-64 bg-white border-r flex-shrink-0 flex-col hidden md:flex">
                 <div className="h-16 flex items-center px-6 border-b">
                     <span className="font-bold text-lg tracking-tight">
                         Admin Panel
                     </span>
                 </div>
                 <SidebarNav />
+                <UserProfile />
             </aside>
         </>
     );
