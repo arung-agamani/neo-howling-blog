@@ -1,6 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/admin/Sidebar";
+import QueryProvider from "@/lib/react-query/QueryProvider";
 
 export default function MainAdminLayout({
     children,
@@ -8,12 +9,14 @@ export default function MainAdminLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex flex-col md:flex-row min-h-screen w-full bg-muted">
-            {/* Sidebar at top on mobile, left on desktop */}
-            <Sidebar />
-            <div className="flex-1 flex flex-col">
-                <main className="flex-1">{children}</main>
+        <QueryProvider>
+            <div className="flex flex-col md:flex-row min-h-screen w-full bg-muted">
+                {/* Sidebar at top on mobile, left on desktop */}
+                <Sidebar />
+                <div className="flex-1 flex flex-col">
+                    <main className="flex-1">{children}</main>
+                </div>
             </div>
-        </div>
+        </QueryProvider>
     );
 }

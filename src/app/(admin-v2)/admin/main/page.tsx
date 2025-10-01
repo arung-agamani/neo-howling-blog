@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
     Card,
     CardContent,
@@ -18,48 +17,11 @@ import {
     Eye,
     Edit,
 } from "lucide-react";
-import axios from "@/utils/axios";
 import Link from "next/link";
-
-interface DashboardStats {
-    total: number;
-    unpublished: number;
-    recentPosts: Array<{
-        id: string;
-        title: string;
-        description: string;
-    }>;
-    tags: Array<{
-        name: string;
-        count: number;
-    }>;
-    untaggedPosts: Array<{
-        id: string;
-        title: string;
-        description: string;
-    }>;
-}
+import { useDashboardStats } from "@/hooks/api/useDashboardStats";
 
 export default function Page() {
-    const [stats, setStats] = useState<DashboardStats | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        async function fetchStats() {
-            try {
-                const response = await axios.get("/api/v1/dashboard/stats");
-                setStats(response.data.stats);
-            } catch (err) {
-                setError("Failed to load dashboard statistics");
-                console.error("Dashboard stats error:", err);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchStats();
-    }, []);
+    const { data: stats, isLoading: loading, error } = useDashboardStats();
 
     if (loading) {
         return (
@@ -85,7 +47,11 @@ export default function Page() {
                 <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
                 <Card>
                     <CardContent className="p-6">
-                        <p className="text-red-600">{error}</p>
+                        <p className="text-red-600">
+                            {error instanceof Error
+                                ? error.message
+                                : "Failed to load dashboard statistics"}
+                        </p>
                     </CardContent>
                 </Card>
             </div>
