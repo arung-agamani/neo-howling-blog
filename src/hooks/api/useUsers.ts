@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "@/utils/axios";
+import { get, post, put, del } from "@/lib/ky/client";
 
 export interface User {
     id: string;
@@ -36,46 +36,52 @@ export interface UpdateUserPayload extends Partial<CreateUserPayload> {
 export const usersKeys = {
     all: ["users"] as const,
     lists: () => [...usersKeys.all, "list"] as const,
-    list: (filters: Record<string, any>) => [...usersKeys.lists(), filters] as const,
+    list: (filters: Record<string, any>) =>
+        [...usersKeys.lists(), filters] as const,
     details: () => [...usersKeys.all, "detail"] as const,
     detail: (id: string) => [...usersKeys.details(), id] as const,
-    byUsername: (username: string) => [...usersKeys.all, "username", username] as const,
+    byUsername: (username: string) =>
+        [...usersKeys.all, "username", username] as const,
 };
 
 // Fetch users function
 const fetchUsers = async (): Promise<User[]> => {
-    const response = await axios.get<UsersResponse>("/api/v1/users");
-    return response.data.users || [];
+    const response = await get<UsersResponse>("users");
+    return response.users || [];
 };
 
 // Fetch single user function
 const fetchUser = async (id: string): Promise<User> => {
-    const response = await axios.get<User>(`/api/v1/users/${id}`);
-    return response.data;
+    return await get<User>(`users/${id}`);
 };
 
 // Fetch user by username function
 const fetchUserByUsername = async (username: string): Promise<User> => {
-    const response = await axios.get<User>(`/api/v1/users?username=${username}`);
-    return response.data;
+    return await get<User>(`users?username=${username}`);
 };
 
 // Create user function
 const createUser = async (payload: CreateUserPayload): Promise<User> => {
-    const response = await axios.post<{ success: boolean; data: User }>("/api/v1/users", payload);
-    return response.data.data;
+    const response = await post<{ success: boolean; data: User }>(
+        "users",
+        payload,
+    );
+    return response.data;
 };
 
 // Update user function
 const updateUser = async (payload: UpdateUserPayload): Promise<User> => {
     const { id, ...updateData } = payload;
-    const response = await axios.put<{ success: boolean; data: User }>(`/api/v1/users/${id}`, updateData);
-    return response.data.data;
+    const response = await put<{ success: boolean; data: User }>(
+        `users/${id}`,
+        updateData,
+    );
+    return response.data;
 };
 
 // Delete user function
 const deleteUser = async (id: string): Promise<void> => {
-    await axios.delete(`/api/v1/users/${id}`);
+    await del(`users/${id}`);
 };
 
 // React Query hook for fetching all users
@@ -103,7 +109,10 @@ export const useUser = (id: string, enabled: boolean = true) => {
 };
 
 // React Query hook for fetching user by username
-export const useUserByUsername = (username: string, enabled: boolean = true) => {
+export const useUserByUsername = (
+    username: string,
+    enabled: boolean = true,
+) => {
     return useQuery({
         queryKey: usersKeys.byUsername(username),
         queryFn: () => fetchUserByUsername(username),
@@ -144,10 +153,16 @@ export const useUpdateUser = () => {
         mutationFn: updateUser,
         onSuccess: (updatedUser) => {
             // Update the user in the detail cache
-            queryClient.setQueryData(usersKeys.detail(updatedUser.id), updatedUser);
+            queryClient.setQueryData(
+                usersKeys.detail(updatedUser.id),
+                updatedUser,
+            );
 
             // Update username cache if username changed
-            queryClient.setQueryData(usersKeys.byUsername(updatedUser.username), updatedUser);
+            queryClient.setQueryData(
+                usersKeys.byUsername(updatedUser.username),
+                updatedUser,
+            );
 
             // Invalidate users list to reflect changes
             queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
@@ -169,7 +184,9 @@ export const useDeleteUser = () => {
         mutationFn: deleteUser,
         onSuccess: (_, deletedId) => {
             // Remove the user from all relevant caches
-            queryClient.removeQueries({ queryKey: usersKeys.detail(deletedId) });
+            queryClient.removeQueries({
+                queryKey: usersKeys.detail(deletedId),
+            });
 
             // Invalidate users list
             queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
@@ -233,9 +250,10 @@ export const useOptimisticUserUpdate = () => {
 export const useUsersByRole = (role?: string) => {
     const { data: users, ...query } = useUsers();
 
-    const filteredUsers = users?.filter(user =>
-        !role || role === "all" || user.role === role
-    ) || [];
+    const filteredUsers =
+        users?.filter(
+            (user) => !role || role === "all" || user.role === role,
+        ) || [];
 
     return {
         ...query,

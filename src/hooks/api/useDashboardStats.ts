@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "@/utils/axios";
+import { get } from "@/lib/ky/client";
 
 export interface DashboardStats {
     total: number;
@@ -33,10 +33,8 @@ export const dashboardStatsKeys = {
 
 // Fetch dashboard stats function
 const fetchDashboardStats = async (): Promise<DashboardStats> => {
-    const response = await axios.get<DashboardStatsResponse>(
-        "/api/v1/dashboard/stats",
-    );
-    return response.data.stats;
+    const response = await get<DashboardStatsResponse>("dashboard/stats");
+    return response.stats;
 };
 
 // React Query hook for dashboard stats

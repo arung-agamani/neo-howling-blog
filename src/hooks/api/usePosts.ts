@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "@/utils/axios";
+import { get, post, put, del } from "@/lib/ky/client";
 
 export interface Post {
     id: string;
@@ -38,7 +38,8 @@ export interface UpdatePostPayload extends Partial<CreatePostPayload> {
 export const postsKeys = {
     all: ["posts"] as const,
     lists: () => [...postsKeys.all, "list"] as const,
-    list: (filters: Record<string, any>) => [...postsKeys.lists(), filters] as const,
+    list: (filters: Record<string, any>) =>
+        [...postsKeys.lists(), filters] as const,
     details: () => [...postsKeys.all, "detail"] as const,
     detail: (id: string) => [...postsKeys.details(), id] as const,
     related: (id: string) => [...postsKeys.all, "related", id] as const,
@@ -46,38 +47,43 @@ export const postsKeys = {
 
 // Fetch posts function
 const fetchPosts = async (): Promise<Post[]> => {
-    const response = await axios.get<PostsResponse>("/api/v1/posts");
-    return response.data.data || [];
+    const response = await get<PostsResponse>("posts");
+    return response.data || [];
 };
 
 // Fetch single post function
 const fetchPost = async (id: string): Promise<Post> => {
-    const response = await axios.get<Post>(`/api/v1/posts/${id}`);
-    return response.data;
+    return await get<Post>(`posts/${id}`);
 };
 
 // Fetch related posts function
 const fetchRelatedPosts = async (id: string): Promise<Post[]> => {
-    const response = await axios.get<PostsResponse>(`/api/v1/posts?related=${id}`);
-    return response.data.data || [];
+    const response = await get<PostsResponse>(`posts?related=${id}`);
+    return response.data || [];
 };
 
 // Create post function
 const createPost = async (payload: CreatePostPayload): Promise<Post> => {
-    const response = await axios.post<{ success: boolean; data: Post }>("/api/v1/posts", payload);
-    return response.data.data;
+    const response = await post<{ success: boolean; data: Post }>(
+        "posts",
+        payload,
+    );
+    return response.data;
 };
 
 // Update post function
 const updatePost = async (payload: UpdatePostPayload): Promise<Post> => {
     const { id, ...updateData } = payload;
-    const response = await axios.put<{ success: boolean; data: Post }>(`/api/v1/posts/${id}`, updateData);
-    return response.data.data;
+    const response = await put<{ success: boolean; data: Post }>(
+        `posts/${id}`,
+        updateData,
+    );
+    return response.data;
 };
 
 // Delete post function
 const deletePost = async (id: string): Promise<void> => {
-    await axios.delete(`/api/v1/posts/${id}`);
+    await del(`posts/${id}`);
 };
 
 // React Query hook for fetching all posts
@@ -146,7 +152,10 @@ export const useUpdatePost = () => {
         mutationFn: updatePost,
         onSuccess: (updatedPost) => {
             // Update the post in the detail cache
-            queryClient.setQueryData(postsKeys.detail(updatedPost.id), updatedPost);
+            queryClient.setQueryData(
+                postsKeys.detail(updatedPost.id),
+                updatedPost,
+            );
 
             // Invalidate posts list to reflect changes
             queryClient.invalidateQueries({ queryKey: postsKeys.lists() });
@@ -168,7 +177,9 @@ export const useDeletePost = () => {
         mutationFn: deletePost,
         onSuccess: (_, deletedId) => {
             // Remove the post from all relevant caches
-            queryClient.removeQueries({ queryKey: postsKeys.detail(deletedId) });
+            queryClient.removeQueries({
+                queryKey: postsKeys.detail(deletedId),
+            });
 
             // Invalidate posts list
             queryClient.invalidateQueries({ queryKey: postsKeys.lists() });

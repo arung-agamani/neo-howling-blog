@@ -47,6 +47,7 @@
         "highlight.js": "^11.9.0",
         "jotai": "^2.14.0",
         "jsonwebtoken": "^9.0.0",
+        "ky": "^1.11.0",
         "lodash.debounce": "^4.0.8",
         "lodash.startcase": "^4.4.0",
         "material-react-table": "^2.11.1",

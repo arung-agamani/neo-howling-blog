@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { signOut } from "next-auth/react";
-import axios from "@/utils/axios";
+import { get } from "@/lib/ky/client";
 
 export interface CurrentUser {
     id: string;
@@ -24,8 +24,8 @@ export const authKeys = {
 
 // Fetch current user function
 const fetchCurrentUser = async (): Promise<CurrentUser> => {
-    const response = await axios.get<AuthResponse>("/api/v1/auth/me");
-    return response.data.user;
+    const response = await get<AuthResponse>("auth/me");
+    return response.user;
 };
 
 // Logout function
@@ -41,7 +41,10 @@ export const useCurrentUser = () => {
         staleTime: 5 * 60 * 1000, // 5 minutes
         gcTime: 10 * 60 * 1000, // 10 minutes
         refetchOnWindowFocus: false,
-        retry: (failureCount, error: any) => {
+        retry: (
+            failureCount,
+            error: Error & { response?: { status?: number } },
+        ) => {
             // Don't retry on 401 errors (unauthorized)
             if (error?.response?.status === 401) {
                 return false;
@@ -59,7 +62,7 @@ export const useLogout = () => {
         mutationFn: logout,
         onSuccess: () => {
             // Clear all query cache on logout
-            queryClient.clear();
+            // queryClient.clear();
         },
         onError: (error) => {
             console.error("Failed to logout:", error);
