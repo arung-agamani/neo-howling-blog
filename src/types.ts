@@ -28,7 +28,7 @@ export const GeneratePUTSignedURLResponse = z.discriminatedUnion("success", [
     z.object({
         success: z.literal(false),
         message: z.string(),
-        errors: z.record(z.any()),
+        errors: z.record(z.string(), z.any()),
     }),
 ]);
 
@@ -77,7 +77,7 @@ export const LoginParams = z.object({
         .string()
         .regex(
             new RegExp("[A-Za-z0-9@]{8,32}"),
-            "Password should only be alphanumeric and the following symbols: @"
+            "Password should only be alphanumeric and the following symbols: @",
         )
         .max(32, "Maximum length is 32 characters")
         .min(8, "Minimum length is 8 characters"),
@@ -92,7 +92,7 @@ export const SignupRequestBody = z
             .string()
             .regex(
                 new RegExp("[A-Za-z0-9@]{8,32}"),
-                "Password should only be alphanumeric and the following symbols: @"
+                "Password should only be alphanumeric and the following symbols: @",
             )
             .max(32, "Maximum length is 32 characters")
             .min(8, "Minimum length is 8 characters"),

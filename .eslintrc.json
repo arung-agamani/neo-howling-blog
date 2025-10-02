@@ -14,7 +14,8 @@
         // "eslint-plugin-import/no-unresolved": "error"
         "@typescript-eslint/no-explicit-any": "warn",
         "@typescript-eslint/no-unused-vars": "warn",
-        "eslint-plugin-import/no-named-as-default": "off"
+        "eslint-plugin-import/no-named-as-default": "off",
+        "import/no-unresolved": "off"
     },
     // "settings": {
     //     "import/parsers": {

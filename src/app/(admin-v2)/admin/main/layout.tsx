@@ -1,6 +1,7 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import Sidebar from "@/components/admin/Sidebar";
 import QueryProvider from "@/lib/react-query/QueryProvider";
+import { Toaster } from "@/components/ui/toaster";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
@@ -22,6 +23,7 @@ export default async function MainAdminLayout({
                     <main className="flex-1 overflow-auto">{children}</main>
                 </div>
             </div>
+            <Toaster />
         </QueryProvider>
     );
 }
