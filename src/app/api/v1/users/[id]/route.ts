@@ -3,10 +3,8 @@ import prisma from "@/utils/prisma";
 import { verifyRole } from "@/hooks/useRoleAuth";
 import { Unauthorized } from "@/app/api/responses";
 
-export async function GET(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
     }
@@ -33,10 +31,8 @@ export async function GET(
     return NextResponse.json({ user });
 }
 
-export async function PATCH(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
     }

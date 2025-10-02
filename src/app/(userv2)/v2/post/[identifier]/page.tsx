@@ -68,7 +68,8 @@ const componentMap: any = {
     img: (props: any) => <img {...props} className="my-4 mx-auto" alt={props.alt || "Post image"} />
 }
 
-export async function generateMetadata({ params }: { params: { identifier: string } }) {
+export async function generateMetadata(props: { params: Promise<{ identifier: string }> }) {
+    const params = await props.params;
     const { identifier } = params;
     const postData = await prisma.posts.findFirst({
         where: {

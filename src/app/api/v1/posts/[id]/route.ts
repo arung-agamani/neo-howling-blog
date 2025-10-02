@@ -44,8 +44,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string; hard?: string } },
+    props: { params: Promise<{ id: string; hard?: string }> }
 ) {
+    const params = await props.params;
     const postId = params.id;
     const post = await prisma.posts.findUnique({
         where: { id: postId },
@@ -112,8 +113,9 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string; hard?: string } },
+    props: { params: Promise<{ id: string; hard?: string }> }
 ) {
+    const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
     }

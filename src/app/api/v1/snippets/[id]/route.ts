@@ -21,10 +21,8 @@ import jwt from "jsonwebtoken";
 export const dynamic = "force-dynamic";
 
 // GET /api/v1/snippets/[id] (get snippet by id)
-export async function GET(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const id = params.id;
     if (!id) return BadRequest();
     const snippet = await GetSnippet(id);
@@ -33,10 +31,8 @@ export async function GET(
 }
 
 // PATCH /api/v1/snippets/[id] (update snippet)
-export async function PATCH(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
     }
@@ -105,10 +101,8 @@ export async function PATCH(
 }
 
 // DELETE /api/v1/snippets/[id] (delete snippet)
-export async function DELETE(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
     }

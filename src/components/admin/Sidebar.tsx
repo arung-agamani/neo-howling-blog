@@ -1,12 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import {
-    NavigationMenu,
-    NavigationMenuList,
-    NavigationMenuItem,
-    NavigationMenuLink,
-} from "@/components/ui/navigation-menu";
+
 import { cn } from "@/utils/index";
 import { usePathname } from "next/navigation";
 import { Home, Users, FileText, Settings } from "lucide-react";
@@ -42,29 +37,24 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
     return (
         <nav className="flex-1 overflow-y-auto">
-            <NavigationMenu orientation="vertical" className="w-full">
-                <NavigationMenuList className="flex flex-col space-x-0 space-y-1 p-4">
-                    {sidebarNav.map((item) => (
-                        <NavigationMenuItem key={item.href}>
-                            <Link href={item.href} passHref legacyBehavior>
-                                <NavigationMenuLink
-                                    className={cn(
-                                        "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                                        pathname === item.href
-                                            ? "bg-accent text-accent-foreground"
-                                            : "text-muted-foreground",
-                                    )}
-                                    active={pathname === item.href}
-                                    onClick={onNavigate}
-                                >
-                                    {item.icon}
-                                    {item.label}
-                                </NavigationMenuLink>
-                            </Link>
-                        </NavigationMenuItem>
-                    ))}
-                </NavigationMenuList>
-            </NavigationMenu>
+            <div className="flex flex-col space-y-1 p-4">
+                {sidebarNav.map((item) => (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                            "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground w-full",
+                            pathname === item.href
+                                ? "bg-accent text-accent-foreground"
+                                : "text-muted-foreground",
+                        )}
+                        onClick={onNavigate}
+                    >
+                        {item.icon}
+                        {item.label}
+                    </Link>
+                ))}
+            </div>
         </nav>
     );
 }

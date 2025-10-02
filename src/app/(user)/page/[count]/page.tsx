@@ -13,7 +13,8 @@ interface Params {
 
 export const revalidate = 0;
 
-export default async function Page({ params }: { params: Params }) {
+export default async function Page(props: { params: Promise<Params> }) {
+    const params = await props.params;
     const page = Number(params.count);
     const maxPost = await prisma.posts.count({ where: { isPublished: true } });
     if (page < 1) {

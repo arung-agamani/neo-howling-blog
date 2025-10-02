@@ -8,7 +8,7 @@ import prisma from "@/utils/prisma";
 import { headers } from "next/headers";
 
 export default async function Page() {
-    const header = headers(); // trigger dynamic
+    const header = await headers(); // trigger dynamic
     const posts = await prisma.posts.findMany({
         select: {
             id: true,

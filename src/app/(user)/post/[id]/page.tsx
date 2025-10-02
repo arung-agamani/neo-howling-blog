@@ -25,7 +25,8 @@ const baseUrl =
 
 // const baseUrl = "http://localhost:3001";
 
-export async function generateMetadata({ params }: { params: Params }) {
+export async function generateMetadata(props: { params: Promise<Params> }) {
+    const params = await props.params;
     const data = await fetch(`${baseUrl}/api/v1/posts/${params.id}`, {
         // next: { revalidate: 10 },
         cache: "no-cache",
@@ -55,8 +56,9 @@ export async function generateMetadata({ params }: { params: Params }) {
 
 export const dynamic = "force-dynamic";
 export const revalidate = 2;
-export default async function Page({ params }: { params: Params }) {
-    const headerLists = headers();
+export default async function Page(props: { params: Promise<Params> }) {
+    const params = await props.params;
+    const headerLists = await headers();
     headerLists.get("a");
     const data = await fetch(`${baseUrl}/api/v1/posts/${params.id}`).then(
         (res) => res.json(),

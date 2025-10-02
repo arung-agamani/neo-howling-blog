@@ -8,10 +8,10 @@ const nextConfig = {
     experimental: {
         optimizePackageImports: ["@mui/material", "@mui/icons-material"],
     },
-    webpack: (config) => {
-        config.optimization.splitChunks.chunks = "all";
-        return config;
-    },
+    // webpack: (config) => {
+    //     config.optimization.splitChunks.chunks = "all";
+    //     return config;
+    // },
     images: {
         remotePatterns: [
             {

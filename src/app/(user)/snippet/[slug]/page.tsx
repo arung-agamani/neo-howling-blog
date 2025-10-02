@@ -28,7 +28,8 @@ const processor = unified()
     .use(rehypeHightlight)
     .use(rehypeStringify as any);
 
-export async function generateMetadata({ params }: { params: Params }) {
+export async function generateMetadata(props: { params: Promise<Params> }) {
+    const params = await props.params;
     const data = await GetSnippetBySlug(params.slug);
     if (!data)
         return {
@@ -54,7 +55,8 @@ export async function generateMetadata({ params }: { params: Params }) {
     } satisfies Metadata;
 }
 
-export default async function Page({ params }: { params: Params }) {
+export default async function Page(props: { params: Promise<Params> }) {
+    const params = await props.params;
     const data = await GetSnippetBySlug(params.slug);
     if (!data)
         return (
