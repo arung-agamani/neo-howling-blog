@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import RedirectWrapper from "./RedirectWrapper";
+import prisma from "@/utils/prisma";
 
 export const metadata: Metadata = {
     title: "Howling Admin",
