@@ -6,7 +6,7 @@ interface TypographyProps {
     className?: string;
     variant?: 'default' | 'muted' | 'accent' | 'destructive';
     align?: 'left' | 'center' | 'right';
-    as?: keyof JSX.IntrinsicElements;
+    as?: keyof React.JSX.IntrinsicElements;
 }
 
 // Heading component props
@@ -54,7 +54,7 @@ export const Heading: React.FC<HeadingProps> = ({
     as,
     ...props
 }) => {
-    const Component = as || (`h${level}` as keyof JSX.IntrinsicElements);
+    const Component = as || (`h${level}` as keyof React.JSX.IntrinsicElements);
 
     const baseClasses = 'font-bold leading-tight tracking-tight';
 

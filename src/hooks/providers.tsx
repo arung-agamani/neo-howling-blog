@@ -22,7 +22,9 @@ export default function QueryProviders({
     });
     return (
         <QueryClientProvider client={queryClient}>
-            <HydrationBoundary state={undefined}>{children}</HydrationBoundary>
+            {/*<HydrationBoundary state={undefined}>*/}
+            {children}
+            {/*</HydrationBoundary>*/}
             <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
     );
