@@ -1,19 +1,12 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import Sidebar from "@/components/admin/Sidebar";
 import QueryProvider from "@/lib/react-query/QueryProvider";
 import { Toaster } from "@/components/ui/toaster";
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
 
 export default async function MainAdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        redirect("/admin");
-    }
     return (
         <QueryProvider>
             <div className="flex flex-col md:flex-row min-h-screen w-full bg-muted">
