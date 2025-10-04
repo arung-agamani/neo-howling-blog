@@ -30,6 +30,16 @@ const sidebarNav = [
         href: "/admin/main/settings",
         icon: <Settings className="w-4 h-4 mr-2" />,
     },
+    {
+        label: "Go to V1 Admin Dashboard",
+        href: "/dashboard",
+        icon: <Settings className="w-4 h-4 mr-2" />,
+    },
+    {
+        label: "Go to V2 User Page",
+        href: "/v2",
+        icon: <Settings className="w-4 h-4 mr-2" />,
+    }
 ];
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {

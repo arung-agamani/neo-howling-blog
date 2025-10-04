@@ -60,10 +60,8 @@ export default function PostsPage() {
                 </Button>
             </div>
 
-            {/* Statistics */}
             <PostsStats posts={posts} />
 
-            {/* Filters and Search */}
             <PostsFilters
                 searchTerm={searchTerm}
                 filterStatus={filterStatus}
@@ -71,7 +69,6 @@ export default function PostsPage() {
                 onFilterChange={handleFilterChange}
             />
 
-            {/* Posts Table */}
             <PostsTable
                 posts={posts}
                 searchTerm={searchTerm}

@@ -21,7 +21,7 @@ export const metadata = {
 };
 
 const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
-    return (<html>
+    return (<html suppressHydrationWarning>
         <head>
             <link rel="preconnect" href="https://fonts.googleapis.com" />
             <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin='anonymous' />
