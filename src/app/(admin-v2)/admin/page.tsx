@@ -2,25 +2,25 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import Login from "./Login";
 import RedirectWrapper from "./RedirectWrapper";
+import prisma from "@/utils/prisma";
 
 export const metadata: Metadata = {
     title: "Howling Admin",
     description: "Admin Dashboard for Howling Blog",
-}
+};
 
 export default async function Page() {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (session) {
-        redirect("/admin/main")
+        redirect("/admin/main");
     }
 
     const config = await prisma.config.findFirst({
         where: {
-            key: "LOGIN_BACKGROUND_IMAGE"
-        }
-    })
+            key: "LOGIN_BACKGROUND_IMAGE",
+        },
+    });
 
     return (
         <div

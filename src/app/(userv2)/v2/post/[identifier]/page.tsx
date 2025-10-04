@@ -18,7 +18,7 @@ const makeHeading = (level: 1 | 2 | 3 | 4 | 5 | 6 | undefined = 1) => {
 }
 
 const CustomParagraph = ({ children }: { children: React.ReactNode }) => {
-    return <Text className="mb-4 leading-relaxed">{children}</Text>
+    return <Text className="mb-4 leading-relaxed overflow-hidden">{children}</Text>
 }
 
 const CustomUnorderedList = ({ children }: { children: React.ReactNode }) => {
@@ -65,10 +65,14 @@ const componentMap: any = {
     ol: CustomOrderedList,
     li: CustomListItem,
     blockquote: CustomBlockquote,
-    img: (props: any) => <img {...props} className="my-4 mx-auto" alt={props.alt || "Post image"} />
+    img: (props: any) => <img {...props} className="my-4" alt={props.alt || "Post image"} />,
+    // img: (props: any) => <span>Debug Image</span>,
+    a: (props: any) => <a {...props} className="text-blue-600 dark:text-blue-400 hover:underline break-all inline-block" />
+    // a: (props: any) => <span>Debug link</span>
 }
 
-export async function generateMetadata({ params }: { params: { identifier: string } }) {
+export async function generateMetadata(props: { params: Promise<{ identifier: string }> }): Promise<Metadata> {
+    const params = await props.params;
     const { identifier } = params;
     const postData = await prisma.posts.findFirst({
         where: {
@@ -134,7 +138,7 @@ export default async function PostDetailPage({
                 <div className="dark:border-b-slate-700 border-b-slate-300 border-b" />
                 {content}
                 <hr />
-                <RecommendedPosts postId={identifier} />
+                {/* <RecommendedPosts postId={identifier} /> */}
             </div>
         </PageReadySignal>
     )

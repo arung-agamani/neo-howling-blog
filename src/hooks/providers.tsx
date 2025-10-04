@@ -18,11 +18,13 @@ export default function QueryProviders({
         queries: {
             refetchOnWindowFocus: false,
             refetchOnReconnect: false,
-        }
-    })
+        },
+    });
     return (
         <QueryClientProvider client={queryClient}>
-            <HydrationBoundary>{children}</HydrationBoundary>
+            {/*<HydrationBoundary state={undefined}>*/}
+            {children}
+            {/*</HydrationBoundary>*/}
             <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
     );

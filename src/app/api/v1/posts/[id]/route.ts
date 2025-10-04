@@ -10,8 +10,9 @@ import {
     DeletePost,
     HardDeletePost,
     UpdatePost,
-    UpdatePostSchema,
+    // UpdatePostSchema,
 } from "@/lib/Post";
+import type { UpdatePostSchema } from "@/lib/Post";
 import { verifyRole } from "@/hooks/useRoleAuth";
 
 const DeleteRequestParams = z.object({
@@ -21,7 +22,9 @@ const DeleteRequestParams = z.object({
 
 type DeleteRequestParams = z.infer<typeof DeleteRequestParams>;
 
-const UpdatePostSchema = z.object({
+const opTypes = ["update", "publish", "feature"] as const;
+
+const _UpdatePostSchema = z.object({
     author: z.string().optional(),
     bannerUrl: z.string().optional(),
     blogContent: z.string().optional(),
@@ -33,15 +36,17 @@ const UpdatePostSchema = z.object({
     isPublished: z.boolean().optional(),
 
     id: z.string(),
-    op: z.enum(["update", "publish", "feature"]),
+    // op: z.enum(["update", "publish", "feature"]),
+    op: z.enum(opTypes),
 }) satisfies z.ZodType<UpdatePostSchema>;
 
 export const dynamic = "force-dynamic";
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string; hard?: string } }
+    props: { params: Promise<{ id: string; hard?: string }> }
 ) {
+    const params = await props.params;
     const postId = params.id;
     const post = await prisma.posts.findUnique({
         where: { id: postId },
@@ -70,7 +75,7 @@ export async function PATCH(req: NextRequest) {
         return Unauthorized();
     }
     const body = await req.json();
-    const validate = UpdatePostSchema.safeParse(body);
+    const validate = _UpdatePostSchema.safeParse(body);
     if (!validate.success) return BadRequest({ errors: validate.error.issues });
 
     const { id, op, ...payloadData } = validate.data;
@@ -108,8 +113,9 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string; hard?: string } }
+    props: { params: Promise<{ id: string; hard?: string }> }
 ) {
+    const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
     }

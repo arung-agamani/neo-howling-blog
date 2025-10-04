@@ -9,7 +9,8 @@ interface PathParams {
 }
 
 export const revalidate = 0;
-export default async function Page({ params }: { params: PathParams }) {
+export default async function Page(props: { params: Promise<PathParams> }) {
+    const params = await props.params;
     const tag = params.tag;
     if (!tag) {
         return (

@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-    font-family: "Klee One", cursive;
-}
-
 @layer base {
     :root {
         --background: 0 0% 100%;

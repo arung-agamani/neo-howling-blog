@@ -17,10 +17,8 @@ const client = new S3Client({
 });
 
 // GET /api/v1/assets/[key] (fetch asset metadata)
-export async function GET(
-    req: NextRequest,
-    { params }: { params: { key: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ key: string }> }) {
+    const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
     }
@@ -47,10 +45,8 @@ export async function GET(
 }
 
 // DELETE /api/v1/assets/[key]
-export async function DELETE(
-    req: NextRequest,
-    { params }: { params: { key: string } }
-) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ key: string }> }) {
+    const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
     }

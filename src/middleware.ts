@@ -8,21 +8,28 @@ import { withAuth } from "next-auth/middleware";
 //     "/dashboard/main/profile": ["guest", "user", "editor", "admin"],
 // };
 
-export default withAuth(async function middleware(request) {
-    const { pathname } = request.nextUrl;
-    const token = await getToken({
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET,
-    });
-    // if (pathname.startsWith("/dashboard/main")) {
-    //     if (!routeByRoles[pathname]?.includes(token?.role || "guest")) {
-    //         const url = request.nextUrl.clone();
-    //         url.pathname = "/dashboard/main";
-    //         return NextResponse.rewrite(url);
-    //     }
-    // }
-});
+export default withAuth(
+    async function middleware(request) {
+        const { pathname } = request.nextUrl;
+        const token = await getToken({
+            req: request,
+            secret: process.env.NEXTAUTH_SECRET,
+        });
+        // if (pathname.startsWith("/dashboard/main")) {
+        //     if (!routeByRoles[pathname]?.includes(token?.role || "guest")) {
+        //         const url = request.nextUrl.clone();
+        //         url.pathname = "/dashboard/main";
+        //         return NextResponse.rewrite(url);
+        //     }
+        // }
+    },
+    {
+        pages: {
+            signIn: "/admin",
+        },
+    },
+);
 
 export const config = {
-    matcher: ["/dashboard/(.*)"],
+    matcher: ["/dashboard/(.*)", "/admin/(.*)"],
 };

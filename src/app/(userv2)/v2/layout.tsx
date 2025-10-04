@@ -5,6 +5,7 @@ import GithubCard from '@/components/UserPageV2/GithubCard'
 import TopDivWrapper from '@/components/UserPageV2/TopDivWrapper'
 
 import './globals.css'
+import './user-style.css'
 import { Provider } from './ThemeProvider'
 import { JotaiProvider } from "@/components/UserPageV2/JotaiProvider"
 import BapakBapak from '@/components/UserPageV2/BapakBapak'
@@ -20,7 +21,7 @@ export const metadata = {
 };
 
 const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
-    return (<html>
+    return (<html suppressHydrationWarning>
         <head>
             <link rel="preconnect" href="https://fonts.googleapis.com" />
             <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin='anonymous' />
