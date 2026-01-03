@@ -36,7 +36,11 @@ export default function Login() {
                 toast.error("Validation error.");
                 console.log(validate.error.issues);
                 validate.error.issues.forEach((issue) => {
-                    setError(issue.path.join("."), {
+                    const fieldName = issue.path.join(".") as
+                        | "username"
+                        | "password"
+                        | "confirmPassword";
+                    setError(fieldName, {
                         type: "validate",
                         message: issue.message,
                     });

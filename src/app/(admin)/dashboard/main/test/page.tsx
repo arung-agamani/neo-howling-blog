@@ -98,7 +98,7 @@ export default function Page() {
                         setIsSynced(true);
                         setIsModified(false);
                         toast.success("Post updated!", {
-                            position: toast.POSITION.TOP_CENTER,
+                            position: "top-center",
                             autoClose: 3000,
                             closeOnClick: true,
                             theme: "light",
