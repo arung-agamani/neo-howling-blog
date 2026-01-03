@@ -20,7 +20,13 @@ export default function Login() {
     const router = useRouter();
     const [mode, setMode] = useState<"login" | "signup">("login");
     const { status } = useSession();
-    const { handleSubmit, control, reset, setError } = useForm();
+    const { handleSubmit, control, reset, setError } = useForm({
+        defaultValues: {
+            username: "",
+            password: "",
+            confirmPassword: "",
+        },
+    });
     const [loading, isLoading] = useState(false);
     const submit = async (data: unknown) => {
         isLoading(true);

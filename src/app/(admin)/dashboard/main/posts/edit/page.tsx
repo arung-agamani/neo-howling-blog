@@ -102,7 +102,7 @@ export default function Page() {
                 setIsSynced(true);
                 setIsModified(false);
                 toast.success("Post updated!", {
-                    position: toast.POSITION.TOP_CENTER,
+                    position: "top-center",
                     autoClose: 3000,
                     closeOnClick: true,
                     theme: "light",
@@ -126,7 +126,7 @@ export default function Page() {
                 toast.success("Post created!");
                 setTimeout(() => {
                     router.push(
-                        `/dashboard/main/posts/edit?id=${res.data.data.id}`
+                        `/dashboard/main/posts/edit?id=${res.data.data.id}`,
                     );
                 }, 3000);
                 // console.log(res.data);
@@ -259,7 +259,7 @@ export default function Page() {
                                 onChange={() => setIsModified(true)}
                             />
                             <img
-                                src=""
+                                src={page.bannerUrl || undefined}
                                 alt=""
                                 id="bannerPreview"
                                 ref={imagePrevRef}

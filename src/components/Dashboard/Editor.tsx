@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from "react";
-import ReactQuill, { Quill } from "react-quill";
+import ReactQuill, { Quill } from "react-quill-new";
 import ImageUploader from "quill-image-uploader";
 import QuillMarkdown from "quilljs-markdown";
 import QuillBlotFormatter from "quill-blot-formatter";
 import { toast } from "react-toastify";
 import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
-import "react-quill/dist/quill.snow.css";
+import "react-quill-new/dist/quill.snow.css";
 import "./EditorOverride.css";
 
 interface PostMetadata {
@@ -77,8 +77,10 @@ const Editor: React.FC<Props> = ({
 
                             try {
                                 const head = await fetch(
-                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${date.getMonth() + 1
-                                    }/${date.getDate()}/${randPrefix}_${loadedFile?.name
+                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
+                                        date.getMonth() + 1
+                                    }/${date.getDate()}/${randPrefix}_${
+                                        loadedFile?.name
                                     }`,
                                     {
                                         method: "HEAD",
@@ -132,8 +134,10 @@ const Editor: React.FC<Props> = ({
                                     `File ${loadedFile?.name} has been successfully uploaded`,
                                 );
                                 resolve(
-                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${date.getMonth() + 1
-                                    }/${date.getDate()}/${randPrefix}_${loadedFile?.name
+                                    `https://howling-blog-uploads.s3.ap-southeast-1.amazonaws.com/${date.getFullYear()}/${
+                                        date.getMonth() + 1
+                                    }/${date.getDate()}/${randPrefix}_${
+                                        loadedFile?.name
                                     }`,
                                 );
                             } catch (error) {
@@ -162,8 +166,9 @@ const Editor: React.FC<Props> = ({
         )[0] as HTMLDivElement;
         // const appbarHeight =
         //     document.getElementById("app-bar")?.clientHeight || 0;
-        qlContainer.style.maxHeight = `${window.innerHeight - toolbarHeight - 64
-            }px`;
+        qlContainer.style.maxHeight = `${
+            window.innerHeight - toolbarHeight - 64
+        }px`;
     }, []);
 
     function imageHandler() {
