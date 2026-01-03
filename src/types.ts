@@ -1,6 +1,15 @@
 import { isAlpha } from "validator";
 import { z } from "zod";
 
+// Editor Types
+export interface PostMetadata {
+    author?: string;
+    title?: string;
+    description?: string;
+    bannerUrl?: string;
+    tags?: string[];
+}
+
 export const DeleteAssetRequestParams = z.object({
     key: z.string(),
 });
