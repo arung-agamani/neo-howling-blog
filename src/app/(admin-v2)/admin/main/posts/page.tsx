@@ -53,7 +53,7 @@ export default function PostsPage() {
                     </p>
                 </div>
                 <Button asChild>
-                    <Link href="/admin/main/posts/new">
+                    <Link href="/admin/main/editor?mode=post">
                         <Plus className="w-4 h-4 mr-2" />
                         Create New Post
                     </Link>

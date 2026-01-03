@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
-import { Descendant } from "slate";
+import React, { useState, useCallback, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import SlateEditor from "@/components/editor/SlateEditor";
 import {
     useSlateEditor,
     getWordCount,
     getReadingTime,
+    serializeToPlainText,
 } from "@/hooks/useSlateEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +15,51 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Save, Eye, FileText, Clock, Type } from "lucide-react";
+import {
+    Save,
+    Eye,
+    FileText,
+    Clock,
+    Type,
+    Upload,
+    Loader2,
+    ArrowLeft,
+    Code,
+} from "lucide-react";
+import { useCurrentUser } from "@/hooks/api/useAuth";
+import { usePost } from "@/hooks/api/usePosts";
+import { useSnippet } from "@/hooks/api/useSnippets";
+import { toast } from "react-toastify";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Link from "next/link";
+
+type EditorMode = "post" | "snippet";
 
 const EditorPage: React.FC = () => {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const mode = (searchParams.get("mode") as EditorMode) || "post";
+    const postId = searchParams.get("id");
+
+    const { data: currentUser } = useCurrentUser();
+    const { data: existingPost, isLoading: loadingPost } = usePost(
+        postId || "",
+        !!postId && mode === "post",
+    );
+    const { data: existingSnippet, isLoading: loadingSnippet } = useSnippet(
+        postId || "",
+        !!postId && mode === "snippet",
+    );
+
     const [title, setTitle] = useState("");
     const [slug, setSlug] = useState("");
     const [excerpt, setExcerpt] = useState("");
     const [tags, setTags] = useState("");
+    const [bannerUrl, setBannerUrl] = useState("");
     const [showPreview, setShowPreview] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [isPublished, setIsPublished] = useState(false);
 
     const {
         value,
@@ -32,54 +70,264 @@ const EditorPage: React.FC = () => {
         isEmpty,
     } = useSlateEditor({
         onContentChange: (content) => {
-            console.log("Content changed:", content);
+            // Optional: Auto-save could be implemented here
         },
         onHtmlChange: (html) => {
-            console.log("HTML changed:", html);
+            // HTML is automatically updated
         },
     });
 
     const wordCount = getWordCount(value);
     const readingTime = getReadingTime(value);
 
-    const handleSave = useCallback(() => {
-        const postData = {
-            title,
-            slug,
-            excerpt,
-            tags: tags
-                .split(",")
-                .map((tag) => tag.trim())
-                .filter(Boolean),
-            content: value,
-            htmlContent,
-            wordCount,
-            readingTime,
-        };
+    // Load existing post data
+    useEffect(() => {
+        if (existingPost && mode === "post") {
+            setTitle(existingPost.title || "");
+            setExcerpt(existingPost.description || "");
+            setTags(existingPost.tags?.join(", ") || "");
+            setBannerUrl(existingPost.bannerUrl || "");
+            setIsPublished(existingPost.isPublished || false);
 
-        console.log("Saving post:", postData);
-        // TODO: Implement actual save functionality
-        alert(
-            "Post saved! (This is a placeholder - implement actual save logic)",
-        );
+            // TODO: Parse blogContent back to Slate format
+            // For now, this is a placeholder
+            if (existingPost.blogContent) {
+                // You'll need to implement proper HTML/content parsing
+                console.log(
+                    "Loading existing content:",
+                    existingPost.blogContent,
+                );
+            }
+        }
+    }, [existingPost, mode]);
+
+    // Load existing snippet data
+    useEffect(() => {
+        if (existingSnippet && mode === "snippet") {
+            setTitle(existingSnippet.title || "");
+            setExcerpt(existingSnippet.description || "");
+
+            // Parse frontmatter to extract tags if needed
+            if (existingSnippet.content) {
+                // Extract tags from frontmatter if present
+                const tagMatch =
+                    existingSnippet.content.match(/tags:\s*\[(.*?)\]/);
+                if (tagMatch) {
+                    setTags(tagMatch[1].replace(/['"]/g, "").trim());
+                }
+
+                // TODO: Parse content back to Slate format
+                console.log(
+                    "Loading existing snippet:",
+                    existingSnippet.content,
+                );
+            }
+        }
+    }, [existingSnippet, mode]);
+
+    const handleSavePost = useCallback(async () => {
+        if (!currentUser) {
+            toast.error("You must be logged in to save posts");
+            return;
+        }
+
+        if (!title.trim()) {
+            toast.error("Please enter a title");
+            return;
+        }
+
+        if (isEmpty) {
+            toast.error("Please add some content");
+            return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            const payload = {
+                author: currentUser.username,
+                title: title.trim(),
+                description: excerpt.trim(),
+                tags: tags
+                    .split(",")
+                    .map((tag) => tag.trim())
+                    .filter(Boolean),
+                bannerUrl: bannerUrl.trim() || undefined,
+                blogContent: htmlContent,
+            };
+
+            const endpoint = postId
+                ? `/api/v1/posts/${postId}`
+                : "/api/v1/posts";
+            const method = postId ? "PATCH" : "POST";
+
+            const body = postId
+                ? {
+                      id: postId,
+                      op: "update",
+                      ...payload,
+                  }
+                : payload;
+
+            const response = await fetch(endpoint, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(body),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                toast.success(
+                    postId
+                        ? "Post updated successfully!"
+                        : "Post saved as draft!",
+                );
+
+                // If this was a new post, redirect to edit mode
+                if (!postId && data.data?.id) {
+                    router.push(
+                        `/admin/main/editor?mode=post&id=${data.data.id}`,
+                    );
+                }
+            } else {
+                toast.error(data.message || "Failed to save post");
+                console.error("Error:", data);
+            }
+        } catch (error) {
+            console.error("Error saving post:", error);
+            toast.error("An error occurred while saving");
+        } finally {
+            setIsSaving(false);
+        }
     }, [
+        currentUser,
         title,
-        slug,
         excerpt,
         tags,
-        value,
+        bannerUrl,
         htmlContent,
-        wordCount,
-        readingTime,
+        isEmpty,
+        postId,
+        router,
     ]);
 
-    const handlePublish = useCallback(() => {
-        // TODO: Implement publish functionality
-        console.log("Publishing post...");
-        alert(
-            "Post published! (This is a placeholder - implement actual publish logic)",
-        );
-    }, []);
+    const handlePublishPost = useCallback(async () => {
+        if (!postId) {
+            toast.error("Please save the post first before publishing");
+            return;
+        }
+
+        setIsPublishing(true);
+
+        try {
+            const response = await fetch(`/api/v1/posts/${postId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    id: postId,
+                    op: "publish",
+                    isPublished: !isPublished,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const newStatus = !isPublished;
+                setIsPublished(newStatus);
+                toast.success(
+                    newStatus ? "Post published!" : "Post unpublished!",
+                );
+            } else {
+                toast.error(data.message || "Failed to publish post");
+            }
+        } catch (error) {
+            console.error("Error publishing post:", error);
+            toast.error("An error occurred while publishing");
+        } finally {
+            setIsPublishing(false);
+        }
+    }, [postId, isPublished]);
+
+    const handleSaveSnippet = useCallback(async () => {
+        if (!currentUser) {
+            toast.error("You must be logged in to save snippets");
+            return;
+        }
+
+        if (!title.trim()) {
+            toast.error("Please enter a title");
+            return;
+        }
+
+        if (isEmpty) {
+            toast.error("Please add some content");
+            return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            // Convert to frontmatter format for snippets
+            const plainContent = serializeToPlainText(value);
+            const frontmatterContent = `---
+title: ${title}
+description: ${excerpt}
+tags: [${tags
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean)
+                .join(", ")}]
+---
+
+${plainContent}`;
+
+            const endpoint = postId
+                ? `/api/v1/snippets/${postId}`
+                : "/api/v1/snippets";
+            const method = postId ? "PATCH" : "POST";
+
+            const response = await fetch(endpoint, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    content: frontmatterContent,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                toast.success(
+                    postId
+                        ? "Snippet updated successfully!"
+                        : "Snippet created successfully!",
+                );
+
+                // If this was a new snippet, redirect to edit mode
+                if (!postId && data.data?.id) {
+                    router.push(
+                        `/admin/main/editor?mode=snippet&id=${data.data.id}`,
+                    );
+                }
+            } else {
+                toast.error(data.message || "Failed to save snippet");
+                console.error("Error:", data);
+            }
+        } catch (error) {
+            console.error("Error saving snippet:", error);
+            toast.error("An error occurred while saving snippet");
+        } finally {
+            setIsSaving(false);
+        }
+    }, [currentUser, title, excerpt, tags, value, isEmpty, postId, router]);
 
     const generateSlugFromTitle = useCallback((title: string) => {
         return title
@@ -106,66 +354,151 @@ const EditorPage: React.FC = () => {
     const handleReset = useCallback(() => {
         if (
             confirm(
-                "Are you sure you want to reset the editor? All content will be lost.",
+                "Are you sure you want to reset the editor? All unsaved content will be lost.",
             )
         ) {
             setTitle("");
             setSlug("");
             setExcerpt("");
             setTags("");
+            setBannerUrl("");
             resetEditor();
         }
     }, [resetEditor]);
 
+    const handleModeChange = (newMode: string) => {
+        if (newMode !== mode) {
+            if (
+                !isEmpty ||
+                title ||
+                excerpt ||
+                tags ||
+                confirm(
+                    "Switching modes will clear your current work. Continue?",
+                )
+            ) {
+                router.push(`/admin/main/editor?mode=${newMode}`);
+                // Reset form
+                setTitle("");
+                setSlug("");
+                setExcerpt("");
+                setTags("");
+                setBannerUrl("");
+                resetEditor();
+            }
+        }
+    };
+
+    if (loadingPost || loadingSnippet) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+        );
+    }
+
     return (
-        <div className="container mx-auto py-8 px-4 max-w-7xl">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">Blog Post Editor</h1>
-                <p className="text-gray-600">
-                    Create and edit your blog posts with our rich text editor
-                </p>
+        <div className="mx-auto py-8 px-4">
+            <div className="mb-8 flex items-center justify-between">
+                <div>
+                    <div className="flex items-center gap-4 mb-2">
+                        <Button variant="ghost" size="sm" asChild>
+                            <Link href="/admin/main/posts">
+                                <ArrowLeft className="w-4 h-4 mr-2" />
+                                Back to Posts
+                            </Link>
+                        </Button>
+                        <h1 className="text-3xl font-bold">
+                            {postId
+                                ? `Edit ${mode === "post" ? "Post" : "Snippet"}`
+                                : `Create New ${mode === "post" ? "Post" : "Snippet"}`}
+                        </h1>
+                    </div>
+                    <p className="text-gray-600">
+                        {mode === "post"
+                            ? "Create and edit your blog posts with our rich text editor"
+                            : "Create and manage code snippets"}
+                    </p>
+                </div>
+
+                <Tabs value={mode} onValueChange={handleModeChange}>
+                    <TabsList>
+                        <TabsTrigger value="post">
+                            <FileText className="w-4 h-4 mr-2" />
+                            Post
+                        </TabsTrigger>
+                        <TabsTrigger value="snippet">
+                            <Code className="w-4 h-4 mr-2" />
+                            Snippet
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Main Editor */}
                 <div className="lg:col-span-3 space-y-6">
-                    {/* Post Metadata */}
+                    {/* Metadata */}
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <FileText size={20} />
-                                Post Details
+                                {mode === "post" ? "Post" : "Snippet"} Details
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <Label htmlFor="title">Title</Label>
+                                <Label htmlFor="title">Title *</Label>
                                 <Input
                                     id="title"
                                     value={title}
                                     onChange={handleTitleChange}
-                                    placeholder="Enter your post title..."
+                                    placeholder={`Enter your ${mode} title...`}
                                     className="text-lg"
                                 />
                             </div>
 
-                            <div>
-                                <Label htmlFor="slug">Slug</Label>
-                                <Input
-                                    id="slug"
-                                    value={slug}
-                                    onChange={(e) => setSlug(e.target.value)}
-                                    placeholder="post-url-slug"
-                                />
-                            </div>
+                            {mode === "post" && (
+                                <>
+                                    <div>
+                                        <Label htmlFor="slug">Slug</Label>
+                                        <Input
+                                            id="slug"
+                                            value={slug}
+                                            onChange={(e) =>
+                                                setSlug(e.target.value)
+                                            }
+                                            placeholder="post-url-slug"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="bannerUrl">
+                                            Banner URL
+                                        </Label>
+                                        <Input
+                                            id="bannerUrl"
+                                            value={bannerUrl}
+                                            onChange={(e) =>
+                                                setBannerUrl(e.target.value)
+                                            }
+                                            placeholder="https://example.com/banner.jpg"
+                                        />
+                                    </div>
+                                </>
+                            )}
 
                             <div>
-                                <Label htmlFor="excerpt">Excerpt</Label>
+                                <Label htmlFor="excerpt">
+                                    {mode === "post"
+                                        ? "Excerpt"
+                                        : "Description"}
+                                </Label>
                                 <Input
                                     id="excerpt"
                                     value={excerpt}
                                     onChange={(e) => setExcerpt(e.target.value)}
-                                    placeholder="Brief description of your post..."
+                                    placeholder={`Brief description of your ${mode}...`}
                                 />
                             </div>
 
@@ -177,7 +510,11 @@ const EditorPage: React.FC = () => {
                                     id="tags"
                                     value={tags}
                                     onChange={(e) => setTags(e.target.value)}
-                                    placeholder="react, nextjs, tutorial"
+                                    placeholder={
+                                        mode === "post"
+                                            ? "react, nextjs, tutorial"
+                                            : "javascript, react, hooks"
+                                    }
                                 />
                             </div>
                         </CardContent>
@@ -209,8 +546,13 @@ const EditorPage: React.FC = () => {
                             {showPreview ? (
                                 <div className="border rounded-lg p-4 min-h-[400px] bg-gray-50">
                                     <h2 className="text-2xl font-bold mb-4">
-                                        {title || "Untitled Post"}
+                                        {title || "Untitled"}
                                     </h2>
+                                    {excerpt && (
+                                        <p className="text-gray-600 italic mb-4">
+                                            {excerpt}
+                                        </p>
+                                    )}
                                     <div
                                         className="prose max-w-none"
                                         dangerouslySetInnerHTML={{
@@ -225,7 +567,7 @@ const EditorPage: React.FC = () => {
                                     value={value}
                                     onChange={setValue}
                                     onHtmlChange={setHtmlContent}
-                                    placeholder="Start writing your blog post..."
+                                    placeholder={`Start writing your ${mode}...`}
                                 />
                             )}
                         </CardContent>
@@ -263,12 +605,30 @@ const EditorPage: React.FC = () => {
                                 </span>
                                 <Badge
                                     variant={
-                                        isEmpty ? "destructive" : "default"
+                                        isEmpty
+                                            ? "destructive"
+                                            : isPublished
+                                              ? "default"
+                                              : "secondary"
                                     }
                                 >
-                                    {isEmpty ? "Empty" : "Draft"}
+                                    {isEmpty
+                                        ? "Empty"
+                                        : isPublished
+                                          ? "Published"
+                                          : "Draft"}
                                 </Badge>
                             </div>
+                            {postId && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-600">
+                                        Mode
+                                    </span>
+                                    <Badge variant="outline">
+                                        {postId ? "Edit" : "Create"}
+                                    </Badge>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -279,22 +639,55 @@ const EditorPage: React.FC = () => {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <Button
-                                onClick={handleSave}
+                                onClick={
+                                    mode === "post"
+                                        ? handleSavePost
+                                        : handleSaveSnippet
+                                }
                                 className="w-full"
-                                disabled={!title.trim() || isEmpty}
+                                disabled={!title.trim() || isEmpty || isSaving}
                             >
-                                <Save size={16} className="mr-2" />
-                                Save Draft
+                                {isSaving ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={16} className="mr-2" />
+                                        {postId ? "Update" : "Save"}{" "}
+                                        {mode === "post" ? "Draft" : "Snippet"}
+                                    </>
+                                )}
                             </Button>
 
-                            <Button
-                                onClick={handlePublish}
-                                variant="default"
-                                className="w-full"
-                                disabled={!title.trim() || isEmpty}
-                            >
-                                Publish Post
-                            </Button>
+                            {mode === "post" && postId && (
+                                <Button
+                                    onClick={handlePublishPost}
+                                    variant={
+                                        isPublished ? "outline" : "default"
+                                    }
+                                    className="w-full"
+                                    disabled={isPublishing}
+                                >
+                                    {isPublishing ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload
+                                                size={16}
+                                                className="mr-2"
+                                            />
+                                            {isPublished
+                                                ? "Unpublish Post"
+                                                : "Publish Post"}
+                                        </>
+                                    )}
+                                </Button>
+                            )}
 
                             <Separator />
 
@@ -321,24 +714,42 @@ const EditorPage: React.FC = () => {
                                 <h4 className="font-medium mb-2">
                                     Markdown Shortcuts
                                 </h4>
-                                <div className="space-y-1">
+                                <div className="space-y-1 text-xs">
                                     <div>
-                                        <kbd>#</kbd> + space = Heading 1
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            #
+                                        </kbd>{" "}
+                                        + space = Heading 1
                                     </div>
                                     <div>
-                                        <kbd>##</kbd> + space = Heading 2
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            ##
+                                        </kbd>{" "}
+                                        + space = Heading 2
                                     </div>
                                     <div>
-                                        <kbd>###</kbd> + space = Heading 3
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            ###
+                                        </kbd>{" "}
+                                        + space = Heading 3
                                     </div>
                                     <div>
-                                        <kbd>*</kbd> + space = Bullet list
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            *
+                                        </kbd>{" "}
+                                        + space = Bullet list
                                     </div>
                                     <div>
-                                        <kbd>1.</kbd> + space = Numbered list
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            1.
+                                        </kbd>{" "}
+                                        + space = Numbered list
                                     </div>
                                     <div>
-                                        <kbd>{">"}</kbd> + space = Blockquote
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            {">"}
+                                        </kbd>{" "}
+                                        + space = Blockquote
                                     </div>
                                 </div>
                             </div>
@@ -347,51 +758,30 @@ const EditorPage: React.FC = () => {
                                 <h4 className="font-medium mb-2">
                                     Keyboard Shortcuts
                                 </h4>
-                                <div className="space-y-1">
+                                <div className="space-y-1 text-xs">
                                     <div>
-                                        <kbd>Ctrl+B</kbd> = Bold
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            Ctrl+B
+                                        </kbd>{" "}
+                                        = Bold
                                     </div>
                                     <div>
-                                        <kbd>Ctrl+I</kbd> = Italic
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            Ctrl+I
+                                        </kbd>{" "}
+                                        = Italic
                                     </div>
                                     <div>
-                                        <kbd>Ctrl+U</kbd> = Underline
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            Ctrl+U
+                                        </kbd>{" "}
+                                        = Underline
                                     </div>
                                     <div>
-                                        <kbd>Ctrl+`</kbd> = Code
-                                    </div>
-                                    <div>
-                                        <kbd>Ctrl+Z</kbd> = Undo
-                                    </div>
-                                    <div>
-                                        <kbd>Ctrl+Shift+Z</kbd> = Redo
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h4 className="font-medium mb-2">
-                                    Smart Behaviors
-                                </h4>
-                                <div className="space-y-1 text-xs text-gray-600">
-                                    <div>
-                                        • Press Enter in headings to exit to
-                                        normal text
-                                    </div>
-                                    <div>
-                                        • Press Enter twice in lists to exit
-                                        list mode
-                                    </div>
-                                    <div>
-                                        • Select text to show floating toolbar
-                                        with link option
-                                    </div>
-                                    <div>
-                                        • Links are inline and auto-exit
-                                        formatting context
-                                    </div>
-                                    <div>
-                                        • Undo/Redo with full history tracking
+                                        <kbd className="px-1 py-0.5 bg-gray-100 rounded">
+                                            Ctrl+`
+                                        </kbd>{" "}
+                                        = Code
                                     </div>
                                 </div>
                             </div>

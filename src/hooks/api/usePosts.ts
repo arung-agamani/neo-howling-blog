@@ -12,6 +12,7 @@ export interface Post {
     bannerUrl?: string;
     isPublished: boolean;
     deleted?: boolean;
+    blogContent?: string;
 }
 
 export interface PostsResponse {

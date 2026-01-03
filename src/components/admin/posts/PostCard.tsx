@@ -4,7 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash2, Calendar, Tag, User } from "lucide-react";
 import { PostCardProps } from "./types";
-import { formatDate, getAuthorDisplayName, getDescriptionDisplayText } from "./utils";
+import {
+    formatDate,
+    getAuthorDisplayName,
+    getDescriptionDisplayText,
+} from "./utils";
 
 export default function PostCard({ post }: PostCardProps) {
     return (
@@ -12,9 +16,7 @@ export default function PostCard({ post }: PostCardProps) {
             <div className="flex items-start justify-between">
                 <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">
-                            {post.title}
-                        </h3>
+                        <h3 className="font-semibold text-lg">{post.title}</h3>
                         <Badge
                             variant={post.isPublished ? "default" : "secondary"}
                         >
@@ -60,24 +62,15 @@ export default function PostCard({ post }: PostCardProps) {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        asChild
-                    >
-                        <Link
-                            href={`/v2/posts/${post.id}`}
-                            target="_blank"
-                        >
+                    <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/v2/posts/${post.id}`} target="_blank">
                             <Eye className="w-4 h-4" />
                         </Link>
                     </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        asChild
-                    >
-                        <Link href={`/admin/main/posts/${post.id}/edit`}>
+                    <Button variant="ghost" size="sm" asChild>
+                        <Link
+                            href={`/admin/main/editor?mode=post&id=${post.id}`}
+                        >
                             <Edit className="w-4 h-4" />
                         </Link>
                     </Button>
