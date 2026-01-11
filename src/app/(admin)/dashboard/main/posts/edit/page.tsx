@@ -12,6 +12,9 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { PostMetadata } from "@/types";
 import { APP_BAR_HEIGHT } from "@/constants";
+import Typography from "@/components/Typography";
+import { Dialog, DialogContent } from "@mui/material";
+import { MediaLibrary } from "@/components/Dashboard/MediaLibrary";
 
 const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
     ssr: false,
@@ -25,6 +28,7 @@ export default function Page() {
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
+    const [mediaLibOpen, setMediaLibOpen] = useState(false);
 
     const titleInputRef = useRef<HTMLTextAreaElement>(null);
     const descInputRef = useRef<HTMLTextAreaElement>(null);
@@ -269,7 +273,18 @@ export default function Page() {
                             style={{ marginTop: 8 }}
                         />
                     </Box>
-
+                    <Typography.Divider />
+                    <Box className="flex flex-col gap-y-2 mx-4 my-4">
+                        <Button
+                            variant="contained"
+                            onClick={() => {
+                                setMediaLibOpen(true);
+                            }}
+                        >
+                            Media Library
+                        </Button>
+                    </Box>
+                    <Typography.Divider />
                     <Box className="flex flex-col gap-2 mb-4 mx-4">
                         <Chip
                             label={
@@ -298,6 +313,24 @@ export default function Page() {
                     </Box>
                 </div>
             )}
+            <Dialog
+                open={mediaLibOpen}
+                onClose={() => {
+                    setMediaLibOpen(false);
+                }}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        height: "90vh",
+                        maxHeight: "90vh",
+                    },
+                }}
+            >
+                <DialogContent sx={{ p: 0, height: "100%" }}>
+                    <MediaLibrary />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

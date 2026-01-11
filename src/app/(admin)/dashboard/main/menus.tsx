@@ -3,6 +3,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Delete from "@mui/icons-material/Delete";
 import Drafts from "@mui/icons-material/Drafts";
 import FolderIcon from "@mui/icons-material/Folder";
+import PhotoLibrary from "@mui/icons-material/PhotoLibrary";
 import PermMedia from "@mui/icons-material/PermMedia";
 import PersonIcon from "@mui/icons-material/Person";
 import PostAdd from "@mui/icons-material/PostAdd";
@@ -59,11 +60,18 @@ export const hierarchy: TMenuItem[] = [
         children: [],
         link: "snippets",
         icon: <Tag />,
-        role: editorRole
+        role: editorRole,
     },
     {
         name: "assets",
         children: [
+            {
+                name: "Media Library",
+                children: [],
+                link: "media",
+                icon: <PhotoLibrary />,
+                role: editorRole,
+            },
             {
                 name: "Browser",
                 children: [],

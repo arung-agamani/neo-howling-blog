@@ -1,29 +1,30 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
 }
 
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
 model blogusers {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  v           Int?      @map("__v")
+  v           Int?     @map("__v")
   dateCreated DateTime @db.Date
   email       String
   password    String
-  username    String @unique
-
+  username    String   @unique
 }
 
 model posts {
-  id               String                 @id @default(auto()) @map("_id") @db.ObjectId
-  v                Int?                   @map("__v")
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  v                Int?      @map("__v")
   author           String?
   bannerUrl        String?
   blogContent      String
   blogContentDelta String?
-  datePosted       DateTime               @db.Date
+  datePosted       DateTime  @db.Date
   description      String
   imageheader      String?
   isBannerDark     Boolean?
@@ -34,20 +35,20 @@ model posts {
   title            String
   updatedAt        DateTime?
   deleted          Boolean?
-  deletedAt        DateTime?
+  deletedAt        Int       @default(-1)
 }
 
 model snippet {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  title String @unique
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  title       String @unique
   description String
-  type String
-  content String
-  slug String
+  type        String
+  content     String
+  slug        String
 
-  ownerId String @db.ObjectId
+  ownerId    String   @db.ObjectId
   datePosted DateTime @db.Date
-  owner users @relation(fields: [ownerId], references: [id])
+  owner      users    @relation(fields: [ownerId], references: [id])
 }
 
 model sessions {
@@ -60,42 +61,42 @@ model sessions {
 
 model tags {
   id    String   @id @default(auto()) @map("_id") @db.ObjectId
-  v     Int?      @map("__v")
+  v     Int?     @map("__v")
   count Int
-  name  String @unique
+  name  String   @unique
   posts String[]
 }
 
 model userauths {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  v           Int?      @map("__v")
+  v           Int?     @map("__v")
   accessToken String
   lastAccess  DateTime @db.Date
   userId      String
 }
 
 model users {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   v           Int?      @map("__v")
-  dateCreated DateTime @db.Date
+  dateCreated DateTime  @db.Date
   email       String
-  lastAccess  DateTime @db.Date
+  lastAccess  DateTime  @db.Date
   password    String
   username    String
-  role        String  
-  name        String  @default("")
-  birthday    DateTime? @db.Date @default(now())
-  gender      Gender? @default(male)
-  phone       String? @default("")
+  role        String
+  name        String    @default("")
+  birthday    DateTime? @default(now()) @db.Date
+  gender      Gender?   @default(male)
+  phone       String?   @default("")
 
   snippets snippet[]
+  assets   assets[]
 }
 
-
 model config {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  key String @unique
-  value String
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  key         String @unique
+  value       String
   description String
 }
 
@@ -106,27 +107,96 @@ enum Gender {
 
 model assets {
   id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String @unique
-  path String
-  type AssetType
-  remoteLocation RemoteLocation
-  
-  uploader String @db.ObjectId
-  dateUploaded DateTime
 
+  // Basic file information
+  filename String // Original filename
+  title    String? // User-friendly title
+  slug     String  @unique // URL-friendly identifier
+
+  // File details
+  path     String // Storage path
+  url      String // Full URL to access the file
+  mimeType String // e.g., "image/jpeg", "video/mp4"
+  fileSize Int // Size in bytes
+  type     AssetType
+
+  // Image/Video specific metadata
+  width    Int?
+  height   Int?
+  duration Int? // For videos/audio, in seconds
+
+  // SEO and accessibility
+  altText     String? // For images
+  caption     String?
+  description String? @db.String // Longer description
+
+  // Storage information
+  remoteLocation RemoteLocation
+  bucketName     String? // S3 bucket, GCS bucket name
+  storageKey     String? // Actual key/path in remote storage
+
+  // Organization
+  folder String? // Virtual folder path like "/images/2024/01"
+  tags   String[] // Array of tags for searching
+
+  // Relationships
+  uploaderId String @db.ObjectId
+  uploader   users  @relation(fields: [uploaderId], references: [id])
+
+  // Variants/Versions (for image thumbnails, etc.)
+  variants AssetVariant[]
+
+  // Usage tracking
+  usageCount Int       @default(0) // How many times it's referenced
+  lastUsedAt DateTime?
+
+  // Metadata
+  metadata Json? // Flexible field for EXIF, custom data, etc.
+
+  // Timestamps
+  uploadedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  Int      @default(-1) // Soft delete - Unix timestamp (-1 = not deleted)
+
+  // Indexes for performance
+  @@index([uploaderId])
+  @@index([type])
+  @@index([mimeType])
+  @@index([uploadedAt])
+  @@index([folder])
+  @@index([deletedAt])
+}
+
+model AssetVariant {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  assetId String @db.ObjectId
+  asset   assets @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  name     String // e.g., "thumbnail", "medium", "large", "original"
+  path     String
+  url      String
+  width    Int?
+  height   Int?
+  fileSize Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([assetId, name])
+  @@index([assetId])
 }
 
 enum AssetType {
-  MediaThumbnail
-  MediaImage
-  MediaVideo
-  MediaOther
+  Image
+  Video
+  Audio
+  Document
+  Archive
+  Other
 }
 
 enum RemoteLocation {
-  SelfHosted
+  Local // Self-hosted
   S3
-  GCS
-  Others
+  Other
 }
-
