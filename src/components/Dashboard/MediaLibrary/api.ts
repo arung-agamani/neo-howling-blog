@@ -11,16 +11,19 @@ import type {
     ResizeFit,
     ImageFormat,
 } from "./types";
+import {
+    rewriteMediaItemToCDN,
+    rewriteMediaItemsToCDN,
+    rewriteVariantUrlToCDN,
+    getCDNConfig,
+} from "./cdn-config";
 
 const API_BASE = "/api/v1/media";
 
 /**
  * Generic fetch wrapper with error handling
  */
-async function apiFetch<T>(
-    url: string,
-    options?: RequestInit,
-): Promise<T> {
+async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
     const response = await fetch(url, {
         ...options,
         headers: {
@@ -59,7 +62,14 @@ export async function listMedia(
     const queryString = searchParams.toString();
     const url = queryString ? `${API_BASE}?${queryString}` : API_BASE;
 
-    return apiFetch<MediaListResponse>(url);
+    const response = await apiFetch<MediaListResponse>(url);
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteMediaItemsToCDN(response.data, cdnConfig),
+    };
 }
 
 /**
@@ -90,10 +100,21 @@ export async function uploadMedia(params: {
     if (params.generateVariants)
         formData.append("generateVariants", params.generateVariants.toString());
 
-    return apiFetch(`${API_BASE}`, {
+    const response = await apiFetch<{
+        success: boolean;
+        message: string;
+        data: MediaItem;
+    }>(`${API_BASE}`, {
         method: "POST",
         body: formData,
     });
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteMediaItemToCDN(response.data, cdnConfig),
+    };
 }
 
 /**
@@ -102,7 +123,16 @@ export async function uploadMedia(params: {
 export async function getMedia(
     id: string,
 ): Promise<{ success: boolean; data: MediaItem }> {
-    return apiFetch(`${API_BASE}/${id}`);
+    const response = await apiFetch<{ success: boolean; data: MediaItem }>(
+        `${API_BASE}/${id}`,
+    );
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteMediaItemToCDN(response.data, cdnConfig),
+    };
 }
 
 /**
@@ -112,13 +142,24 @@ export async function updateMedia(
     id: string,
     updates: MediaUpdateParams,
 ): Promise<{ success: boolean; message: string; data: MediaItem }> {
-    return apiFetch(`${API_BASE}/${id}`, {
+    const response = await apiFetch<{
+        success: boolean;
+        message: string;
+        data: MediaItem;
+    }>(`${API_BASE}/${id}`, {
         method: "PATCH",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify(updates),
     });
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteMediaItemToCDN(response.data, cdnConfig),
+    };
 }
 
 /**
@@ -170,13 +211,26 @@ export async function generateVariants(
     id: string,
     presets?: VariantPreset[],
 ): Promise<{ success: boolean; message: string; data: MediaVariant[] }> {
-    return apiFetch(`${API_BASE}/${id}/variants`, {
+    const response = await apiFetch<{
+        success: boolean;
+        message: string;
+        data: MediaVariant[];
+    }>(`${API_BASE}/${id}/variants`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({ presets }),
     });
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: response.data.map((variant) =>
+            rewriteVariantUrlToCDN(variant, cdnConfig),
+        ),
+    };
 }
 
 /**
@@ -188,13 +242,24 @@ export async function resizeMedia(
     height?: number,
     fit: ResizeFit = "inside",
 ): Promise<{ success: boolean; message: string; data: MediaItem }> {
-    return apiFetch(`${API_BASE}/${id}/resize`, {
+    const response = await apiFetch<{
+        success: boolean;
+        message: string;
+        data: MediaItem;
+    }>(`${API_BASE}/${id}/resize`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({ width, height, fit }),
     });
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteMediaItemToCDN(response.data, cdnConfig),
+    };
 }
 
 /**
@@ -204,13 +269,24 @@ export async function optimizeMedia(
     id: string,
     quality?: number,
 ): Promise<{ success: boolean; message: string; data: MediaItem }> {
-    return apiFetch(`${API_BASE}/${id}/optimize`, {
+    const response = await apiFetch<{
+        success: boolean;
+        message: string;
+        data: MediaItem;
+    }>(`${API_BASE}/${id}/optimize`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({ quality }),
     });
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteMediaItemToCDN(response.data, cdnConfig),
+    };
 }
 
 /**
@@ -221,13 +297,24 @@ export async function convertMedia(
     format: ImageFormat,
     quality?: number,
 ): Promise<{ success: boolean; message: string; data: MediaItem }> {
-    return apiFetch(`${API_BASE}/${id}/convert`, {
+    const response = await apiFetch<{
+        success: boolean;
+        message: string;
+        data: MediaItem;
+    }>(`${API_BASE}/${id}/convert`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({ format, quality }),
     });
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteMediaItemToCDN(response.data, cdnConfig),
+    };
 }
 
 /**
