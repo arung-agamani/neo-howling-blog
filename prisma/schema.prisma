@@ -35,7 +35,7 @@ model posts {
   title            String
   updatedAt        DateTime?
   deleted          Boolean?
-  deletedAt        Int       @default(-1)
+  deletedAt        DateTime?
 }
 
 model snippet {

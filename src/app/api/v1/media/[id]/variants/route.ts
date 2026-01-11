@@ -13,15 +13,23 @@ import { FlattenErrors } from "@/lib/ZodError";
 
 // Validation schemas
 const GenerateVariantsSchema = z.object({
-    presets: z.array(
-        z.enum(["thumbnail", "medium", "medium_large", "large", "2048x2048"])
-    ).optional(),
+    presets: z
+        .array(
+            z.enum([
+                "thumbnail",
+                "medium",
+                "medium_large",
+                "large",
+                "2048x2048",
+            ]),
+        )
+        .optional(),
 });
 
 // GET /api/v1/media/[id]/variants - List all variants for a media item
 export async function GET(
     req: NextRequest,
-    props: { params: Promise<{ id: string }> }
+    props: { params: Promise<{ id: string }> },
 ) {
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
@@ -45,7 +53,10 @@ export async function GET(
     } catch (error) {
         console.error("Error fetching variants:", error);
         return InternalServerError({
-            message: error instanceof Error ? error.message : "Failed to fetch variants",
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to fetch variants",
         });
     }
 }
@@ -53,7 +64,7 @@ export async function GET(
 // POST /api/v1/media/[id]/variants - Generate variants for an image
 export async function POST(
     req: NextRequest,
-    props: { params: Promise<{ id: string }> }
+    props: { params: Promise<{ id: string }> },
 ) {
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
@@ -72,11 +83,16 @@ export async function POST(
             });
         }
 
-        const presets = parseResult.data.presets || ["thumbnail", "medium", "large"];
+        const presets = parseResult.data.presets || [
+            "thumbnail",
+            "medium",
+            "large",
+        ];
 
         const variants = await assetService.generateImageVariantsForAsset(
             params.id,
-            presets as (keyof typeof IMAGE_SIZE_PRESETS)[]
+            undefined,
+            presets as (keyof typeof IMAGE_SIZE_PRESETS)[],
         );
 
         return NextResponse.json(
@@ -85,7 +101,7 @@ export async function POST(
                 message: "Variants generated successfully",
                 data: variants,
             },
-            { status: 201 }
+            { status: 201 },
         );
     } catch (error) {
         console.error("Error generating variants:", error);
@@ -94,12 +110,20 @@ export async function POST(
             return NotFound({ message: "Media not found" });
         }
 
-        if (error instanceof Error && error.message === "Asset is not an image") {
-            return BadRequest({ message: "Only images can have variants generated" });
+        if (
+            error instanceof Error &&
+            error.message === "Asset is not an image"
+        ) {
+            return BadRequest({
+                message: "Only images can have variants generated",
+            });
         }
 
         return InternalServerError({
-            message: error instanceof Error ? error.message : "Failed to generate variants",
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to generate variants",
         });
     }
 }

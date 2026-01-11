@@ -442,8 +442,6 @@ export class AssetService {
             metadata: extractedMetadata,
         });
 
-        console.log("Asset", asset);
-
         // Generate image variants if requested and it's an image
         if (generateVariants && assetType === AssetType.Image) {
             await this.generateImageVariantsForAsset(asset.id, asset);
