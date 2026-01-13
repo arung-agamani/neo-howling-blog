@@ -54,6 +54,7 @@ import {
     UploadConfirmDialog,
     type FileWithOptions,
 } from "./UploadConfirmDialog";
+import { MediaCropper, type CropCoordinates } from "./MediaCropper";
 import {
     listMedia,
     uploadMedia,
@@ -65,6 +66,7 @@ import {
     optimizeMedia,
     convertMedia,
     downloadMedia,
+    cropCustomVariant,
 } from "./api";
 import {
     formatFileSize,
@@ -154,6 +156,15 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
     }>({
         open: false,
         files: [],
+    });
+
+    // Cropper dialog state
+    const [cropperDialogState, setCropperDialogState] = useState<{
+        open: boolean;
+        mediaItem: MediaItem | null;
+    }>({
+        open: false,
+        mediaItem: null,
     });
 
     // Snackbar state
@@ -647,6 +658,69 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
         [onSelect, selectionMode],
     );
 
+    // Open cropper dialog handler
+    const handleOpenCropper = useCallback((item: MediaItem) => {
+        setCropperDialogState({
+            open: true,
+            mediaItem: item,
+        });
+    }, []);
+
+    // Handle custom crop variant creation
+    const handleCustomCrop = useCallback(
+        async (variantName: string, coordinates: CropCoordinates) => {
+            const mediaItem = cropperDialogState.mediaItem;
+            if (!mediaItem) return;
+
+            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
+
+            try {
+                const response = await cropCustomVariant(
+                    mediaItem.id,
+                    variantName,
+                    coordinates,
+                );
+
+                // Update the selected item with the new variant
+                const updatedVariants = [
+                    ...mediaItem.variants.filter((v) => v.name !== variantName),
+                    response.data,
+                ];
+                const updatedItem = {
+                    ...mediaItem,
+                    variants: updatedVariants,
+                };
+
+                setSelectedItem(updatedItem);
+                setMediaItems((prev) =>
+                    prev.map((item) =>
+                        item.id === mediaItem.id ? updatedItem : item,
+                    ),
+                );
+
+                setCropperDialogState({ open: false, mediaItem: null });
+
+                setSnackbar({
+                    open: true,
+                    message: `Custom variant "${variantName}" created successfully`,
+                    severity: "success",
+                });
+            } catch (err) {
+                setSnackbar({
+                    open: true,
+                    message:
+                        err instanceof Error
+                            ? err.message
+                            : "Failed to create custom variant",
+                    severity: "error",
+                });
+            } finally {
+                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
+            }
+        },
+        [cropperDialogState.mediaItem],
+    );
+
     return (
         <Box
             ref={containerRef}
@@ -1040,6 +1114,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                     }}
                     onDownload={handleDownloadItem}
                     onGenerateVariants={handleGenerateVariants}
+                    onCustomCrop={handleOpenCropper}
                     onResize={handleResize}
                     onOptimize={handleOptimize}
                     onConvert={handleConvert}
@@ -1056,6 +1131,64 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                     setUploadDialogState({ open: false, files: [] })
                 }
             />
+
+            {/* Custom Crop Dialog */}
+            <Dialog
+                open={cropperDialogState.open}
+                onClose={() =>
+                    setCropperDialogState({ open: false, mediaItem: null })
+                }
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    sx: { height: "90vh", maxHeight: 800 },
+                }}
+            >
+                <DialogTitle>
+                    Create Custom Crop Variant
+                    {cropperDialogState.mediaItem && (
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            component="span"
+                            sx={{ ml: 1 }}
+                        >
+                            - {cropperDialogState.mediaItem.filename}
+                        </Typography>
+                    )}
+                </DialogTitle>
+                <DialogContent
+                    sx={{ p: 3, display: "flex", flexDirection: "column" }}
+                >
+                    {cropperDialogState.mediaItem && (
+                        <MediaCropper
+                            assetId={cropperDialogState.mediaItem.id}
+                            onCropConfirm={handleCustomCrop}
+                            onCancel={() =>
+                                setCropperDialogState({
+                                    open: false,
+                                    mediaItem: null,
+                                })
+                            }
+                            isProcessing={loadingState.isProcessing}
+                            existingVariantNames={cropperDialogState.mediaItem.variants.map(
+                                (v) => v.name,
+                            )}
+                            originalDimensions={
+                                cropperDialogState.mediaItem.width &&
+                                cropperDialogState.mediaItem.height
+                                    ? {
+                                          width: cropperDialogState.mediaItem
+                                              .width,
+                                          height: cropperDialogState.mediaItem
+                                              .height,
+                                      }
+                                    : undefined
+                            }
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
 
             {/* Delete Confirmation Dialog */}
             <Dialog

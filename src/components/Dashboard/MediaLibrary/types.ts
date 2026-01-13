@@ -86,6 +86,7 @@ export interface MediaDetailPanelProps {
     onDelete: (permanent?: boolean) => void;
     onDownload: (item: MediaItem) => void;
     onGenerateVariants: (presets?: VariantPreset[]) => Promise<void>;
+    onCustomCrop: (item: MediaItem) => void;
     onResize: (
         width?: number,
         height?: number,
@@ -212,4 +213,31 @@ export interface VariantInfo {
     url: string;
     dimensions: string;
     size: string;
+}
+
+// Custom crop coordinates from react-advanced-cropper
+export interface CropCoordinates {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+}
+
+// Custom crop parameters for creating a custom variant
+export interface CustomCropParams {
+    coordinates: CropCoordinates;
+    variantName: string;
+}
+
+// API request for cropping
+export interface CropMediaParams {
+    coordinates: CropCoordinates;
+    variantName: string;
+}
+
+// Response for crop API
+export interface CropMediaResponse {
+    success: boolean;
+    message: string;
+    data: MediaVariant;
 }

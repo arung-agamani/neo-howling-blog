@@ -10,6 +10,7 @@ import type {
     VariantPreset,
     ResizeFit,
     ImageFormat,
+    CropCoordinates,
 } from "./types";
 import {
     rewriteMediaItemToCDN,
@@ -314,6 +315,37 @@ export async function convertMedia(
     return {
         ...response,
         data: rewriteMediaItemToCDN(response.data, cdnConfig),
+    };
+}
+
+/**
+ * Crop an image to create a custom variant
+ */
+export async function cropCustomVariant(
+    id: string,
+    variantName: string,
+    coordinates: CropCoordinates,
+): Promise<{ success: boolean; message: string; data: MediaVariant }> {
+    const response = await apiFetch<{
+        success: boolean;
+        message: string;
+        data: MediaVariant;
+    }>(`${API_BASE}/${id}/crop`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            variantName,
+            coordinates,
+        }),
+    });
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteVariantUrlToCDN(response.data, cdnConfig),
     };
 }
 

@@ -38,6 +38,7 @@ import {
     Transform,
     AutoFixHigh,
     Link as LinkIcon,
+    Crop,
 } from "@mui/icons-material";
 import {
     MediaDetailPanelProps,
@@ -97,6 +98,7 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
     onDelete,
     onDownload,
     onGenerateVariants,
+    onCustomCrop,
     onResize,
     onOptimize,
     onConvert,
@@ -558,18 +560,29 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
                                             </Typography>
                                         )}
                                     </List>
-                                    <Button
-                                        size="small"
-                                        startIcon={<ImageIcon />}
-                                        onClick={() =>
-                                            setVariantsDialogOpen(true)
-                                        }
-                                        fullWidth
-                                        sx={{ mt: 1 }}
-                                        disabled={isProcessing}
-                                    >
-                                        Generate Variants
-                                    </Button>
+                                    <Stack spacing={1} sx={{ mt: 1 }}>
+                                        <Button
+                                            size="small"
+                                            startIcon={<ImageIcon />}
+                                            onClick={() =>
+                                                setVariantsDialogOpen(true)
+                                            }
+                                            fullWidth
+                                            disabled={isProcessing}
+                                        >
+                                            Generate Variants
+                                        </Button>
+                                        <Button
+                                            size="small"
+                                            startIcon={<Crop />}
+                                            onClick={() => onCustomCrop(item)}
+                                            fullWidth
+                                            disabled={isProcessing}
+                                            variant="outlined"
+                                        >
+                                            Custom Crop Variant
+                                        </Button>
+                                    </Stack>
                                 </Collapse>
                             </Box>
                             <Divider />

@@ -21,7 +21,11 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
 import path from "path";
 import mime from "mime-types";
-import { ImageService, IMAGE_SIZE_PRESETS } from "./ImageService";
+import {
+    ImageService,
+    IMAGE_SIZE_PRESETS,
+    CustomCropOptions,
+} from "./ImageService";
 
 // Types for asset operations
 export interface UploadAssetParams {
@@ -78,6 +82,16 @@ export interface AssetVariantParams {
     width?: number;
     height?: number;
     quality?: number;
+}
+
+export interface CustomCropVariantParams {
+    variantName: string;
+    coordinates: {
+        left: number;
+        top: number;
+        width: number;
+        height: number;
+    };
 }
 
 export interface ListAssetsParams {
@@ -809,6 +823,85 @@ export class AssetService {
                 fileSize,
             },
         });
+    }
+
+    /**
+     * Create a custom cropped variant for an asset using exact coordinates
+     * This is designed to work with react-advanced-cropper which provides
+     * the exact pixel coordinates for the crop region.
+     *
+     * @param assetId - The ID of the asset to create the variant for
+     * @param params - Custom crop parameters including variant name and coordinates
+     * @returns The created variant record
+     */
+    async createCustomCroppedVariant(
+        assetId: string,
+        params: CustomCropVariantParams,
+    ) {
+        const asset = await this.getAssetById(assetId);
+        if (!asset) {
+            throw new Error("Asset not found");
+        }
+
+        if (asset.type !== AssetType.Image) {
+            throw new Error("Asset is not an image");
+        }
+
+        if (!asset.storageKey) {
+            throw new Error("Asset storage key not found");
+        }
+
+        // Download the original image from S3
+        const command = new GetObjectCommand({
+            Bucket: this.bucketName,
+            Key: asset.storageKey,
+        });
+
+        const response = await s3Client.send(command);
+        const originalBuffer = await this.streamToBuffer(response.Body as any);
+
+        // Crop the image using ImageService with exact coordinates
+        const croppedBuffer = await this.imageService.cropWithCoordinates(
+            originalBuffer,
+            params.coordinates as CustomCropOptions,
+        );
+
+        // Get metadata of the cropped image
+        const croppedMetadata =
+            await this.imageService.getMetadata(croppedBuffer);
+
+        // Check if variant with this name already exists and delete it
+        const existingVariant = await this.db.assetVariant.findFirst({
+            where: {
+                assetId,
+                name: params.variantName,
+            },
+        });
+
+        if (existingVariant) {
+            // Delete existing variant from S3 and database
+            try {
+                await this.deleteFromS3(existingVariant.path);
+            } catch (error) {
+                console.warn(
+                    `Failed to delete existing variant from S3: ${error}`,
+                );
+            }
+            await this.db.assetVariant.delete({
+                where: { id: existingVariant.id },
+            });
+        }
+
+        // Create the variant record
+        const variant = await this.createAssetVariant(
+            assetId,
+            params.variantName,
+            croppedBuffer,
+            croppedMetadata.width,
+            croppedMetadata.height,
+        );
+
+        return variant;
     }
 
     /**
