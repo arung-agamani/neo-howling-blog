@@ -223,16 +223,25 @@ export interface CropCoordinates {
     height: number;
 }
 
+// Image transforms from react-advanced-cropper (flip and rotation)
+export interface ImageTransforms {
+    rotate: number; // Rotation angle in degrees (0, 90, 180, 270)
+    flipHorizontal: boolean;
+    flipVertical: boolean;
+}
+
 // Custom crop parameters for creating a custom variant
 export interface CustomCropParams {
     coordinates: CropCoordinates;
     variantName: string;
+    transforms?: ImageTransforms;
 }
 
 // API request for cropping
 export interface CropMediaParams {
     coordinates: CropCoordinates;
     variantName: string;
+    transforms?: ImageTransforms;
 }
 
 // Response for crop API

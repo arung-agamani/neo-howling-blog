@@ -77,6 +77,13 @@ export interface CustomCropOptions {
     height: number;
 }
 
+// Image transforms from react-advanced-cropper (flip and rotation)
+export interface ImageTransforms {
+    rotate: number; // 0, 90, 180, 270
+    flipHorizontal: boolean;
+    flipVertical: boolean;
+}
+
 // Resize options
 export interface ResizeImageOptions {
     width?: number;
@@ -478,6 +485,79 @@ export class ImageService {
         );
 
         return await this.createSharpInstance(input)
+            .extract({
+                left,
+                top,
+                width,
+                height,
+            })
+            .toBuffer();
+    }
+
+    /**
+     * Crop image with transforms (flip and rotation) from react-advanced-cropper
+     * This method applies transforms first (in the order: flip -> rotate),
+     * then crops the image using the provided coordinates.
+     *
+     * The order of operations matches how react-advanced-cropper applies transforms:
+     * 1. Flip horizontal/vertical (if specified)
+     * 2. Rotate (if specified)
+     * 3. Crop to coordinates
+     *
+     * @param input - Image buffer or file path
+     * @param coordinates - Exact crop coordinates { left, top, width, height }
+     * @param transforms - Optional transforms { rotate, flipHorizontal, flipVertical }
+     * @returns Transformed and cropped image buffer
+     */
+    async cropWithTransforms(
+        input: Buffer | string,
+        coordinates: CustomCropOptions,
+        transforms?: ImageTransforms,
+    ): Promise<Buffer> {
+        let instance = this.createSharpInstance(input);
+
+        // Apply transforms if provided
+        if (transforms) {
+            // Apply flips first
+            if (transforms.flipHorizontal || transforms.flipVertical) {
+                instance = instance
+                    .flip(transforms.flipVertical)
+                    .flop(transforms.flipHorizontal);
+            }
+
+            // Apply rotation (sharp uses clockwise rotation)
+            if (transforms.rotate && transforms.rotate !== 0) {
+                instance = instance.rotate(transforms.rotate);
+            }
+        }
+
+        // Get metadata after transforms to validate coordinates
+        const transformedBuffer = await instance.toBuffer();
+        const transformedInstance = this.createSharpInstance(transformedBuffer);
+        const metadata = await transformedInstance.metadata();
+        const imageWidth = metadata.width || 0;
+        const imageHeight = metadata.height || 0;
+
+        // Validate and clamp coordinates to image bounds
+        const left = Math.max(
+            0,
+            Math.min(Math.round(coordinates.left), imageWidth - 1),
+        );
+        const top = Math.max(
+            0,
+            Math.min(Math.round(coordinates.top), imageHeight - 1),
+        );
+        const width = Math.max(
+            1,
+            Math.min(Math.round(coordinates.width), imageWidth - left),
+        );
+        const height = Math.max(
+            1,
+            Math.min(Math.round(coordinates.height), imageHeight - top),
+        );
+
+        // Extract the cropped region
+        return await transformedInstance
             .extract({
                 left,
                 top,

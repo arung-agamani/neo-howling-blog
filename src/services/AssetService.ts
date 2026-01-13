@@ -84,6 +84,12 @@ export interface AssetVariantParams {
     quality?: number;
 }
 
+export interface ImageTransforms {
+    rotate: number; // 0, 90, 180, 270
+    flipHorizontal: boolean;
+    flipVertical: boolean;
+}
+
 export interface CustomCropVariantParams {
     variantName: string;
     coordinates: {
@@ -92,6 +98,7 @@ export interface CustomCropVariantParams {
         width: number;
         height: number;
     };
+    transforms?: ImageTransforms;
 }
 
 export interface ListAssetsParams {
@@ -860,10 +867,11 @@ export class AssetService {
         const response = await s3Client.send(command);
         const originalBuffer = await this.streamToBuffer(response.Body as any);
 
-        // Crop the image using ImageService with exact coordinates
-        const croppedBuffer = await this.imageService.cropWithCoordinates(
+        // Apply transforms and crop the image using ImageService
+        const croppedBuffer = await this.imageService.cropWithTransforms(
             originalBuffer,
             params.coordinates as CustomCropOptions,
+            params.transforms,
         );
 
         // Get metadata of the cropped image

@@ -11,6 +11,7 @@ import type {
     ResizeFit,
     ImageFormat,
     CropCoordinates,
+    ImageTransforms,
 } from "./types";
 import {
     rewriteMediaItemToCDN,
@@ -325,6 +326,7 @@ export async function cropCustomVariant(
     id: string,
     variantName: string,
     coordinates: CropCoordinates,
+    transforms?: ImageTransforms,
 ): Promise<{ success: boolean; message: string; data: MediaVariant }> {
     const response = await apiFetch<{
         success: boolean;
@@ -338,6 +340,7 @@ export async function cropCustomVariant(
         body: JSON.stringify({
             variantName,
             coordinates,
+            transforms,
         }),
     });
 

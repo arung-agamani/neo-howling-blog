@@ -43,6 +43,13 @@ export interface CropCoordinates {
     height: number;
 }
 
+// Image transforms from react-advanced-cropper (flip and rotation)
+export interface ImageTransforms {
+    rotate: number; // 0, 90, 180, 270
+    flipHorizontal: boolean;
+    flipVertical: boolean;
+}
+
 // Props for the MediaCropper component
 export interface MediaCropperProps {
     /**
@@ -54,9 +61,13 @@ export interface MediaCropperProps {
      */
     initialVariantName?: string;
     /**
-     * Callback when crop is confirmed with coordinates
+     * Callback when crop is confirmed with coordinates and transforms
      */
-    onCropConfirm: (variantName: string, coordinates: CropCoordinates) => void;
+    onCropConfirm: (
+        variantName: string,
+        coordinates: CropCoordinates,
+        transforms: ImageTransforms,
+    ) => void;
     /**
      * Callback when crop is cancelled
      */
@@ -119,6 +130,8 @@ export const MediaCropper: React.FC<MediaCropperProps> = ({
     );
     const [zoom, setZoom] = useState(1);
     const [rotation, setRotation] = useState(0);
+    const [flipHorizontal, setFlipHorizontal] = useState(false);
+    const [flipVertical, setFlipVertical] = useState(false);
     const [cropDimensions, setCropDimensions] = useState<{
         width: number;
         height: number;
@@ -247,8 +260,21 @@ export const MediaCropper: React.FC<MediaCropperProps> = ({
             height: Math.round(coords.height),
         };
 
-        onCropConfirm(variantName.trim(), coordinates);
-    }, [variantName, isValidName, onCropConfirm]);
+        const transforms: ImageTransforms = {
+            rotate: rotation,
+            flipHorizontal,
+            flipVertical,
+        };
+
+        onCropConfirm(variantName.trim(), coordinates, transforms);
+    }, [
+        variantName,
+        isValidName,
+        onCropConfirm,
+        rotation,
+        flipHorizontal,
+        flipVertical,
+    ]);
 
     // Zoom controls
     const handleZoomIn = useCallback(() => {
@@ -302,6 +328,7 @@ export const MediaCropper: React.FC<MediaCropperProps> = ({
         const cropper = cropperRef.current;
         if (cropper) {
             cropper.flipImage(true, false);
+            setFlipHorizontal((prev) => !prev);
         }
     }, []);
 
@@ -309,6 +336,7 @@ export const MediaCropper: React.FC<MediaCropperProps> = ({
         const cropper = cropperRef.current;
         if (cropper) {
             cropper.flipImage(false, true);
+            setFlipVertical((prev) => !prev);
         }
     }, []);
 
@@ -319,6 +347,8 @@ export const MediaCropper: React.FC<MediaCropperProps> = ({
             cropper.reset();
             setZoom(1);
             setRotation(0);
+            setFlipHorizontal(false);
+            setFlipVertical(false);
         }
     }, []);
 

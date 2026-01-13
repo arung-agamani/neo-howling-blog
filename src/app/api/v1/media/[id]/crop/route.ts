@@ -18,6 +18,18 @@ const CropCoordinatesSchema = z.object({
     height: z.number().positive("Height must be positive"),
 });
 
+// Validation schema for image transforms (flip and rotation)
+const ImageTransformsSchema = z.object({
+    rotate: z
+        .number()
+        .refine(
+            (val) => [0, 90, 180, 270].includes(val),
+            "Rotation must be 0, 90, 180, or 270 degrees",
+        ),
+    flipHorizontal: z.boolean(),
+    flipVertical: z.boolean(),
+});
+
 // Validation schema for the crop request
 const CropImageSchema = z.object({
     variantName: z
@@ -26,15 +38,16 @@ const CropImageSchema = z.object({
         .max(100, "Variant name must be at most 100 characters")
         .regex(
             /^[a-zA-Z0-9_-]+$/,
-            "Variant name can only contain letters, numbers, underscores, and hyphens"
+            "Variant name can only contain letters, numbers, underscores, and hyphens",
         ),
     coordinates: CropCoordinatesSchema,
+    transforms: ImageTransformsSchema.optional(),
 });
 
 // POST /api/v1/media/[id]/crop - Crop an image to create a custom variant
 export async function POST(
     req: NextRequest,
-    props: { params: Promise<{ id: string }> }
+    props: { params: Promise<{ id: string }> },
 ) {
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
@@ -53,14 +66,15 @@ export async function POST(
             });
         }
 
-        const { variantName, coordinates } = parseResult.data;
+        const { variantName, coordinates, transforms } = parseResult.data;
 
         const variant = await assetService.createCustomCroppedVariant(
             params.id,
             {
                 variantName,
                 coordinates,
-            }
+                transforms,
+            },
         );
 
         return NextResponse.json(
@@ -69,7 +83,7 @@ export async function POST(
                 message: `Custom variant "${variantName}" created successfully`,
                 data: variant,
             },
-            { status: 201 }
+            { status: 201 },
         );
     } catch (error) {
         console.error("Error cropping image:", error);
@@ -98,9 +112,7 @@ export async function POST(
 
         return InternalServerError({
             message:
-                error instanceof Error
-                    ? error.message
-                    : "Failed to crop image",
+                error instanceof Error ? error.message : "Failed to crop image",
         });
     }
 }

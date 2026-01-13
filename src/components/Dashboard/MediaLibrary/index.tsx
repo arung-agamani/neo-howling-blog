@@ -54,7 +54,11 @@ import {
     UploadConfirmDialog,
     type FileWithOptions,
 } from "./UploadConfirmDialog";
-import { MediaCropper, type CropCoordinates } from "./MediaCropper";
+import {
+    MediaCropper,
+    type CropCoordinates,
+    type ImageTransforms,
+} from "./MediaCropper";
 import {
     listMedia,
     uploadMedia,
@@ -668,7 +672,11 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
 
     // Handle custom crop variant creation
     const handleCustomCrop = useCallback(
-        async (variantName: string, coordinates: CropCoordinates) => {
+        async (
+            variantName: string,
+            coordinates: CropCoordinates,
+            transforms: ImageTransforms,
+        ) => {
             const mediaItem = cropperDialogState.mediaItem;
             if (!mediaItem) return;
 
@@ -679,6 +687,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                     mediaItem.id,
                     variantName,
                     coordinates,
+                    transforms,
                 );
 
                 // Update the selected item with the new variant
