@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import React from "react";
 import {
     Box,
     Button,
@@ -35,6 +34,10 @@ import {
     Snackbar,
     Chip,
     LinearProgress,
+    Slide,
+    Backdrop,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import {
     Upload,
@@ -45,57 +48,17 @@ import {
     Delete,
     InsertDriveFile,
     Refresh,
+    Settings,
 } from "@mui/icons-material";
 
 import { MediaGridItem } from "./MediaGridItem";
 import { MediaListItem } from "./MediaListItem";
 import { MediaDetailPanel } from "./MediaDetailPanel";
-import {
-    UploadConfirmDialog,
-    type FileWithOptions,
-} from "./UploadConfirmDialog";
-import {
-    MediaCropper,
-    type CropCoordinates,
-    type ImageTransforms,
-} from "./MediaCropper";
-import {
-    listMedia,
-    uploadMedia,
-    updateMedia,
-    deleteMedia,
-    bulkDeleteMedia,
-    generateVariants,
-    deleteVariant,
-    resizeMedia,
-    optimizeMedia,
-    convertMedia,
-    downloadMedia,
-    cropCustomVariant,
-} from "./api";
-import {
-    formatFileSize,
-    getAcceptedFileTypes,
-    validateFileSize,
-    getFileValidationError,
-} from "./utils";
-import type {
-    MediaItem,
-    ViewMode,
-    FilterType,
-    MediaLibraryProps,
-    MediaUpdateParams,
-    VariantPreset,
-    ResizeFit,
-    ImageFormat,
-    MediaType,
-} from "./types";
-
-// Form data interface for react-hook-form
-interface MediaFilterForm {
-    search: string;
-    filterType: FilterType;
-}
+import { UploadConfirmDialog } from "./UploadConfirmDialog";
+import { MediaCropper } from "./MediaCropper";
+import { getAcceptedFileTypes } from "./utils";
+import type { MediaLibraryProps, FilterType } from "./types";
+import { useMediaLibrary } from "./useMediaLibrary";
 
 /**
  * Main Media Library Component
@@ -105,673 +68,124 @@ interface MediaFilterForm {
  *
  * Features:
  * - Upload via button, drag & drop, or clipboard (Ctrl/Cmd + V)
- * - Simplified state management with react-hook-form
+ * - Mobile responsive with bottom drawer for detail panel
+ * - Simplified state management with custom hook
  */
 export const MediaLibrary: React.FC<MediaLibraryProps> = ({
     onSelect,
     selectionMode = "multiple",
 }) => {
-    // Form state management with react-hook-form
-    const { register, watch, setValue } = useForm<MediaFilterForm>({
-        defaultValues: {
-            search: "",
-            filterType: "all",
-        },
-    });
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-    const searchQuery = watch("search");
-    const filterType = watch("filterType");
+    const {
+        // Form state
+        register,
+        setValue,
+        searchQuery,
+        filterType,
 
-    // View state
-    const [viewMode, setViewMode] = useState<ViewMode>("grid");
+        // View state
+        viewMode,
+        setViewMode,
 
-    // Selection state
-    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-    const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+        // Selection state
+        selectedItems,
+        selectedItem,
+        setSelectedItem,
 
-    // Data state
-    const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-    const [totalItems, setTotalItems] = useState(0);
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
+        // Data state
+        mediaItems,
+        totalItems,
+        currentPage,
+        setCurrentPage,
+        totalPages,
 
-    // Loading state grouped
-    const [loadingState, setLoadingState] = useState({
-        isLoading: true,
-        isUploading: false,
-        isProcessing: false,
-    });
+        // Loading state
+        loadingState,
+        uploadProgress,
+        error,
 
-    const [uploadProgress, setUploadProgress] = useState<number[]>([]);
-    const [error, setError] = useState<string | null>(null);
+        // File input key
+        fileInputKey,
 
-    // File input key for resetting file input after upload
-    const [fileInputKey, setFileInputKey] = useState(0);
+        // Dialog states
+        dialogState,
+        setDialogState,
+        uploadDialogState,
+        setUploadDialogState,
+        cropperDialogState,
+        setCropperDialogState,
 
-    // Dialog state grouped
-    const [dialogState, setDialogState] = useState({
-        deleteDialogOpen: false,
-        permanentDelete: false,
-    });
+        // Snackbar state
+        snackbar,
+        setSnackbar,
 
-    // Upload dialog state
-    const [uploadDialogState, setUploadDialogState] = useState<{
-        open: boolean;
-        files: File[];
-    }>({
-        open: false,
-        files: [],
-    });
+        // Container ref
+        containerRef,
 
-    // Cropper dialog state
-    const [cropperDialogState, setCropperDialogState] = useState<{
-        open: boolean;
-        mediaItem: MediaItem | null;
-    }>({
-        open: false,
-        mediaItem: null,
-    });
+        // Handlers
+        fetchMedia,
+        handleShowUploadDialog,
+        handleFileUpload,
+        handleDragOver,
+        handleDrop,
+        handleSelectItem,
+        handleSelectAll,
+        handleDeleteSelected,
+        handleUpdateItem,
+        handleDownloadItem,
+        handleGenerateVariants,
+        handleDeleteVariant,
+        handleResize,
+        handleOptimize,
+        handleConvert,
+        handleViewItem,
+        handleOpenCropper,
+        handleCustomCrop,
+    } = useMediaLibrary({ onSelect, selectionMode });
 
-    // Snackbar state
-    const [snackbar, setSnackbar] = useState<{
-        open: boolean;
-        message: string;
-        severity: "success" | "error" | "info" | "warning";
-    }>({ open: false, message: "", severity: "info" });
+    // State for mobile detail panel drawer
+    const [mobileDetailOpen, setMobileDetailOpen] = React.useState(false);
 
-    // Ref for the main container to attach paste listener
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    // Fetch media items
-    const fetchMedia = useCallback(async () => {
-        setLoadingState((prev) => ({ ...prev, isLoading: true }));
-        setError(null);
-
-        try {
-            const response = await listMedia({
-                type:
-                    filterType === "all"
-                        ? undefined
-                        : (filterType as MediaType),
-                search: searchQuery || undefined,
-                limit: itemsPerPage,
-                offset: (currentPage - 1) * itemsPerPage,
-                orderBy: "uploadedAt",
-                orderDirection: "desc",
-            });
-
-            setMediaItems(response.data);
-            setTotalItems(response.pagination.total);
-        } catch (err) {
-            const message =
-                err instanceof Error ? err.message : "Failed to load media";
-            setError(message);
-            setSnackbar({
-                open: true,
-                message,
-                severity: "error",
-            });
-        } finally {
-            setLoadingState((prev) => ({ ...prev, isLoading: false }));
+    // Open mobile drawer when item is selected on mobile
+    React.useEffect(() => {
+        if (isMobile && selectedItem) {
+            setMobileDetailOpen(true);
         }
-    }, [filterType, searchQuery, currentPage, itemsPerPage]);
+    }, [isMobile, selectedItem]);
 
-    // Initial load and refetch on filter/page change
-    useEffect(() => {
-        fetchMedia();
-    }, [fetchMedia]);
+    // Close drawer handler
+    const handleCloseMobileDetail = () => {
+        setMobileDetailOpen(false);
+    };
 
-    // Debounced search
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setCurrentPage(1);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [searchQuery]);
-
-    // Pagination
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-    // Show upload dialog
-    const handleShowUploadDialog = useCallback(
-        (files: FileList | File[] | null) => {
-            if (!files || files.length === 0) return;
-
-            const fileArray = Array.from(files);
-            setUploadDialogState({
-                open: true,
-                files: fileArray,
-            });
-        },
-        [],
-    );
-
-    // File upload handler with individual file options
-    const handleFileUpload = useCallback(
-        async (filesWithOptions: FileWithOptions[]) => {
-            if (!filesWithOptions || filesWithOptions.length === 0) return;
-
-            // Close upload dialog
-            setUploadDialogState({ open: false, files: [] });
-
-            setLoadingState((prev) => ({ ...prev, isUploading: true }));
-            setUploadProgress(new Array(filesWithOptions.length).fill(0));
-
-            const uploadResults: {
-                success: boolean;
-                filename: string;
-                error?: string;
-            }[] = [];
-
-            for (let i = 0; i < filesWithOptions.length; i++) {
-                const { file, options } = filesWithOptions[i];
-
-                // Validate file size
-                const validationError = getFileValidationError(file, 50);
-                if (validationError) {
-                    uploadResults.push({
-                        success: false,
-                        filename: file.name,
-                        error: validationError,
-                    });
-                    continue;
-                }
-
-                try {
-                    // Upload with individual file options
-                    const response = await uploadMedia({
-                        file,
-                        ...options,
-                    });
-
-                    uploadResults.push({
-                        success: true,
-                        filename: file.name,
-                    });
-
-                    // Update progress
-                    setUploadProgress((prev) => {
-                        const newProgress = [...prev];
-                        newProgress[i] = 100;
-                        return newProgress;
-                    });
-                } catch (err) {
-                    uploadResults.push({
-                        success: false,
-                        filename: file.name,
-                        error:
-                            err instanceof Error
-                                ? err.message
-                                : "Upload failed",
-                    });
-                }
-            }
-
-            setLoadingState((prev) => ({ ...prev, isUploading: false }));
-            setUploadProgress([]);
-
-            // Reset file input to allow re-uploading the same files
-            setFileInputKey((prev) => prev + 1);
-
-            // Show result summary
-            const successCount = uploadResults.filter((r) => r.success).length;
-            const failCount = uploadResults.filter((r) => !r.success).length;
-
-            if (successCount > 0) {
-                setSnackbar({
-                    open: true,
-                    message: `${successCount} file(s) uploaded successfully${failCount > 0 ? `, ${failCount} failed` : ""}`,
-                    severity: failCount > 0 ? "warning" : "success",
-                });
-                fetchMedia();
-            } else {
-                setSnackbar({
-                    open: true,
-                    message: "All uploads failed",
-                    severity: "error",
-                });
-            }
-        },
-        [fetchMedia],
-    );
-
-    // Clipboard paste handler for file upload
-    const handlePaste = useCallback(
-        (e: ClipboardEvent) => {
-            const items = e.clipboardData?.items;
-            if (!items) return;
-
-            const files: File[] = [];
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                if (item.kind === "file") {
-                    const file = item.getAsFile();
-                    if (file) {
-                        files.push(file);
-                    }
-                }
-            }
-
-            if (files.length > 0) {
-                e.preventDefault();
-                handleShowUploadDialog(files);
-                setSnackbar({
-                    open: true,
-                    message: `Pasted ${files.length} file(s) from clipboard`,
-                    severity: "info",
-                });
-            }
-        },
-        [handleShowUploadDialog],
-    );
-
-    // Add paste event listener
-    useEffect(() => {
-        const handlePasteEvent = (e: ClipboardEvent) => handlePaste(e);
-        window.addEventListener("paste", handlePasteEvent);
-        return () => {
-            window.removeEventListener("paste", handlePasteEvent);
-        };
-    }, [handlePaste]);
-
-    // Drag and drop handlers
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-    }, []);
-
-    const handleDrop = useCallback(
-        (e: React.DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleShowUploadDialog(e.dataTransfer.files);
-        },
-        [handleShowUploadDialog],
-    );
-
-    // Selection handlers
-    const handleSelectItem = useCallback((id: string) => {
-        setSelectedItems((prev) => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) {
-                newSet.delete(id);
-            } else {
-                newSet.add(id);
-            }
-            return newSet;
-        });
-    }, []);
-
-    const handleSelectAll = useCallback(() => {
-        if (selectedItems.size === mediaItems.length) {
-            setSelectedItems(new Set());
-        } else {
-            setSelectedItems(new Set(mediaItems.map((item) => item.id)));
-        }
-    }, [selectedItems, mediaItems]);
-
-    // Delete handlers
-    const handleDeleteSelected = useCallback(async () => {
-        if (selectedItems.size === 0 && !selectedItem) return;
-
-        setLoadingState((prev) => ({ ...prev, isProcessing: true }));
-
-        try {
-            if (selectedItems.size > 0) {
-                const result = await bulkDeleteMedia(
-                    Array.from(selectedItems),
-                    dialogState.permanentDelete,
-                );
-                setSnackbar({
-                    open: true,
-                    message: `${result.success} item(s) deleted${result.failed > 0 ? `, ${result.failed} failed` : ""}`,
-                    severity: result.failed > 0 ? "warning" : "success",
-                });
-            } else if (selectedItem) {
-                await deleteMedia(selectedItem.id, dialogState.permanentDelete);
-                setSnackbar({
-                    open: true,
-                    message: dialogState.permanentDelete
-                        ? "Media permanently deleted"
-                        : "Media moved to trash",
-                    severity: "success",
-                });
+    // Detail Panel Component (shared between desktop and mobile)
+    const DetailPanelContent = () => (
+        <MediaDetailPanel
+            item={selectedItem}
+            onClose={() => {
                 setSelectedItem(null);
-            }
-
-            setSelectedItems(new Set());
-            setDialogState((prev) => ({ ...prev, deleteDialogOpen: false }));
-            fetchMedia();
-        } catch (err) {
-            setSnackbar({
-                open: true,
-                message: err instanceof Error ? err.message : "Delete failed",
-                severity: "error",
-            });
-        } finally {
-            setLoadingState((prev) => ({ ...prev, isProcessing: false }));
-        }
-    }, [selectedItems, selectedItem, dialogState.permanentDelete, fetchMedia]);
-
-    // Update handler
-    const handleUpdateItem = useCallback(
-        async (id: string, updates: MediaUpdateParams) => {
-            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
-
-            try {
-                const response = await updateMedia(id, updates);
-                setMediaItems((prev) =>
-                    prev.map((item) => (item.id === id ? response.data : item)),
-                );
-                if (selectedItem?.id === id) {
-                    setSelectedItem(response.data);
+                if (isMobile) {
+                    setMobileDetailOpen(false);
                 }
-                setSnackbar({
-                    open: true,
-                    message: "Media updated successfully",
-                    severity: "success",
+            }}
+            onUpdate={handleUpdateItem}
+            onDelete={(permanent) => {
+                setDialogState({
+                    permanentDelete: permanent || false,
+                    deleteDialogOpen: true,
                 });
-            } catch (err) {
-                setSnackbar({
-                    open: true,
-                    message:
-                        err instanceof Error ? err.message : "Update failed",
-                    severity: "error",
-                });
-                throw err;
-            } finally {
-                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
-            }
-        },
-        [selectedItem],
-    );
-
-    // Download handler
-    const handleDownloadItem = useCallback((item: MediaItem) => {
-        downloadMedia(item);
-    }, []);
-
-    // Generate variants handler
-    const handleGenerateVariants = useCallback(
-        async (presets?: VariantPreset[]) => {
-            if (!selectedItem) return;
-
-            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
-
-            try {
-                const response = await generateVariants(
-                    selectedItem.id,
-                    presets,
-                );
-                // Refresh the selected item to get updated variants
-                const updatedItem = {
-                    ...selectedItem,
-                    variants: response.data,
-                };
-                setSelectedItem(updatedItem);
-                setMediaItems((prev) =>
-                    prev.map((item) =>
-                        item.id === selectedItem.id ? updatedItem : item,
-                    ),
-                );
-                setSnackbar({
-                    open: true,
-                    message: `${response.data.length} variant(s) generated`,
-                    severity: "success",
-                });
-            } catch (err) {
-                setSnackbar({
-                    open: true,
-                    message:
-                        err instanceof Error
-                            ? err.message
-                            : "Variant generation failed",
-                    severity: "error",
-                });
-            } finally {
-                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
-            }
-        },
-        [selectedItem],
-    );
-
-    // Delete variant handler
-    const handleDeleteVariant = useCallback(
-        async (variantName: string) => {
-            if (!selectedItem) return;
-
-            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
-
-            try {
-                await deleteVariant(selectedItem.id, variantName);
-                // Update the selected item to remove the deleted variant
-                const updatedItem = {
-                    ...selectedItem,
-                    variants: selectedItem.variants.filter(
-                        (v) => v.name !== variantName,
-                    ),
-                };
-                setSelectedItem(updatedItem);
-                setMediaItems((prev) =>
-                    prev.map((item) =>
-                        item.id === selectedItem.id ? updatedItem : item,
-                    ),
-                );
-                setSnackbar({
-                    open: true,
-                    message: `Variant "${variantName}" deleted successfully`,
-                    severity: "success",
-                });
-            } catch (err) {
-                setSnackbar({
-                    open: true,
-                    message:
-                        err instanceof Error
-                            ? err.message
-                            : "Failed to delete variant",
-                    severity: "error",
-                });
-            } finally {
-                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
-            }
-        },
-        [selectedItem],
-    );
-
-    // Resize handler
-    const handleResize = useCallback(
-        async (width?: number, height?: number, fit?: ResizeFit) => {
-            if (!selectedItem) return;
-
-            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
-
-            try {
-                const response = await resizeMedia(
-                    selectedItem.id,
-                    width,
-                    height,
-                    fit,
-                );
-                setSelectedItem(response.data);
-                setMediaItems((prev) =>
-                    prev.map((item) =>
-                        item.id === selectedItem.id ? response.data : item,
-                    ),
-                );
-                setSnackbar({
-                    open: true,
-                    message: "Image resized successfully",
-                    severity: "success",
-                });
-            } catch (err) {
-                setSnackbar({
-                    open: true,
-                    message:
-                        err instanceof Error ? err.message : "Resize failed",
-                    severity: "error",
-                });
-            } finally {
-                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
-            }
-        },
-        [selectedItem],
-    );
-
-    // Optimize handler
-    const handleOptimize = useCallback(
-        async (quality?: number) => {
-            if (!selectedItem) return;
-
-            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
-
-            try {
-                const response = await optimizeMedia(selectedItem.id, quality);
-                setSelectedItem(response.data);
-                setMediaItems((prev) =>
-                    prev.map((item) =>
-                        item.id === selectedItem.id ? response.data : item,
-                    ),
-                );
-                const sizeSaved =
-                    selectedItem.fileSize - response.data.fileSize;
-                setSnackbar({
-                    open: true,
-                    message: `Image optimized - saved ${formatFileSize(sizeSaved)}`,
-                    severity: "success",
-                });
-            } catch (err) {
-                setSnackbar({
-                    open: true,
-                    message:
-                        err instanceof Error
-                            ? err.message
-                            : "Optimization failed",
-                    severity: "error",
-                });
-            } finally {
-                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
-            }
-        },
-        [selectedItem],
-    );
-
-    // Convert handler
-    const handleConvert = useCallback(
-        async (format: ImageFormat, quality?: number) => {
-            if (!selectedItem) return;
-
-            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
-
-            try {
-                const response = await convertMedia(
-                    selectedItem.id,
-                    format,
-                    quality,
-                );
-                setSelectedItem(response.data);
-                setMediaItems((prev) =>
-                    prev.map((item) =>
-                        item.id === selectedItem.id ? response.data : item,
-                    ),
-                );
-                setSnackbar({
-                    open: true,
-                    message: `Image converted to ${format.toUpperCase()}`,
-                    severity: "success",
-                });
-            } catch (err) {
-                setSnackbar({
-                    open: true,
-                    message:
-                        err instanceof Error
-                            ? err.message
-                            : "Conversion failed",
-                    severity: "error",
-                });
-            } finally {
-                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
-            }
-        },
-        [selectedItem],
-    );
-
-    // View item handler
-    const handleViewItem = useCallback(
-        (item: MediaItem) => {
-            setSelectedItem(item);
-            if (onSelect && selectionMode === "single") {
-                onSelect(item);
-            }
-        },
-        [onSelect, selectionMode],
-    );
-
-    // Open cropper dialog handler
-    const handleOpenCropper = useCallback((item: MediaItem) => {
-        setCropperDialogState({
-            open: true,
-            mediaItem: item,
-        });
-    }, []);
-
-    // Handle custom crop variant creation
-    const handleCustomCrop = useCallback(
-        async (
-            variantName: string,
-            coordinates: CropCoordinates,
-            transforms: ImageTransforms,
-        ) => {
-            const mediaItem = cropperDialogState.mediaItem;
-            if (!mediaItem) return;
-
-            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
-
-            try {
-                const response = await cropCustomVariant(
-                    mediaItem.id,
-                    variantName,
-                    coordinates,
-                    transforms,
-                );
-
-                // Update the selected item with the new variant
-                const updatedVariants = [
-                    ...mediaItem.variants.filter((v) => v.name !== variantName),
-                    response.data,
-                ];
-                const updatedItem = {
-                    ...mediaItem,
-                    variants: updatedVariants,
-                };
-
-                setSelectedItem(updatedItem);
-                setMediaItems((prev) =>
-                    prev.map((item) =>
-                        item.id === mediaItem.id ? updatedItem : item,
-                    ),
-                );
-
-                setCropperDialogState({ open: false, mediaItem: null });
-
-                setSnackbar({
-                    open: true,
-                    message: `Custom variant "${variantName}" created successfully`,
-                    severity: "success",
-                });
-            } catch (err) {
-                setSnackbar({
-                    open: true,
-                    message:
-                        err instanceof Error
-                            ? err.message
-                            : "Failed to create custom variant",
-                    severity: "error",
-                });
-            } finally {
-                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
-            }
-        },
-        [cropperDialogState.mediaItem],
+            }}
+            onDownload={handleDownloadItem}
+            onGenerateVariants={handleGenerateVariants}
+            onDeleteVariant={handleDeleteVariant}
+            onCustomCrop={handleOpenCropper}
+            onResize={handleResize}
+            onOptimize={handleOptimize}
+            onConvert={handleConvert}
+            isProcessing={loadingState.isProcessing}
+        />
     );
 
     return (
@@ -782,17 +196,22 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                 display: "flex",
                 flexDirection: "column",
                 bgcolor: "grey.50",
+                position: "relative",
+                overflow: "hidden",
             }}
             tabIndex={0}
         >
             {/* Header */}
-            <Paper sx={{ p: 3, borderRadius: 0, boxShadow: 1 }}>
+            <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 0, boxShadow: 1 }}>
+                {/* Row 1: Title */}
                 <Box
                     sx={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        mb: 3,
+                        mb: { xs: 2, md: 3 },
+                        flexWrap: "wrap",
+                        gap: 1,
                     }}
                 >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -800,6 +219,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                             variant="h4"
                             component="h1"
                             fontWeight="bold"
+                            sx={{ fontSize: { xs: "1.5rem", md: "2.125rem" } }}
                         >
                             Media Library
                         </Typography>
@@ -812,39 +232,49 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                             />
                         )}
                     </Box>
-                    <Stack direction="row" spacing={1}>
-                        <Tooltip title="Refresh">
-                            <Button
-                                variant="outlined"
-                                onClick={fetchMedia}
-                                disabled={loadingState.isLoading}
-                            >
-                                <Refresh />
-                            </Button>
-                        </Tooltip>
-                        <Tooltip title="Upload files via button, drag & drop, or paste (Ctrl/Cmd+V)">
-                            <Button
-                                variant="contained"
-                                startIcon={<Upload />}
-                                component="label"
-                                disabled={loadingState.isUploading}
-                            >
-                                Upload Files
-                                <input
-                                    key={fileInputKey}
-                                    type="file"
-                                    multiple
-                                    hidden
-                                    onChange={(e) => {
-                                        handleShowUploadDialog(e.target.files);
-                                        // Reset the input value to allow selecting the same file again
-                                        e.target.value = "";
-                                    }}
-                                    accept={getAcceptedFileTypes()}
-                                />
-                            </Button>
-                        </Tooltip>
-                    </Stack>
+                </Box>
+
+                {/* Row 2: Action Buttons */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        gap: 1,
+                        mb: 2,
+                        flexWrap: "wrap",
+                    }}
+                >
+                    <Tooltip title="Refresh">
+                        <Button
+                            variant="outlined"
+                            onClick={fetchMedia}
+                            disabled={loadingState.isLoading}
+                            size={isMobile ? "small" : "medium"}
+                        >
+                            <Refresh />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip title="Upload files via button, drag & drop, or paste (Ctrl/Cmd+V)">
+                        <Button
+                            variant="contained"
+                            startIcon={<Upload />}
+                            component="label"
+                            disabled={loadingState.isUploading}
+                            size={isMobile ? "small" : "medium"}
+                        >
+                            Upload Files
+                            <input
+                                key={fileInputKey}
+                                type="file"
+                                multiple
+                                hidden
+                                onChange={(e) => {
+                                    handleShowUploadDialog(e.target.files);
+                                    e.target.value = "";
+                                }}
+                                accept={getAcceptedFileTypes()}
+                            />
+                        </Button>
+                    </Tooltip>
                 </Box>
 
                 {/* Upload Progress */}
@@ -867,19 +297,14 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                     </Box>
                 )}
 
-                {/* Toolbar */}
-                <Stack
-                    direction="row"
-                    spacing={2}
-                    flexWrap="wrap"
-                    alignItems="center"
-                >
-                    {/* Search */}
+                {/* Row 3: Search Bar */}
+                <Box sx={{ mb: 2 }}>
                     <TextField
                         placeholder="Search media..."
                         {...register("search")}
                         size="small"
-                        sx={{ minWidth: 250, flexGrow: 1, maxWidth: 400 }}
+                        fullWidth
+                        sx={{ maxWidth: { md: 400 } }}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
@@ -888,9 +313,18 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                             ),
                         }}
                     />
+                </Box>
 
+                {/* Row 4: Filter and View Mode */}
+                <Stack
+                    direction="row"
+                    spacing={2}
+                    flexWrap="wrap"
+                    alignItems="center"
+                    sx={{ gap: 1 }}
+                >
                     {/* Filter */}
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
                         <InputLabel>Filter</InputLabel>
                         <Select
                             value={filterType}
@@ -1074,8 +508,8 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                             {mediaItems.map((item) => (
                                 <Grid
                                     item
-                                    xs={12}
-                                    sm={6}
+                                    xs={6}
+                                    sm={4}
                                     md={4}
                                     lg={3}
                                     xl={2.4}
@@ -1092,7 +526,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                         </Grid>
                     ) : !loadingState.isLoading && viewMode === "list" ? (
                         <TableContainer component={Paper}>
-                            <Table>
+                            <Table size={isMobile ? "small" : "medium"}>
                                 <TableHead>
                                     <TableRow>
                                         <TableCell padding="checkbox">
@@ -1111,9 +545,13 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                                             />
                                         </TableCell>
                                         <TableCell>File</TableCell>
-                                        <TableCell>Type</TableCell>
-                                        <TableCell>Size</TableCell>
-                                        <TableCell>Date</TableCell>
+                                        {!isMobile && (
+                                            <>
+                                                <TableCell>Type</TableCell>
+                                                <TableCell>Size</TableCell>
+                                                <TableCell>Date</TableCell>
+                                            </>
+                                        )}
                                         <TableCell>Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -1149,32 +587,134 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                                 page={currentPage}
                                 onChange={(_, page) => setCurrentPage(page)}
                                 color="primary"
+                                size={isMobile ? "small" : "medium"}
                             />
                         </Box>
                     )}
                 </Box>
 
-                {/* Detail Panel - Always Visible */}
-                <MediaDetailPanel
-                    item={selectedItem}
-                    onClose={() => setSelectedItem(null)}
-                    onUpdate={handleUpdateItem}
-                    onDelete={(permanent) => {
-                        setDialogState({
-                            permanentDelete: permanent || false,
-                            deleteDialogOpen: true,
-                        });
-                    }}
-                    onDownload={handleDownloadItem}
-                    onGenerateVariants={handleGenerateVariants}
-                    onDeleteVariant={handleDeleteVariant}
-                    onCustomCrop={handleOpenCropper}
-                    onResize={handleResize}
-                    onOptimize={handleOptimize}
-                    onConvert={handleConvert}
-                    isProcessing={loadingState.isProcessing}
-                />
+                {/* Detail Panel - Desktop: Side panel */}
+                {!isMobile && <DetailPanelContent />}
             </Box>
+
+            {/* Mobile: Floating button to open detail panel when item selected */}
+            {isMobile && selectedItem && !mobileDetailOpen && (
+                <Button
+                    variant="contained"
+                    onClick={() => setMobileDetailOpen(true)}
+                    sx={{
+                        position: "absolute",
+                        bottom: 16,
+                        right: 16,
+                        zIndex: 10,
+                        borderRadius: "50%",
+                        minWidth: "56px",
+                        width: "56px",
+                        height: "56px",
+                        boxShadow: 3,
+                    }}
+                    aria-label="Open media details"
+                >
+                    <Settings />
+                </Button>
+            )}
+
+            {/* Mobile: Inline Bottom Sheet for Detail Panel (confined to container) */}
+            {isMobile && (
+                <>
+                    {/* Backdrop */}
+                    <Backdrop
+                        open={mobileDetailOpen}
+                        onClick={handleCloseMobileDetail}
+                        sx={{
+                            position: "absolute",
+                            zIndex: 20,
+                            bgcolor: "rgba(0, 0, 0, 0.5)",
+                        }}
+                    />
+                    {/* Slide-up Panel */}
+                    <Slide
+                        direction="up"
+                        in={mobileDetailOpen}
+                        mountOnEnter
+                        unmountOnExit
+                    >
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                height: "85%",
+                                maxHeight: "85%",
+                                bgcolor: "white",
+                                borderTopLeftRadius: 16,
+                                borderTopRightRadius: 16,
+                                boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
+                                zIndex: 30,
+                                display: "flex",
+                                flexDirection: "column",
+                                overflow: "hidden",
+                            }}
+                        >
+                            {/* Drag handle indicator */}
+                            <Box
+                                sx={{
+                                    width: "100%",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    py: 1.5,
+                                    backgroundColor: "white",
+                                    borderBottom: "1px solid #eee",
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 40,
+                                        height: 4,
+                                        backgroundColor: "#ccc",
+                                        borderRadius: 2,
+                                    }}
+                                />
+                            </Box>
+                            {/* Header with close button */}
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    px: 2,
+                                    py: 1,
+                                    backgroundColor: "white",
+                                    borderBottom: "1px solid #eee",
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <Typography fontWeight="bold" fontSize="1.1rem">
+                                    Media Details
+                                </Typography>
+                                <Button
+                                    onClick={handleCloseMobileDetail}
+                                    sx={{ minWidth: "auto", p: 1 }}
+                                >
+                                    ✕
+                                </Button>
+                            </Box>
+                            {/* Content */}
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    overflow: "auto",
+                                    backgroundColor: "white",
+                                }}
+                            >
+                                <DetailPanelContent />
+                            </Box>
+                        </Box>
+                    </Slide>
+                </>
+            )}
 
             {/* Upload Confirmation Dialog */}
             <UploadConfirmDialog
@@ -1194,8 +734,9 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                 }
                 maxWidth="lg"
                 fullWidth
+                fullScreen={isMobile}
                 PaperProps={{
-                    sx: { height: "90vh", maxHeight: 800 },
+                    sx: isMobile ? {} : { height: "90vh", maxHeight: 800 },
                 }}
             >
                 <DialogTitle>
@@ -1253,6 +794,8 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                         deleteDialogOpen: false,
                     }))
                 }
+                fullWidth
+                maxWidth="xs"
             >
                 <DialogTitle>Confirm Delete</DialogTitle>
                 <DialogContent>

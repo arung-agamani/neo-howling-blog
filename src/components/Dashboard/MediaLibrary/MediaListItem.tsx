@@ -9,6 +9,8 @@ import {
     Tooltip,
     Chip,
     Stack,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import { Download, Visibility } from "@mui/icons-material";
 import { MediaListItemProps } from "./types";
@@ -34,6 +36,8 @@ export const MediaListItem: React.FC<MediaListItemProps> = ({
     onView,
     onDownload,
 }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const Icon = getFileIcon(item.type);
     const thumbnailUrl = isImage(item) ? getThumbnailUrl(item) : null;
     const hasVariants = item.variants && item.variants.length > 0;
@@ -150,55 +154,65 @@ export const MediaListItem: React.FC<MediaListItemProps> = ({
                 </Box>
             </TableCell>
 
-            {/* Type */}
-            <TableCell>
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip
-                        label={item.type}
-                        size="small"
-                        color={getMediaTypeColor(item.type)}
-                        sx={{ fontSize: "0.7rem" }}
-                    />
-                    {hasVariants && (
-                        <Tooltip
-                            title={`${item.variants.length} size variants`}
-                        >
-                            <Chip
-                                label={`${item.variants.length}`}
-                                size="small"
-                                variant="outlined"
-                                sx={{
-                                    fontSize: "0.65rem",
-                                    height: 20,
-                                    minWidth: 24,
-                                }}
-                            />
-                        </Tooltip>
-                    )}
-                </Stack>
-            </TableCell>
+            {/* Type - Hidden on mobile */}
+            {!isMobile && (
+                <TableCell>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Chip
+                            label={item.type}
+                            size="small"
+                            color={getMediaTypeColor(item.type)}
+                            sx={{ fontSize: "0.7rem" }}
+                        />
+                        {hasVariants && (
+                            <Tooltip
+                                title={`${item.variants.length} size variants`}
+                            >
+                                <Chip
+                                    label={`${item.variants.length}`}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                        fontSize: "0.65rem",
+                                        height: 20,
+                                        minWidth: 24,
+                                    }}
+                                />
+                            </Tooltip>
+                        )}
+                    </Stack>
+                </TableCell>
+            )}
 
-            {/* Size */}
-            <TableCell>
-                <Typography variant="body2" noWrap>
-                    {formatFileSize(item.fileSize)}
-                </Typography>
-                {item.width && item.height && (
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                        {formatDimensions(item)}
+            {/* Size - Hidden on mobile */}
+            {!isMobile && (
+                <TableCell>
+                    <Typography variant="body2" noWrap>
+                        {formatFileSize(item.fileSize)}
                     </Typography>
-                )}
-            </TableCell>
+                    {item.width && item.height && (
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            noWrap
+                        >
+                            {formatDimensions(item)}
+                        </Typography>
+                    )}
+                </TableCell>
+            )}
 
-            {/* Date */}
-            <TableCell>
-                <Typography variant="body2" noWrap>
-                    {formatDate(item.uploadedAt)}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                    by {item.uploader?.name || "Unknown"}
-                </Typography>
-            </TableCell>
+            {/* Date - Hidden on mobile */}
+            {!isMobile && (
+                <TableCell>
+                    <Typography variant="body2" noWrap>
+                        {formatDate(item.uploadedAt)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                        by {item.uploader?.name || "Unknown"}
+                    </Typography>
+                </TableCell>
+            )}
 
             {/* Actions */}
             <TableCell onClick={(e) => e.stopPropagation()}>

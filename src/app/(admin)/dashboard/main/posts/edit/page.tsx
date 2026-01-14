@@ -13,7 +13,13 @@ import TextField from "@mui/material/TextField";
 import { PostMetadata } from "@/types";
 import { APP_BAR_HEIGHT } from "@/constants";
 import Typography from "@/components/Typography";
-import { Dialog, DialogContent } from "@mui/material";
+import {
+    Dialog,
+    DialogContent,
+    SwipeableDrawer,
+    useMediaQuery,
+    useTheme,
+} from "@mui/material";
 import { MediaLibrary } from "@/components/Dashboard/MediaLibrary";
 
 const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
@@ -30,14 +36,21 @@ export default function Page() {
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
     const [mediaLibOpen, setMediaLibOpen] = useState(false);
 
-    const titleInputRef = useRef<HTMLTextAreaElement>(null);
-    const descInputRef = useRef<HTMLTextAreaElement>(null);
-    const bannerUrlRef = useRef<HTMLTextAreaElement>(null);
+    // Controlled state for form fields
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [bannerUrl, setBannerUrl] = useState("");
+    const [tags, setTags] = useState("");
+    const [bannerPreviewVisible, setBannerPreviewVisible] = useState(false);
+
     const imagePrevRef = useRef<HTMLImageElement>(null);
-    const tagsRef = useRef<HTMLTextAreaElement>(null);
 
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    // Responsive detection
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
     useEffect(() => {
         (async () => {
@@ -49,6 +62,14 @@ export default function Page() {
                 const res = await axios.get("/api/v1/posts/" + id);
                 setContent(res.data.blogContent);
                 setPage(res.data);
+                // Initialize form fields from fetched data
+                setTitle(res.data.title || "");
+                setDescription(res.data.description || "");
+                setBannerUrl(res.data.bannerUrl || "");
+                setTags(res.data.tags?.join(", ") || "");
+                if (res.data.bannerUrl) {
+                    setBannerPreviewVisible(true);
+                }
             } catch (error) {
                 console.error("Failed to fetch post:", error);
                 setContent("<h1>Failed to fetch content</h1>");
@@ -58,14 +79,23 @@ export default function Page() {
         })();
     }, [searchParams]);
 
-    const previewBannerUrl = useCallback(() => {
-        if (!bannerUrlRef.current) return;
+    // Initialize form fields when page data changes (for new posts scenario)
+    useEffect(() => {
+        if (page.title !== undefined && title === "")
+            setTitle(page.title || "");
+        if (page.description !== undefined && description === "")
+            setDescription(page.description || "");
+        if (page.bannerUrl !== undefined && bannerUrl === "") {
+            setBannerUrl(page.bannerUrl || "");
+            if (page.bannerUrl) setBannerPreviewVisible(true);
+        }
+        if (page.tags !== undefined && tags === "")
+            setTags(page.tags?.join(", ") || "");
+    }, [page]);
 
-        const url = bannerUrlRef.current.value;
+    const previewBannerUrl = useCallback((url: string) => {
         if (!url) {
-            if (imagePrevRef.current) {
-                imagePrevRef.current.className = "hidden";
-            }
+            setBannerPreviewVisible(false);
             return;
         }
 
@@ -73,18 +103,10 @@ export default function Page() {
             .then((res) => {
                 const contentType = res.headers.get("content-type");
                 const isImage = contentType?.startsWith("image");
-
-                if (isImage && imagePrevRef.current) {
-                    imagePrevRef.current.src = url;
-                    imagePrevRef.current.className = "w-full h-auto";
-                } else if (imagePrevRef.current) {
-                    imagePrevRef.current.className = "hidden";
-                }
+                setBannerPreviewVisible(!!isImage);
             })
             .catch(() => {
-                if (imagePrevRef.current) {
-                    imagePrevRef.current.className = "hidden";
-                }
+                setBannerPreviewVisible(false);
             });
     }, []);
 
@@ -100,10 +122,10 @@ export default function Page() {
                     id,
                     op: "update",
                     blogContent: content,
-                    title: titleInputRef.current?.value,
-                    description: descInputRef.current?.value,
-                    bannerUrl: bannerUrlRef.current?.value,
-                    tags: tagsRef.current?.value
+                    title: title,
+                    description: description,
+                    bannerUrl: bannerUrl,
+                    tags: tags
                         .split(",")
                         .map((t) => t.trim())
                         .filter(Boolean),
@@ -120,12 +142,12 @@ export default function Page() {
                 const res = await axios.post("/api/v1/posts", {
                     author: page.author || "Shirayuki Haruka", // TODO: Get from auth context
                     blogContent: content,
-                    description: descInputRef.current?.value,
-                    tags: tagsRef.current?.value
+                    description: description,
+                    tags: tags
                         .split(",")
                         .map((t) => t.trim())
                         .filter(Boolean),
-                    title: titleInputRef.current?.value,
+                    title: title,
                 });
 
                 setHasUnsavedChanges(false);
@@ -146,7 +168,137 @@ export default function Page() {
         } finally {
             setIsSaving(false);
         }
-    }, [searchParams, content, page.author, router]);
+    }, [
+        searchParams,
+        content,
+        title,
+        description,
+        bannerUrl,
+        tags,
+        page.author,
+        router,
+    ]);
+
+    // Panel content component - shared between desktop side panel and mobile bottom sheet
+    const PanelContent = () => (
+        <Box
+            className="flex flex-col h-full"
+            sx={{
+                paddingTop: 2,
+                paddingBottom: 2,
+                backgroundColor: "white",
+            }}
+        >
+            <Box className="mx-2 pb-4 flex-1 overflow-y-auto">
+                <TextField
+                    label="Title"
+                    name="title"
+                    value={title}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    margin="dense"
+                    variant="outlined"
+                    onChange={(e) => {
+                        setTitle(e.target.value);
+                        setHasUnsavedChanges(true);
+                    }}
+                />
+                <TextField
+                    label="Description"
+                    name="description"
+                    value={description}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    margin="dense"
+                    variant="outlined"
+                    onChange={(e) => {
+                        setDescription(e.target.value);
+                        setHasUnsavedChanges(true);
+                    }}
+                />
+                <TextField
+                    label="Banner"
+                    name="bannerUrl"
+                    value={bannerUrl}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    margin="dense"
+                    variant="outlined"
+                    onChange={(e) => {
+                        const newUrl = e.target.value;
+                        setBannerUrl(newUrl);
+                        previewBannerUrl(newUrl);
+                        setHasUnsavedChanges(true);
+                    }}
+                />
+                <TextField
+                    label="Tags"
+                    name="tags"
+                    value={tags}
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    margin="dense"
+                    variant="outlined"
+                    onChange={(e) => {
+                        setTags(e.target.value);
+                        setHasUnsavedChanges(true);
+                    }}
+                />
+                {bannerPreviewVisible && bannerUrl && (
+                    <img
+                        src={bannerUrl}
+                        alt=""
+                        id="bannerPreview"
+                        ref={imagePrevRef}
+                        className="w-full h-auto"
+                        style={{ marginTop: 8 }}
+                    />
+                )}
+            </Box>
+            <Typography.Divider />
+            <Box className="flex flex-col gap-y-2 mx-4 my-4">
+                <Button
+                    variant="contained"
+                    onClick={() => {
+                        setMediaLibOpen(true);
+                    }}
+                >
+                    Media Library
+                </Button>
+            </Box>
+            <Typography.Divider />
+            <Box className="flex flex-col gap-2 mb-4 mx-4">
+                <Chip
+                    label={
+                        hasUnsavedChanges
+                            ? "Unsaved Changes"
+                            : "All Changes Saved"
+                    }
+                    color={hasUnsavedChanges ? "warning" : "success"}
+                    className="font-bold px-2 py-2 text-center"
+                />
+                <Button
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    fullWidth
+                    onClick={saveHandler}
+                    disabled={isSaving}
+                    sx={{
+                        padding: "0.5rem 1rem",
+                        fontWeight: "bold",
+                        textTransform: "none",
+                    }}
+                >
+                    {isSaving ? "Saving..." : "Save"}
+                </Button>
+            </Box>
+        </Box>
+    );
 
     if (loading) return <h1>Loading...</h1>;
 
@@ -167,152 +319,158 @@ export default function Page() {
                 />
             </div>
 
-            {/* Collapse/Expand Button */}
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    background: "#fff",
-                    borderLeft: "1px solid #eee",
-                    minWidth: "24px",
-                    cursor: "pointer",
-                    userSelect: "none",
-                }}
-            >
-                <button
-                    aria-label={
-                        rightPanelOpen ? "Collapse panel" : "Expand panel"
-                    }
-                    onClick={() => setRightPanelOpen((v) => !v)}
+            {/* Collapse/Expand Button - Desktop only */}
+            {!isMobile && (
+                <div
                     style={{
-                        background: "none",
-                        border: "none",
-                        padding: "8px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        background: "#fff",
+                        borderLeft: "1px solid #eee",
+                        minWidth: "24px",
                         cursor: "pointer",
-                        fontSize: "1.2rem",
+                        userSelect: "none",
                     }}
                 >
-                    {rightPanelOpen ? "⮞" : "⮜"}
-                </button>
-            </div>
+                    <button
+                        aria-label={
+                            rightPanelOpen ? "Collapse panel" : "Expand panel"
+                        }
+                        onClick={() => setRightPanelOpen((v) => !v)}
+                        style={{
+                            background: "none",
+                            border: "none",
+                            padding: "8px",
+                            cursor: "pointer",
+                            fontSize: "1.2rem",
+                        }}
+                    >
+                        {rightPanelOpen ? "⮞" : "⮜"}
+                    </button>
+                </div>
+            )}
 
-            {/* Right Panel */}
-            {rightPanelOpen && (
+            {/* Right Panel - Desktop: Side panel, always mounted for state preservation */}
+            {!isMobile && (
                 <div
-                    className="sticky h-full top-0 flex flex-col w-full max-w-xs bg-white"
+                    className="sticky h-full top-0 flex flex-col bg-white"
                     id="right-panel"
                     style={{
-                        paddingTop: 16,
-                        paddingBottom: 16,
+                        width: rightPanelOpen ? "320px" : "0px",
+                        maxWidth: rightPanelOpen ? "320px" : "0px",
+                        overflow: "hidden",
+                        transition: "width 0.3s ease, max-width 0.3s ease",
                         color: "inherit",
                         minWidth: 0,
                     }}
                 >
-                    <Box className="mx-2 pb-4" sx={{ flex: 1 }}>
-                        <TextField
-                            label="Title"
-                            name="title"
-                            inputRef={titleInputRef}
-                            defaultValue={page.title}
-                            multiline
-                            minRows={2}
-                            fullWidth
-                            margin="dense"
-                            variant="outlined"
-                            onChange={() => setHasUnsavedChanges(true)}
-                        />
-                        <TextField
-                            label="Description"
-                            name="description"
-                            inputRef={descInputRef}
-                            defaultValue={page.description}
-                            multiline
-                            minRows={2}
-                            fullWidth
-                            margin="dense"
-                            variant="outlined"
-                            onChange={() => setHasUnsavedChanges(true)}
-                        />
-                        <TextField
-                            label="Banner"
-                            name="bannerUrl"
-                            inputRef={bannerUrlRef}
-                            defaultValue={page.bannerUrl}
-                            multiline
-                            minRows={2}
-                            fullWidth
-                            margin="dense"
-                            variant="outlined"
-                            onChange={() => {
-                                previewBannerUrl();
-                                setHasUnsavedChanges(true);
-                            }}
-                        />
-                        <TextField
-                            label="Tags"
-                            name="tags"
-                            inputRef={tagsRef}
-                            defaultValue={page.tags?.join(", ")}
-                            multiline
-                            minRows={2}
-                            fullWidth
-                            margin="dense"
-                            variant="outlined"
-                            onChange={() => setHasUnsavedChanges(true)}
-                        />
-                        <img
-                            src={page.bannerUrl || undefined}
-                            alt=""
-                            id="bannerPreview"
-                            ref={imagePrevRef}
-                            className={
-                                page.bannerUrl ? "w-full h-auto" : "hidden"
-                            }
-                            style={{ marginTop: 8 }}
-                        />
-                    </Box>
-                    <Typography.Divider />
-                    <Box className="flex flex-col gap-y-2 mx-4 my-4">
-                        <Button
-                            variant="contained"
-                            onClick={() => {
-                                setMediaLibOpen(true);
-                            }}
-                        >
-                            Media Library
-                        </Button>
-                    </Box>
-                    <Typography.Divider />
-                    <Box className="flex flex-col gap-2 mb-4 mx-4">
-                        <Chip
-                            label={
-                                hasUnsavedChanges
-                                    ? "Unsaved Changes"
-                                    : "All Changes Saved"
-                            }
-                            color={hasUnsavedChanges ? "warning" : "success"}
-                            className="font-bold px-2 py-2 text-center"
-                        />
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            size="large"
-                            fullWidth
-                            onClick={saveHandler}
-                            disabled={isSaving}
-                            sx={{
-                                padding: "0.5rem 1rem",
-                                fontWeight: "bold",
-                                textTransform: "none",
-                            }}
-                        >
-                            {isSaving ? "Saving..." : "Save"}
-                        </Button>
-                    </Box>
+                    <div
+                        style={{
+                            width: "320px",
+                            height: "100%",
+                        }}
+                    >
+                        <PanelContent />
+                    </div>
                 </div>
             )}
+
+            {/* Mobile: Floating button to open bottom sheet */}
+            {isMobile && (
+                <Button
+                    variant="contained"
+                    onClick={() => setRightPanelOpen(true)}
+                    sx={{
+                        position: "fixed",
+                        bottom: 16,
+                        right: 16,
+                        zIndex: 1000,
+                        borderRadius: "50%",
+                        minWidth: "56px",
+                        width: "56px",
+                        height: "56px",
+                        boxShadow: 3,
+                    }}
+                    aria-label="Open settings panel"
+                >
+                    ⚙️
+                </Button>
+            )}
+
+            {/* Mobile: Bottom Sheet using SwipeableDrawer */}
+            {isMobile && (
+                <SwipeableDrawer
+                    anchor="bottom"
+                    open={rightPanelOpen}
+                    onClose={() => setRightPanelOpen(false)}
+                    onOpen={() => setRightPanelOpen(true)}
+                    disableSwipeToOpen={false}
+                    swipeAreaWidth={20}
+                    ModalProps={{
+                        keepMounted: true, // Better mobile performance and state preservation
+                    }}
+                    PaperProps={{
+                        sx: {
+                            height: "85vh",
+                            maxHeight: "85vh",
+                            borderTopLeftRadius: 16,
+                            borderTopRightRadius: 16,
+                            overflow: "hidden",
+                        },
+                    }}
+                >
+                    {/* Drag handle indicator */}
+                    <Box
+                        sx={{
+                            width: "100%",
+                            display: "flex",
+                            justifyContent: "center",
+                            py: 1.5,
+                            backgroundColor: "white",
+                            borderBottom: "1px solid #eee",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 40,
+                                height: 4,
+                                backgroundColor: "#ccc",
+                                borderRadius: 2,
+                            }}
+                        />
+                    </Box>
+                    {/* Header with close button */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            px: 2,
+                            py: 1,
+                            backgroundColor: "white",
+                            borderBottom: "1px solid #eee",
+                        }}
+                    >
+                        <span
+                            style={{ fontWeight: "bold", fontSize: "1.1rem" }}
+                        >
+                            Post Settings
+                        </span>
+                        <Button
+                            onClick={() => setRightPanelOpen(false)}
+                            sx={{ minWidth: "auto", p: 1 }}
+                        >
+                            ✕
+                        </Button>
+                    </Box>
+                    <Box sx={{ height: "calc(100% - 60px)", overflow: "auto" }}>
+                        <PanelContent />
+                    </Box>
+                </SwipeableDrawer>
+            )}
+
             <Dialog
                 open={mediaLibOpen}
                 onClose={() => {

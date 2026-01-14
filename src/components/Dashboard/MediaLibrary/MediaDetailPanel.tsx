@@ -224,9 +224,10 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
         return (
             <Box
                 sx={{
-                    width: 400,
+                    width: { xs: "100%", md: 400 },
+                    minWidth: { xs: "auto", md: 400 },
                     bgcolor: "white",
-                    borderLeft: 1,
+                    borderLeft: { xs: 0, md: 1 },
                     borderColor: "divider",
                     display: "flex",
                     alignItems: "center",
@@ -247,9 +248,10 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
     return (
         <Box
             sx={{
-                width: 400,
+                width: { xs: "100%", md: 400 },
+                minWidth: { xs: "auto", md: 400 },
                 bgcolor: "white",
-                borderLeft: 1,
+                borderLeft: { xs: 0, md: 1 },
                 borderColor: "divider",
                 display: "flex",
                 flexDirection: "column",
@@ -283,7 +285,7 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
             )}
 
             {/* Content */}
-            <Box sx={{ p: 3, overflowY: "auto", flex: 1 }}>
+            <Box sx={{ p: { xs: 2, md: 3 }, overflowY: "auto", flex: 1 }}>
                 <Stack spacing={3}>
                     {/* Preview - Fixed Height */}
                     <Paper
