@@ -86,6 +86,7 @@ export interface MediaDetailPanelProps {
     onDelete: (permanent?: boolean) => void;
     onDownload: (item: MediaItem) => void;
     onGenerateVariants: (presets?: VariantPreset[]) => Promise<void>;
+    onDeleteVariant: (variantName: string) => Promise<void>;
     onCustomCrop: (item: MediaItem) => void;
     onResize: (
         width?: number,

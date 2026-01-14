@@ -66,6 +66,7 @@ import {
     deleteMedia,
     bulkDeleteMedia,
     generateVariants,
+    deleteVariant,
     resizeMedia,
     optimizeMedia,
     convertMedia,
@@ -525,6 +526,49 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                         err instanceof Error
                             ? err.message
                             : "Variant generation failed",
+                    severity: "error",
+                });
+            } finally {
+                setLoadingState((prev) => ({ ...prev, isProcessing: false }));
+            }
+        },
+        [selectedItem],
+    );
+
+    // Delete variant handler
+    const handleDeleteVariant = useCallback(
+        async (variantName: string) => {
+            if (!selectedItem) return;
+
+            setLoadingState((prev) => ({ ...prev, isProcessing: true }));
+
+            try {
+                await deleteVariant(selectedItem.id, variantName);
+                // Update the selected item to remove the deleted variant
+                const updatedItem = {
+                    ...selectedItem,
+                    variants: selectedItem.variants.filter(
+                        (v) => v.name !== variantName,
+                    ),
+                };
+                setSelectedItem(updatedItem);
+                setMediaItems((prev) =>
+                    prev.map((item) =>
+                        item.id === selectedItem.id ? updatedItem : item,
+                    ),
+                );
+                setSnackbar({
+                    open: true,
+                    message: `Variant "${variantName}" deleted successfully`,
+                    severity: "success",
+                });
+            } catch (err) {
+                setSnackbar({
+                    open: true,
+                    message:
+                        err instanceof Error
+                            ? err.message
+                            : "Failed to delete variant",
                     severity: "error",
                 });
             } finally {
@@ -1123,6 +1167,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                     }}
                     onDownload={handleDownloadItem}
                     onGenerateVariants={handleGenerateVariants}
+                    onDeleteVariant={handleDeleteVariant}
                     onCustomCrop={handleOpenCropper}
                     onResize={handleResize}
                     onOptimize={handleOptimize}

@@ -236,6 +236,22 @@ export async function generateVariants(
 }
 
 /**
+ * Delete a media variant by name
+ */
+export async function deleteVariant(
+    id: string,
+    variantName: string,
+): Promise<{ success: boolean; message: string }> {
+    return apiFetch(`${API_BASE}/${id}/variants`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ variantName }),
+    });
+}
+
+/**
  * Resize an image
  */
 export async function resizeMedia(

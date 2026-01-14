@@ -235,23 +235,19 @@ export class AssetService {
 
     /**
      * Generate storage path for the asset
+     * Note: The filename is expected to already include a timestamp prefix
+     * (added by the route handler) for uniqueness, so we just use it as-is.
      */
     private generateStoragePath(filename: string, folder?: string): string {
         const date = new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
 
-        const randomSuffix = crypto.randomBytes(8).toString("hex");
-        const ext = path.extname(filename);
-        const baseName = path.parse(filename).name;
-        const sanitizedName = this.sanitizeSlug(baseName);
-        const uniqueFilename = `${sanitizedName}-${randomSuffix}${ext}`;
-
         if (folder) {
-            return `${this.uploadBasePath}/${folder}/${uniqueFilename}`;
+            return `${this.uploadBasePath}/${folder}/${filename}`;
         }
 
-        return `${this.uploadBasePath}/${year}/${month}/${uniqueFilename}`;
+        return `${this.uploadBasePath}/${year}/${month}/${filename}`;
     }
 
     /**
@@ -391,7 +387,7 @@ export class AssetService {
         // Generate unique slug
         const slug = await this.generateUniqueSlug(filename);
 
-        // Generate storage path
+        // Generate storage path (filename already includes timestamp from route)
         const storagePath = this.generateStoragePath(filename, folder);
 
         // Upload to S3
@@ -1258,6 +1254,30 @@ export class AssetService {
         // Delete from database
         return await this.db.assetVariant.delete({
             where: { id: variantId },
+        });
+    }
+
+    /**
+     * Delete an asset variant by asset ID and variant name
+     */
+    async deleteAssetVariantByName(assetId: string, variantName: string) {
+        const variant = await this.db.assetVariant.findFirst({
+            where: {
+                assetId,
+                name: variantName,
+            },
+        });
+
+        if (!variant) {
+            throw new Error("Variant not found");
+        }
+
+        // Delete from S3
+        await this.deleteFromS3(variant.path);
+
+        // Delete from database
+        return await this.db.assetVariant.delete({
+            where: { id: variant.id },
         });
     }
 

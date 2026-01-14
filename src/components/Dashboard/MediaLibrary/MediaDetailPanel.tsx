@@ -39,6 +39,7 @@ import {
     AutoFixHigh,
     Link as LinkIcon,
     Crop,
+    OpenInNew,
 } from "@mui/icons-material";
 import {
     MediaDetailPanelProps,
@@ -98,6 +99,7 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
     onDelete,
     onDownload,
     onGenerateVariants,
+    onDeleteVariant,
     onCustomCrop,
     onResize,
     onOptimize,
@@ -320,7 +322,7 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
                         )}
                     </Paper>
 
-                    {/* URL with copy button */}
+                    {/* URL with copy and open in new tab buttons */}
                     <Box
                         sx={{
                             display: "flex",
@@ -343,6 +345,14 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
                         >
                             {item.url}
                         </Typography>
+                        <Tooltip title="Open in new tab">
+                            <IconButton
+                                size="small"
+                                onClick={() => window.open(item.url, "_blank")}
+                            >
+                                <OpenInNew fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
                         <Tooltip title={urlCopied ? "Copied!" : "Copy URL"}>
                             <IconButton
                                 size="small"
@@ -522,6 +532,19 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
                                                         }}
                                                     />
                                                     <ListItemSecondaryAction>
+                                                        <Tooltip title="Open in new tab">
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() =>
+                                                                    window.open(
+                                                                        variant.url,
+                                                                        "_blank",
+                                                                    )
+                                                                }
+                                                            >
+                                                                <OpenInNew fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
                                                         <Tooltip title="Copy URL">
                                                             <IconButton
                                                                 size="small"
@@ -545,6 +568,22 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
                                                                 }
                                                             >
                                                                 <Download fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Delete variant">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="error"
+                                                                onClick={() =>
+                                                                    onDeleteVariant(
+                                                                        variant.name,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isProcessing
+                                                                }
+                                                            >
+                                                                <Delete fontSize="small" />
                                                             </IconButton>
                                                         </Tooltip>
                                                     </ListItemSecondaryAction>

@@ -26,6 +26,10 @@ const GenerateVariantsSchema = z.object({
         .optional(),
 });
 
+const DeleteVariantSchema = z.object({
+    variantName: z.string().min(1, "Variant name is required"),
+});
+
 // GET /api/v1/media/[id]/variants - List all variants for a media item
 export async function GET(
     req: NextRequest,
@@ -124,6 +128,63 @@ export async function POST(
                 error instanceof Error
                     ? error.message
                     : "Failed to generate variants",
+        });
+    }
+}
+
+// DELETE /api/v1/media/[id]/variants - Delete a specific variant by name
+export async function DELETE(
+    req: NextRequest,
+    props: { params: Promise<{ id: string }> },
+) {
+    if (!(await verifyRole(req, ["admin", "editor"]))) {
+        return Unauthorized();
+    }
+
+    try {
+        const params = await props.params;
+        const body = await req.json();
+
+        const parseResult = DeleteVariantSchema.safeParse(body);
+
+        if (!parseResult.success) {
+            return BadRequest({
+                message: "Invalid parameters",
+                errors: FlattenErrors(parseResult.error),
+            });
+        }
+
+        const { variantName } = parseResult.data;
+
+        // Check if asset exists
+        const asset = await assetService.getAssetById(params.id);
+        if (!asset) {
+            return NotFound({ message: "Media not found" });
+        }
+
+        // Find and delete the variant
+        await assetService.deleteAssetVariantByName(params.id, variantName);
+
+        return NextResponse.json({
+            success: true,
+            message: `Variant "${variantName}" deleted successfully`,
+        });
+    } catch (error) {
+        console.error("Error deleting variant:", error);
+
+        if (error instanceof Error && error.message === "Asset not found") {
+            return NotFound({ message: "Media not found" });
+        }
+
+        if (error instanceof Error && error.message === "Variant not found") {
+            return NotFound({ message: "Variant not found" });
+        }
+
+        return InternalServerError({
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to delete variant",
         });
     }
 }
