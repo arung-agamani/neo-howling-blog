@@ -203,14 +203,14 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
         >
             {/* Header */}
             <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 0, boxShadow: 1 }}>
-                {/* Row 1: Title */}
+                {/* Row 1: Title and Action Buttons */}
                 <Box
                     sx={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
                         mb: { xs: 2, md: 3 },
-                        flexWrap: "wrap",
+                        flexWrap: { xs: "wrap", md: "nowrap" },
                         gap: 1,
                     }}
                 >
@@ -232,49 +232,46 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                             />
                         )}
                     </Box>
-                </Box>
-
-                {/* Row 2: Action Buttons */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        gap: 1,
-                        mb: 2,
-                        flexWrap: "wrap",
-                    }}
-                >
-                    <Tooltip title="Refresh">
-                        <Button
-                            variant="outlined"
-                            onClick={fetchMedia}
-                            disabled={loadingState.isLoading}
-                            size={isMobile ? "small" : "medium"}
-                        >
-                            <Refresh />
-                        </Button>
-                    </Tooltip>
-                    <Tooltip title="Upload files via button, drag & drop, or paste (Ctrl/Cmd+V)">
-                        <Button
-                            variant="contained"
-                            startIcon={<Upload />}
-                            component="label"
-                            disabled={loadingState.isUploading}
-                            size={isMobile ? "small" : "medium"}
-                        >
-                            Upload Files
-                            <input
-                                key={fileInputKey}
-                                type="file"
-                                multiple
-                                hidden
-                                onChange={(e) => {
-                                    handleShowUploadDialog(e.target.files);
-                                    e.target.value = "";
-                                }}
-                                accept={getAcceptedFileTypes()}
-                            />
-                        </Button>
-                    </Tooltip>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            gap: 1,
+                            flexWrap: "wrap",
+                        }}
+                    >
+                        <Tooltip title="Refresh">
+                            <Button
+                                variant="outlined"
+                                onClick={fetchMedia}
+                                disabled={loadingState.isLoading}
+                                size={isMobile ? "small" : "medium"}
+                            >
+                                <Refresh />
+                            </Button>
+                        </Tooltip>
+                        <Tooltip title="Upload files via button, drag & drop, or paste (Ctrl/Cmd+V)">
+                            <Button
+                                variant="contained"
+                                startIcon={<Upload />}
+                                component="label"
+                                disabled={loadingState.isUploading}
+                                size={isMobile ? "small" : "medium"}
+                            >
+                                Upload Files
+                                <input
+                                    key={fileInputKey}
+                                    type="file"
+                                    multiple
+                                    hidden
+                                    onChange={(e) => {
+                                        handleShowUploadDialog(e.target.files);
+                                        e.target.value = "";
+                                    }}
+                                    accept={getAcceptedFileTypes()}
+                                />
+                            </Button>
+                        </Tooltip>
+                    </Box>
                 </Box>
 
                 {/* Upload Progress */}
@@ -297,14 +294,24 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                     </Box>
                 )}
 
-                {/* Row 3: Search Bar */}
-                <Box sx={{ mb: 2 }}>
+                {/* Row 2: Search Bar, Filter, and View Mode */}
+                <Stack
+                    direction={{ xs: "column", md: "row" }}
+                    spacing={2}
+                    flexWrap="wrap"
+                    alignItems={{ xs: "stretch", md: "center" }}
+                    sx={{ gap: 1 }}
+                >
+                    {/* Search Bar */}
                     <TextField
                         placeholder="Search media..."
                         {...register("search")}
                         size="small"
-                        fullWidth
-                        sx={{ maxWidth: { md: 400 } }}
+                        sx={{
+                            flexGrow: { xs: 1, md: 0 },
+                            minWidth: { md: 300 },
+                            maxWidth: { md: 400 },
+                        }}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
@@ -313,16 +320,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                             ),
                         }}
                     />
-                </Box>
 
-                {/* Row 4: Filter and View Mode */}
-                <Stack
-                    direction="row"
-                    spacing={2}
-                    flexWrap="wrap"
-                    alignItems="center"
-                    sx={{ gap: 1 }}
-                >
                     {/* Filter */}
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                         <InputLabel>Filter</InputLabel>
