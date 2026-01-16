@@ -2,6 +2,7 @@ export interface Post {
     title: string;
     id: string;
     author: string | null;
+    link: string;
     bannerUrl: string | null;
     datePosted: Date;
     description: string;

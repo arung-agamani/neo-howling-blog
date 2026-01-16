@@ -1,6 +1,13 @@
+import { Metadata } from "next";
 import Sidebar from "@/components/admin/Sidebar";
 import QueryProvider from "@/lib/react-query/QueryProvider";
 import { Toaster } from "@/components/ui/toaster";
+
+export const metadata: Metadata = {
+    title: "Dashboard | Howling Admin",
+    description:
+        "Admin dashboard overview - view statistics, recent posts, popular tags, and quick actions for managing your blog",
+};
 
 export default async function MainAdminLayout({
     children,

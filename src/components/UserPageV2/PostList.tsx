@@ -18,7 +18,7 @@ const PostList: React.FC<Props> = ({ posts }) => {
                 >
                     <Heading level={4}>
                         <Link
-                            href={`/v2/post/${post.id}`}
+                            href={`/v2/post/${post.link}`}
                             className="hover:underline"
                         >
                             {post.title}
