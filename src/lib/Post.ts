@@ -1,5 +1,6 @@
 import prisma from "@/utils/prisma";
 import { Prisma } from "@prisma/client";
+import { slugFromTitle } from "@/utils/slug";
 
 export class DeleteError extends Error {
     public msg: string = "Error when deleting post";
@@ -57,9 +58,13 @@ export interface CreatePostPayload {
 }
 
 export async function CreatePost(data: CreatePostPayload) {
+    // Auto-generate link from title if not provided
+    const link = slugFromTitle(data.title);
+
     const createRes = await prisma.posts.create({
         data: {
             ...data,
+            link,
             deleted: false,
 
             datePosted: new Date(),
@@ -81,14 +86,21 @@ export interface UpdatePostSchema {
 }
 
 export async function UpdatePost(id: string, data: UpdatePostSchema) {
+    // Auto-update link if title is being updated
+    const updateData: UpdatePostSchema & { link?: string; updatedAt?: Date } = {
+        ...data,
+        updatedAt: new Date(),
+    };
+
+    if (data.title) {
+        updateData.link = slugFromTitle(data.title);
+    }
+
     const res = await prisma.posts.update({
         where: {
             id,
         },
-        data: {
-            ...data,
-            updatedAt: new Date(),
-        },
+        data: updateData,
     });
 
     return res;

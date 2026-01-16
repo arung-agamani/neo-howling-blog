@@ -4,6 +4,7 @@ import { get, post, put, del } from "@/lib/ky/client";
 export interface Post {
     id: string;
     title: string;
+    link: string;
     author?: string;
     datePosted: string;
     updatedAt?: string;

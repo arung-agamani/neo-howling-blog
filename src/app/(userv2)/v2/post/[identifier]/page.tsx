@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import prisma from "@/utils/prisma";
+import { slugFromTitle } from "@/utils/slug";
 import {
     Blockquote,
     Heading,
@@ -95,16 +96,68 @@ const componentMap: any = {
     // a: (props: any) => <span>Debug link</span>
 };
 
+async function findPostByIdentifier(identifier: string) {
+    // Decode URL-encoded identifier (e.g., %E6%97%A5%E8%A8%98 -> 日記)
+    const decodedIdentifier = decodeURIComponent(identifier);
+
+    // Check if identifier looks like a MongoDB ObjectId (24 hex characters)
+    const isObjectId = /^[a-fA-F0-9]{24}$/.test(decodedIdentifier);
+
+    // 1. Try to find by ID first (only if it looks like an ObjectId)
+    if (isObjectId) {
+        const postById = await prisma.posts.findFirst({
+            where: { id: decodedIdentifier },
+        });
+        if (postById) return postById;
+    }
+
+    // 2. Try to find by link field (try both decoded and original)
+    const postByLink = await prisma.posts.findFirst({
+        where: { link: decodedIdentifier },
+    });
+    if (postByLink) return postByLink;
+
+    // 3. Try to find by title slug (infer from title)
+    const allPosts = await prisma.posts.findMany({
+        where: {
+            isPublished: true,
+            deleted: { not: true },
+        },
+        select: {
+            id: true,
+            title: true,
+            author: true,
+            bannerUrl: true,
+            blogContent: true,
+            blogContentDelta: true,
+            datePosted: true,
+            description: true,
+            imageheader: true,
+            isBannerDark: true,
+            isFeatured: true,
+            isPublished: true,
+            link: true,
+            tags: true,
+            updatedAt: true,
+            deleted: true,
+            deletedAt: true,
+            v: true,
+        },
+    });
+
+    const postBySlug = allPosts.find(
+        (post) => slugFromTitle(post.title) === decodedIdentifier,
+    );
+
+    return postBySlug || null;
+}
+
 export async function generateMetadata(props: {
     params: Promise<{ identifier: string }>;
 }): Promise<Metadata> {
     const params = await props.params;
     const { identifier } = params;
-    const postData = await prisma.posts.findFirst({
-        where: {
-            id: identifier,
-        },
-    });
+    const postData = await findPostByIdentifier(identifier);
 
     const metadata: Metadata = {
         title: postData?.title || "Post not found",
@@ -137,11 +190,7 @@ export default async function PostDetailPage({
     params: Promise<{ identifier: string }>;
 }) {
     const { identifier } = await params;
-    const postData = await prisma.posts.findFirst({
-        where: {
-            id: identifier,
-        },
-    });
+    const postData = await findPostByIdentifier(identifier);
 
     const processor = unified()
         .use(rehypeParse, { fragment: true })
@@ -177,7 +226,7 @@ export default async function PostDetailPage({
                             aria-current="page"
                             className="text-gray-700 dark:text-gray-200 font-semibold"
                         >
-                            {identifier}
+                            {decodeURIComponent(identifier)}
                         </li>
                     </ol>
                 </nav>
@@ -200,7 +249,7 @@ export default async function PostDetailPage({
                     {content}
                 </div>
                 <hr />
-                {/* <RecommendedPosts postId={identifier} /> */}
+                <RecommendedPosts postId={identifier} />
             </div>
         </PageReadySignal>
     );

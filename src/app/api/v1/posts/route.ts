@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
                     description: true,
                     bannerUrl: true,
                     datePosted: true,
+                    link: true,
                 },
             });
             return NextResponse.json({
@@ -79,6 +80,7 @@ export async function GET(req: NextRequest) {
                 description: true,
                 bannerUrl: true,
                 datePosted: true,
+                link: true,
             },
         });
         return NextResponse.json({
@@ -102,6 +104,7 @@ export async function GET(req: NextRequest) {
             bannerUrl: true,
             isPublished: true,
             deleted: true,
+            link: true,
         },
         orderBy: {
             datePosted: "desc",

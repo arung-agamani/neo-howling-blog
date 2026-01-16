@@ -18,7 +18,7 @@ export function usePreferences() {
 }
 
 function PreferencesProvider({ children }: { children: React.ReactNode }) {
-    const [contrast, setContrast] = useState(false);
+    const [contrast, setContrast] = useState(true);
 
     useEffect(() => {
         const storedContrast = localStorage.getItem("user:contrast");
