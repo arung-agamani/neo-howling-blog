@@ -16,16 +16,21 @@ export async function GET(req: NextRequest) {
             id: true,
             username: true,
             name: true,
+            email: true,
             role: true,
             birthday: true,
             gender: true,
             phone: true,
+            avatarUrl: true,
+            bio: true,
+            dateCreated: true,
+            lastAccess: true,
         },
     });
     if (!user) {
         return NextResponse.json(
             { message: "User not found" },
-            { status: 404 }
+            { status: 404 },
         );
     }
     return NextResponse.json({

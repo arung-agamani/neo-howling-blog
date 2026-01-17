@@ -7,6 +7,10 @@ export interface User {
     birthday?: string;
     gender?: string;
     phone?: string;
+    avatarUrl?: string;
+    bio?: string;
+    dateCreated?: string;
+    lastAccess?: string;
 }
 
 export type UserRole = "admin" | "editor" | "user" | "guest";

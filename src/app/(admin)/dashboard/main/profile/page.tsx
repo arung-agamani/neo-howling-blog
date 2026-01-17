@@ -1,110 +1,190 @@
 "use client";
 
+import React from "react";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import Divider from "@mui/material/Divider";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "@/utils/axios";
-import { emptyHelloResponse, HelloResponse } from "@/types";
-import { Button } from "@mui/material";
-import SaveIcon from "@mui/icons-material/Save";
-
-import SingleFieldForm from "@/components/Dashboard/SingleFieldForm";
+import Skeleton from "@mui/material/Skeleton";
+import Grid from "@mui/material/Grid";
+import PersonIcon from "@mui/icons-material/Person";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LockIcon from "@mui/icons-material/Lock";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-export default function Page() {
-    const queryClient = useQueryClient();
-    const { data: user, isSuccess } = useQuery({
-        queryKey: ["currentAuthenticatedUser"],
-        queryFn: async () => {
-            const res = await axios.get("/api/v1/auth/me", {
-                withCredentials: true,
-            });
-            const validated = HelloResponse.safeParse(res.data);
-            if (!validated.success) {
-                return emptyHelloResponse.user;
-            }
-            return validated.data.user;
-        },
-    });
 
-    const updateUser = async (id: string, value: string) => {
+import {
+    ProfileSection,
+    AvatarUpload,
+    PersonalInfoForm,
+    PasswordChangeForm,
+    AccountDetails,
+    UserStats,
+    TProfileUpdate,
+} from "@/components/Dashboard/Profile";
+import { useCurrentUserQuery } from "@/app/(admin)/dashboard/queries";
+import axios from "@/utils/axios";
+
+export default function ProfilePage() {
+    const queryClient = useQueryClient();
+    const { data: user, isLoading, isSuccess } = useCurrentUserQuery();
+    const handleAvatarSave = async (avatarUrl: string) => {
         if (!user) return;
-        const payload: any = { id: user.id };
-        payload[id] = value;
         try {
-            await axios.patch("/api/v1/users/" + user.id, payload);
-            toast.success(`Data \`${id}\` updated`);
-            queryClient.invalidateQueries({
-                queryKey: ["currentAuthenticatedUser"],
-            });
+            await axios.patch(`/api/v1/users/${user.id}`, { avatarUrl });
+            toast.success("Avatar updated successfully");
+            queryClient.invalidateQueries({ queryKey: ["user", "me"] });
         } catch (error) {
-            toast.error(`Data update failed`);
+            toast.error("Failed to update avatar");
+            throw error;
         }
     };
 
-    if (!isSuccess) return;
+    const handlePersonalInfoSave = async (data: TProfileUpdate) => {
+        if (!user) return;
+        try {
+            await axios.patch(`/api/v1/users/${user.id}`, data);
+            toast.success("Profile updated successfully");
+            queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+        } catch (error) {
+            toast.error("Failed to update profile");
+            throw error;
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
+                <Skeleton
+                    variant="text"
+                    width={200}
+                    height={60}
+                    sx={{ mb: 2 }}
+                />
+                <Skeleton
+                    variant="rectangular"
+                    height={300}
+                    sx={{ mb: 3, borderRadius: 2 }}
+                />
+                <Skeleton
+                    variant="rectangular"
+                    height={400}
+                    sx={{ mb: 3, borderRadius: 2 }}
+                />
+                <Skeleton
+                    variant="rectangular"
+                    height={200}
+                    sx={{ borderRadius: 2 }}
+                />
+            </Box>
+        );
+    }
+
+    if (!isSuccess || !user) {
+        return (
+            <Box sx={{ p: 3, textAlign: "center" }}>
+                <Typography variant="h5" color="error">
+                    Failed to load profile data
+                </Typography>
+                <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                >
+                    Please try refreshing the page
+                </Typography>
+            </Box>
+        );
+    }
+
     return (
-        <Paper className="mx-2 my-2 px-4 py-2">
-            <Typography variant="h3">Profile</Typography>
-            <Divider sx={{ marginBottom: 1 }} />
-            <div className="grid grid-cols-2">
-                <div className="grid grid-cols-2 gap-y-2">
-                    <div className="col-span-2">
-                        <div
-                            style={{
-                                backgroundImage: "url('/test-avatar.png')",
-                                backgroundPosition: "center center",
-                                backgroundSize: "cover",
-                                backgroundColor: "#ccccc",
-                                width: "300px",
-                                height: "300px",
-                                borderRadius: "150px",
+        <Box
+            sx={{
+                p: 3,
+                maxWidth: 1200,
+                mx: "auto",
+                backgroundColor: "background.paper",
+            }}
+        >
+            {/* Page Header */}
+            <Box sx={{ mb: 4 }}>
+                <Typography variant="h3" fontWeight={700} gutterBottom>
+                    Profile Settings
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                    Manage your account settings and personal information
+                </Typography>
+            </Box>
+
+            <Grid container spacing={3}>
+                {/* Left Column - Avatar and Stats */}
+                <Grid item xs={12} md={4}>
+                    {/* Avatar Section */}
+                    <ProfileSection
+                        title="Profile Picture"
+                        description="Upload a profile picture to personalize your account"
+                    >
+                        <AvatarUpload
+                            currentAvatarUrl={user.avatarUrl ?? ""}
+                            username={user.name || user.username}
+                            onSave={handleAvatarSave}
+                        />
+                    </ProfileSection>
+
+                    {/* Activity Stats */}
+                    <ProfileSection
+                        title="Activity Overview"
+                        description="Your content contribution statistics"
+                        icon={<BarChartIcon />}
+                    >
+                        <UserStats userId={user.id} />
+                    </ProfileSection>
+                </Grid>
+
+                {/* Right Column - Main Content */}
+                <Grid item xs={12} md={8}>
+                    {/* Account Details Section */}
+                    <ProfileSection
+                        title="Account Details"
+                        description="Your account information and access details"
+                        icon={<AccountCircleIcon />}
+                    >
+                        <AccountDetails
+                            username={user.username}
+                            email={user.email}
+                            role={user.role}
+                            dateCreated={user.dateCreated}
+                            lastAccess={user.lastAccess}
+                        />
+                    </ProfileSection>
+
+                    {/* Personal Information Section */}
+                    <ProfileSection
+                        title="Personal Information"
+                        description="Update your personal details"
+                        icon={<PersonIcon />}
+                    >
+                        <PersonalInfoForm
+                            initialData={{
+                                name: user.name,
+                                birthday: user.birthday,
+                                gender: user.gender,
+                                phone: user.phone,
+                                bio: user.bio ? user.bio : "",
                             }}
-                        ></div>
-                    </div>
-                    <Typography variant="h4" className="col-span-2">
-                        Personal Info
-                    </Typography>
-                    <Divider className="col-span-2" sx={{ marginBottom: 2 }} />
+                            onSave={handlePersonalInfoSave}
+                        />
+                    </ProfileSection>
 
-                    <Typography variant="h5">Username</Typography>
-                    <Typography variant="h6">{user.username}</Typography>
-                    <Typography variant="h5">Role</Typography>
-                    <Typography variant="h6">{user.role}</Typography>
-                    <Divider
-                        className="col-span-2"
-                        sx={{ marginTop: 2, marginBottom: 2 }}
-                    />
-                    <Typography variant="h5">Name</Typography>
-                    <SingleFieldForm
-                        id={"name"}
-                        value={user.name || "Empty field..."}
-                        save={updateUser}
-                    />
-                    <Typography variant="h5">Birthday</Typography>
-                    <SingleFieldForm
-                        id={"birthday"}
-                        value={
-                            user.birthday?.toDateString() || "Empty field..."
-                        }
-                        save={updateUser}
-                    />
-                    <Typography variant="h5">Gender</Typography>
-                    <SingleFieldForm
-                        id={"gender"}
-                        value={user.gender || "Empty field..."}
-                        save={updateUser}
-                    />
-                    <Typography variant="h5">Phone</Typography>
-                    <SingleFieldForm
-                        id={"phone"}
-                        value={user.phone || "Empty field..."}
-                        save={updateUser}
-                    />
-
-                    <Divider className="col-span-2" sx={{ marginBottom: 2 }} />
-                </div>
-            </div>
-        </Paper>
+                    {/* Security Section */}
+                    <ProfileSection
+                        title="Security"
+                        description="Change your password to keep your account secure"
+                        icon={<LockIcon />}
+                    >
+                        <PasswordChangeForm />
+                    </ProfileSection>
+                </Grid>
+            </Grid>
+        </Box>
     );
 }

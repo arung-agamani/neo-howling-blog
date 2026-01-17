@@ -88,6 +88,8 @@ model users {
   birthday    DateTime? @default(now()) @db.Date
   gender      Gender?   @default(male)
   phone       String?   @default("")
+  avatarUrl   String?   @default("")
+  bio         String?   @default("")
 
   snippets snippet[]
   assets   assets[]

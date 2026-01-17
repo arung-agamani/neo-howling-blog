@@ -35,6 +35,7 @@ export const useCurrentUserQuery = () => {
         },
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-        refetchOnMount: false,
+        refetchOnMount: true,
+        staleTime: 5 * 60 * 1000, // 5 minutes
     });
 };

@@ -207,19 +207,30 @@ export const HelloResponse = z.object({
     user: z.object({
         id: z.string(),
         username: z.string(),
+        email: z.string().optional(),
         role: z.string(),
         name: z.string().optional(),
-        birthday: z.coerce.date(),
+        birthday: z.coerce.date().optional(),
         gender: z.string().optional(),
         phone: z.string().optional(),
+        avatarUrl: z.string().optional().nullable(),
+        bio: z.string().optional().nullable(),
+        dateCreated: z.coerce.date().optional(),
+        lastAccess: z.coerce.date().optional(),
     }),
 });
 export type THelloResponse = z.infer<typeof HelloResponse>;
+export type TCurrentUser = THelloResponse["user"];
 export const emptyHelloResponse: THelloResponse = {
     user: {
         id: "",
         username: "",
+        email: "",
         role: "",
-        birthday: new Date(),
+        birthday: undefined,
+        avatarUrl: "",
+        bio: "",
+        dateCreated: undefined,
+        lastAccess: undefined,
     },
 };

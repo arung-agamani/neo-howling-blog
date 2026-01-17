@@ -24,6 +24,10 @@ export async function GET(req: NextRequest) {
                 birthday: true,
                 gender: true,
                 phone: true,
+                avatarUrl: true,
+                bio: true,
+                dateCreated: true,
+                lastAccess: true,
             },
         });
 
@@ -45,7 +49,10 @@ export async function GET(req: NextRequest) {
             birthday: true,
             gender: true,
             phone: true,
-            // add/remove fields as needed
+            avatarUrl: true,
+            bio: true,
+            dateCreated: true,
+            lastAccess: true,
         },
     });
     return NextResponse.json({ users });

@@ -114,8 +114,9 @@ const TreeView: React.FC<{
                         }}
                         onClick={() =>
                             router.push(
-                                `${parentLink}/${data.link ? data.link : data.name
-                                }`
+                                `${parentLink}/${
+                                    data.link ? data.link : data.name
+                                }`,
                             )
                         }
                     >
@@ -131,13 +132,15 @@ const TreeView: React.FC<{
                     {data.children.map((child) => (
                         <div
                             className="ml-4 mt-2"
-                            key={`${parentLink}/${data.link ? data.link : data.name
-                                }/${child.link ? child.link : child.name}`}
+                            key={`${parentLink}/${
+                                data.link ? data.link : data.name
+                            }/${child.link ? child.link : child.name}`}
                         >
                             <TreeView
                                 data={child}
-                                parentLink={`${parentLink}/${data.link ? data.link : data.name
-                                    }`}
+                                parentLink={`${parentLink}/${
+                                    data.link ? data.link : data.name
+                                }`}
                                 depth={depth + 1}
                                 role={role}
                             />
@@ -160,7 +163,7 @@ export default function PostLayout({
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const openProfileMenu = Boolean(anchorEl);
     const router = useRouter();
-    const { data: user, isSuccess: userQuerySuccess } = useCurrentUserQuery()
+    const { data: user, isSuccess: userQuerySuccess } = useCurrentUserQuery();
     const { data: session, status } = useSession();
 
     const signout = async () => {
@@ -168,7 +171,12 @@ export default function PostLayout({
         router.push("/dashboard");
     };
 
-    if (status === "loading" || status === "unauthenticated" || !userQuerySuccess) return null;
+    if (
+        status === "loading" ||
+        status === "unauthenticated" ||
+        !userQuerySuccess
+    )
+        return null;
     return (
         <>
             <AppBar
@@ -209,7 +217,13 @@ export default function PostLayout({
                                 setAnchorEl(e.currentTarget);
                             }}
                         >
-                            <Avatar sx={{ ml: 2 }} src="/test-avatar.png" />
+                            <Avatar
+                                sx={{ ml: 2 }}
+                                src={user.avatarUrl || undefined}
+                            >
+                                {!user.avatarUrl &&
+                                    user.username?.charAt(0).toUpperCase()}
+                            </Avatar>
                         </IconButton>
                     </Box>
                 </Toolbar>
@@ -256,6 +270,7 @@ export default function PostLayout({
                 <MenuItem
                     onClick={() => {
                         setAnchorEl(null);
+                        router.push("/dashboard/main/profile");
                     }}
                 >
                     <AccountCircleIcon sx={{ mr: 2 }} /> Profile

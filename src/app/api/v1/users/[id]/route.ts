@@ -3,7 +3,10 @@ import prisma from "@/utils/prisma";
 import { verifyRole } from "@/hooks/useRoleAuth";
 import { Unauthorized } from "@/app/api/responses";
 
-export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function GET(
+    req: NextRequest,
+    props: { params: Promise<{ id: string }> },
+) {
     const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
@@ -31,7 +34,10 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     return NextResponse.json({ user });
 }
 
-export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+    req: NextRequest,
+    props: { params: Promise<{ id: string }> },
+) {
     const params = await props.params;
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
@@ -40,18 +46,30 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
     const data = await req.json();
 
     // Only allow specific fields and only if present
-    const allowedFields = ["name", "role", "birthday", "gender", "phone"];
+    const allowedFields = [
+        "name",
+        "role",
+        "birthday",
+        "gender",
+        "phone",
+        "avatarUrl",
+        "bio",
+    ];
     const updateData: Record<string, any> = {};
     for (const field of allowedFields) {
         if (field in data) {
-            updateData[field] = data[field];
+            if (field === "birthday" && data[field]) {
+                updateData[field] = new Date(data[field]);
+            } else {
+                updateData[field] = data[field];
+            }
         }
     }
 
     if (Object.keys(updateData).length === 0) {
         return NextResponse.json(
             { error: "No valid fields provided for update" },
-            { status: 400 }
+            { status: 400 },
         );
     }
 
@@ -68,14 +86,18 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
                 birthday: true,
                 gender: true,
                 phone: true,
-                // add/remove fields as needed
+                avatarUrl: true,
+                bio: true,
+                dateCreated: true,
+                lastAccess: true,
             },
         });
         return NextResponse.json({ user: updatedUser });
     } catch (error) {
+        console.error("Error updating user:", error);
         return NextResponse.json(
             { error: "User not found or update failed" },
-            { status: 404 }
+            { status: 404 },
         );
     }
 }
