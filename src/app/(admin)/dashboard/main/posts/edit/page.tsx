@@ -27,6 +27,160 @@ const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
     loading: () => <p>Loading...</p>,
 });
 
+interface PanelContentProps {
+    title: string;
+    setTitle: (value: string) => void;
+    description: string;
+    setDescription: (value: string) => void;
+    bannerUrl: string;
+    setBannerUrl: (value: string) => void;
+    tags: string;
+    setTags: (value: string) => void;
+    bannerPreviewVisible: boolean;
+    previewBannerUrl: (url: string) => void;
+    imagePrevRef: React.RefObject<HTMLImageElement | null>;
+    hasUnsavedChanges: boolean;
+    setHasUnsavedChanges: (value: boolean) => void;
+    isSaving: boolean;
+    saveHandler: () => void;
+    setMediaLibOpen: (value: boolean) => void;
+}
+
+const PanelContent = ({
+    title,
+    setTitle,
+    description,
+    setDescription,
+    bannerUrl,
+    setBannerUrl,
+    tags,
+    setTags,
+    bannerPreviewVisible,
+    previewBannerUrl,
+    imagePrevRef,
+    hasUnsavedChanges,
+    setHasUnsavedChanges,
+    isSaving,
+    saveHandler,
+    setMediaLibOpen,
+}: PanelContentProps) => (
+    <Box
+        className="flex flex-col h-full"
+        sx={{
+            paddingTop: 2,
+            paddingBottom: 2,
+            backgroundColor: "white",
+        }}
+    >
+        <Box className="mx-2 pb-4 flex-1 overflow-y-auto">
+            <TextField
+                label="Title"
+                name="title"
+                value={title}
+                multiline
+                minRows={2}
+                fullWidth
+                margin="dense"
+                variant="outlined"
+                onChange={(e) => {
+                    setTitle(e.target.value);
+                    setHasUnsavedChanges(true);
+                }}
+            />
+            <TextField
+                label="Description"
+                name="description"
+                value={description}
+                multiline
+                minRows={2}
+                fullWidth
+                margin="dense"
+                variant="outlined"
+                onChange={(e) => {
+                    setDescription(e.target.value);
+                    setHasUnsavedChanges(true);
+                }}
+            />
+            <TextField
+                label="Banner"
+                name="bannerUrl"
+                value={bannerUrl}
+                multiline
+                minRows={2}
+                fullWidth
+                margin="dense"
+                variant="outlined"
+                onChange={(e) => {
+                    const newUrl = e.target.value;
+                    setBannerUrl(newUrl);
+                    previewBannerUrl(newUrl);
+                    setHasUnsavedChanges(true);
+                }}
+            />
+            <TextField
+                label="Tags"
+                name="tags"
+                value={tags}
+                multiline
+                minRows={2}
+                fullWidth
+                margin="dense"
+                variant="outlined"
+                onChange={(e) => {
+                    setTags(e.target.value);
+                    setHasUnsavedChanges(true);
+                }}
+            />
+            {bannerPreviewVisible && bannerUrl && (
+                <img
+                    src={bannerUrl}
+                    alt=""
+                    id="bannerPreview"
+                    ref={imagePrevRef}
+                    className="w-full h-auto"
+                    style={{ marginTop: 8 }}
+                />
+            )}
+        </Box>
+        <Typography.Divider />
+        <Box className="flex flex-col gap-y-2 mx-4 my-4">
+            <Button
+                variant="contained"
+                onClick={() => {
+                    setMediaLibOpen(true);
+                }}
+            >
+                Media Library
+            </Button>
+        </Box>
+        <Typography.Divider />
+        <Box className="flex flex-col gap-2 mb-4 mx-4">
+            <Chip
+                label={
+                    hasUnsavedChanges ? "Unsaved Changes" : "All Changes Saved"
+                }
+                color={hasUnsavedChanges ? "warning" : "success"}
+                className="font-bold px-2 py-2 text-center"
+            />
+            <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                fullWidth
+                onClick={saveHandler}
+                disabled={isSaving}
+                sx={{
+                    padding: "0.5rem 1rem",
+                    fontWeight: "bold",
+                    textTransform: "none",
+                }}
+            >
+                {isSaving ? "Saving..." : "Save"}
+            </Button>
+        </Box>
+    </Box>
+);
+
 export default function Page() {
     const [content, setContent] = useState("");
     const [page, setPage] = useState<PostMetadata>({});
@@ -179,127 +333,6 @@ export default function Page() {
         router,
     ]);
 
-    // Panel content component - shared between desktop side panel and mobile bottom sheet
-    const PanelContent = () => (
-        <Box
-            className="flex flex-col h-full"
-            sx={{
-                paddingTop: 2,
-                paddingBottom: 2,
-                backgroundColor: "white",
-            }}
-        >
-            <Box className="mx-2 pb-4 flex-1 overflow-y-auto">
-                <TextField
-                    label="Title"
-                    name="title"
-                    value={title}
-                    multiline
-                    minRows={2}
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    onChange={(e) => {
-                        setTitle(e.target.value);
-                        setHasUnsavedChanges(true);
-                    }}
-                />
-                <TextField
-                    label="Description"
-                    name="description"
-                    value={description}
-                    multiline
-                    minRows={2}
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    onChange={(e) => {
-                        setDescription(e.target.value);
-                        setHasUnsavedChanges(true);
-                    }}
-                />
-                <TextField
-                    label="Banner"
-                    name="bannerUrl"
-                    value={bannerUrl}
-                    multiline
-                    minRows={2}
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    onChange={(e) => {
-                        const newUrl = e.target.value;
-                        setBannerUrl(newUrl);
-                        previewBannerUrl(newUrl);
-                        setHasUnsavedChanges(true);
-                    }}
-                />
-                <TextField
-                    label="Tags"
-                    name="tags"
-                    value={tags}
-                    multiline
-                    minRows={2}
-                    fullWidth
-                    margin="dense"
-                    variant="outlined"
-                    onChange={(e) => {
-                        setTags(e.target.value);
-                        setHasUnsavedChanges(true);
-                    }}
-                />
-                {bannerPreviewVisible && bannerUrl && (
-                    <img
-                        src={bannerUrl}
-                        alt=""
-                        id="bannerPreview"
-                        ref={imagePrevRef}
-                        className="w-full h-auto"
-                        style={{ marginTop: 8 }}
-                    />
-                )}
-            </Box>
-            <Typography.Divider />
-            <Box className="flex flex-col gap-y-2 mx-4 my-4">
-                <Button
-                    variant="contained"
-                    onClick={() => {
-                        setMediaLibOpen(true);
-                    }}
-                >
-                    Media Library
-                </Button>
-            </Box>
-            <Typography.Divider />
-            <Box className="flex flex-col gap-2 mb-4 mx-4">
-                <Chip
-                    label={
-                        hasUnsavedChanges
-                            ? "Unsaved Changes"
-                            : "All Changes Saved"
-                    }
-                    color={hasUnsavedChanges ? "warning" : "success"}
-                    className="font-bold px-2 py-2 text-center"
-                />
-                <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    fullWidth
-                    onClick={saveHandler}
-                    disabled={isSaving}
-                    sx={{
-                        padding: "0.5rem 1rem",
-                        fontWeight: "bold",
-                        textTransform: "none",
-                    }}
-                >
-                    {isSaving ? "Saving..." : "Save"}
-                </Button>
-            </Box>
-        </Box>
-    );
-
     if (loading) return <h1>Loading...</h1>;
 
     return (
@@ -372,7 +405,24 @@ export default function Page() {
                             height: "100%",
                         }}
                     >
-                        <PanelContent />
+                        <PanelContent
+                            title={title}
+                            setTitle={setTitle}
+                            description={description}
+                            setDescription={setDescription}
+                            bannerUrl={bannerUrl}
+                            setBannerUrl={setBannerUrl}
+                            tags={tags}
+                            setTags={setTags}
+                            bannerPreviewVisible={bannerPreviewVisible}
+                            previewBannerUrl={previewBannerUrl}
+                            imagePrevRef={imagePrevRef}
+                            hasUnsavedChanges={hasUnsavedChanges}
+                            setHasUnsavedChanges={setHasUnsavedChanges}
+                            isSaving={isSaving}
+                            saveHandler={saveHandler}
+                            setMediaLibOpen={setMediaLibOpen}
+                        />
                     </div>
                 </div>
             )}
@@ -466,7 +516,24 @@ export default function Page() {
                         </Button>
                     </Box>
                     <Box sx={{ height: "calc(100% - 60px)", overflow: "auto" }}>
-                        <PanelContent />
+                        <PanelContent
+                            title={title}
+                            setTitle={setTitle}
+                            description={description}
+                            setDescription={setDescription}
+                            bannerUrl={bannerUrl}
+                            setBannerUrl={setBannerUrl}
+                            tags={tags}
+                            setTags={setTags}
+                            bannerPreviewVisible={bannerPreviewVisible}
+                            previewBannerUrl={previewBannerUrl}
+                            imagePrevRef={imagePrevRef}
+                            hasUnsavedChanges={hasUnsavedChanges}
+                            setHasUnsavedChanges={setHasUnsavedChanges}
+                            isSaving={isSaving}
+                            saveHandler={saveHandler}
+                            setMediaLibOpen={setMediaLibOpen}
+                        />
                     </Box>
                 </SwipeableDrawer>
             )}
