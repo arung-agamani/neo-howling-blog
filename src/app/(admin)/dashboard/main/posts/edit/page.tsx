@@ -342,7 +342,10 @@ export default function Page() {
                 height: `calc(100vh - ${APP_BAR_HEIGHT}px)`,
             }}
         >
-            <div className="flex-grow bg-white">
+            <div
+                className="flex-grow bg-white"
+                style={{ minWidth: 0, overflow: "hidden" }}
+            >
                 <Editor
                     page={page}
                     setPage={setPage}
@@ -363,6 +366,7 @@ export default function Page() {
                         background: "#fff",
                         borderLeft: "1px solid #eee",
                         minWidth: "24px",
+                        flexShrink: 0,
                         cursor: "pointer",
                         userSelect: "none",
                     }}
@@ -392,11 +396,11 @@ export default function Page() {
                     id="right-panel"
                     style={{
                         width: rightPanelOpen ? "320px" : "0px",
-                        maxWidth: rightPanelOpen ? "320px" : "0px",
+                        maxWidth: "320px",
                         overflow: "hidden",
-                        transition: "width 0.3s ease, max-width 0.3s ease",
+                        transition: "width 0.3s ease",
                         color: "inherit",
-                        minWidth: 0,
+                        flexShrink: 0,
                     }}
                 >
                     <div
