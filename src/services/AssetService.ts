@@ -149,7 +149,49 @@ export interface InitiateUploadResponse {
 // Parameters for processing an uploaded asset
 export interface ProcessUploadParams {
     generateVariants?: boolean;
+    postProcessings?: PostProcessingOperation[];
 }
+
+// Post-processing operation types (gadgets)
+export type PostProcessingType = "resize" | "compress" | "convertFormat";
+
+// Base interface for post-processing operations
+export interface BasePostProcessingOperation {
+    type: PostProcessingType;
+}
+
+// Resize operation config
+export interface ResizeOperation extends BasePostProcessingOperation {
+    type: "resize";
+    config: {
+        width?: number;
+        height?: number;
+        fit?: "cover" | "contain" | "fill" | "inside" | "outside";
+    };
+}
+
+// Compress operation config
+export interface CompressOperation extends BasePostProcessingOperation {
+    type: "compress";
+    config: {
+        quality?: number; // 1-100
+    };
+}
+
+// Convert format operation config
+export interface ConvertFormatOperation extends BasePostProcessingOperation {
+    type: "convertFormat";
+    config: {
+        format: "jpeg" | "png" | "webp" | "avif";
+        quality?: number; // 1-100
+    };
+}
+
+// Union type for all post-processing operations
+export type PostProcessingOperation =
+    | ResizeOperation
+    | CompressOperation
+    | ConvertFormatOperation;
 
 // Image dimension presets similar to WordPress
 export const IMAGE_SIZES = {
@@ -604,10 +646,10 @@ export class AssetService {
 
     /**
      * Process an uploaded asset (after file has been uploaded via presigned URL)
-     * Extracts metadata, generates variants if requested
+     * Extracts metadata, applies post-processing operations, generates variants if requested
      */
     async processUpload(assetId: string, params: ProcessUploadParams = {}) {
-        const { generateVariants = false } = params;
+        const { generateVariants = false, postProcessings = [] } = params;
 
         // Get the asset
         const asset = await this.db.assets.findUnique({
@@ -714,7 +756,62 @@ export class AssetService {
                 }
             }
 
-            // Update asset with extracted metadata
+            // Apply post-processing operations if provided (only for images)
+            // Track if we need to update file path info due to format conversion
+            let newStorageKey: string | undefined;
+            let newFilename: string | undefined;
+            let newMimeType: string | undefined;
+            let newUrl: string | undefined;
+            let newSlug: string | undefined;
+
+            if (postProcessings.length > 0 && asset.type === AssetType.Image) {
+                try {
+                    const processedResult = await this.applyPostProcessingChain(
+                        asset.storageKey!,
+                        postProcessings,
+                    );
+
+                    // Update dimensions if they changed
+                    if (processedResult.width) width = processedResult.width;
+                    if (processedResult.height) height = processedResult.height;
+
+                    // Update file size
+                    actualFileSize = processedResult.fileSize;
+
+                    // Record post-processing in metadata
+                    extractedMetadata = {
+                        ...extractedMetadata,
+                        postProcessingApplied: postProcessings,
+                    };
+
+                    // Handle format conversion - update storage key, filename, URL, etc.
+                    if (processedResult.newStorageKey) {
+                        newStorageKey = processedResult.newStorageKey;
+                        newFilename = processedResult.newFilename;
+                        newMimeType = processedResult.newMimeType;
+                        newUrl = this.generateAssetUrl(newStorageKey);
+
+                        // Generate new slug based on new filename
+                        const slugBase = newFilename!.replace(/\.[^/.]+$/, "");
+                        newSlug = await this.generateUniqueSlug(slugBase);
+                    } else if (processedResult.newMimeType) {
+                        // MimeType changed but extension didn't (shouldn't happen, but handle it)
+                        newMimeType = processedResult.newMimeType;
+                    }
+                } catch (error) {
+                    console.error("Failed to apply post-processing:", error);
+                    // Continue without post-processing - don't fail the whole upload
+                    extractedMetadata = {
+                        ...extractedMetadata,
+                        postProcessingError:
+                            error instanceof Error
+                                ? error.message
+                                : "Post-processing failed",
+                    };
+                }
+            }
+
+            // Update asset with extracted metadata and potentially new file info
             const updatedAsset = await this.db.assets.update({
                 where: { id: assetId },
                 data: {
@@ -724,6 +821,15 @@ export class AssetService {
                     metadata: extractedMetadata,
                     uploadStatus: UploadStatus.Completed,
                     statusMessage: null,
+                    // Update file path info if format was converted
+                    ...(newStorageKey && {
+                        storageKey: newStorageKey,
+                        path: newStorageKey,
+                        url: newUrl,
+                        filename: newFilename,
+                        slug: newSlug,
+                    }),
+                    ...(newMimeType && { mimeType: newMimeType }),
                 },
                 include: {
                     uploader: {
@@ -770,6 +876,151 @@ export class AssetService {
             });
             throw error;
         }
+    }
+
+    /**
+     * Apply a chain of post-processing operations to an image
+     * Operations are applied in order to the original file in S3
+     * @param storageKey - The S3 key of the file to process
+     * @param operations - Array of post-processing operations to apply in order
+     * @returns Object containing the new file size, dimensions, and potentially new storage key/mimeType
+     */
+    async applyPostProcessingChain(
+        storageKey: string,
+        operations: PostProcessingOperation[],
+    ): Promise<{
+        fileSize: number;
+        width?: number;
+        height?: number;
+        newStorageKey?: string;
+        newMimeType?: string;
+        newFilename?: string;
+    }> {
+        if (operations.length === 0) {
+            const headResponse = await s3Client.send(
+                new HeadObjectCommand({
+                    Bucket: this.bucketName,
+                    Key: storageKey,
+                }),
+            );
+            return { fileSize: headResponse.ContentLength || 0 };
+        }
+
+        // Download the original file
+        const getCommand = new GetObjectCommand({
+            Bucket: this.bucketName,
+            Key: storageKey,
+        });
+
+        const response = await s3Client.send(getCommand);
+        const arrayBuffer = await response.Body?.transformToByteArray();
+
+        if (!arrayBuffer) {
+            throw new Error("Failed to download file for post-processing");
+        }
+
+        let buffer: Buffer = Buffer.from(arrayBuffer);
+        let currentMimeType = response.ContentType || "image/jpeg";
+        let newFormat: string | null = null;
+
+        // Apply each operation in order
+        for (const operation of operations) {
+            switch (operation.type) {
+                case "resize": {
+                    const { width, height, fit } = operation.config;
+                    if (width || height) {
+                        buffer = Buffer.from(
+                            await this.imageService.resize(buffer, {
+                                width,
+                                height,
+                                fit: fit || "inside",
+                                withoutEnlargement: true,
+                            }),
+                        );
+                    }
+                    break;
+                }
+
+                case "compress": {
+                    const { quality } = operation.config;
+                    buffer = Buffer.from(
+                        await this.imageService.compress(buffer, {
+                            quality: quality || 85,
+                        }),
+                    );
+                    break;
+                }
+
+                case "convertFormat": {
+                    const { format, quality } = operation.config;
+                    buffer = Buffer.from(
+                        await this.imageService.convertFormat(buffer, format, {
+                            quality: quality || 85,
+                        }),
+                    );
+                    currentMimeType = `image/${format}`;
+                    newFormat = format;
+                    break;
+                }
+
+                default:
+                    console.warn(
+                        `Unknown post-processing operation: ${(operation as any).type}`,
+                    );
+            }
+        }
+
+        // Get final metadata
+        const finalMetadata = await this.imageService.getMetadata(buffer);
+
+        // Determine if we need a new storage key (format changed)
+        let finalStorageKey = storageKey;
+        let newFilename: string | undefined;
+
+        if (newFormat) {
+            // Replace the extension in the storage key
+            const oldExtension = path.extname(storageKey);
+            const newExtension = `.${newFormat === "jpeg" ? "jpg" : newFormat}`;
+
+            if (oldExtension.toLowerCase() !== newExtension.toLowerCase()) {
+                finalStorageKey = storageKey.replace(
+                    new RegExp(`${oldExtension.replace(".", "\\.")}$`, "i"),
+                    newExtension,
+                );
+                newFilename = path.basename(finalStorageKey);
+
+                // Upload to new key
+                await this.uploadToS3(buffer, finalStorageKey, currentMimeType);
+
+                // Delete the old file
+                try {
+                    await this.deleteFromS3(storageKey);
+                } catch (error) {
+                    console.warn(
+                        `Failed to delete old file after format conversion: ${storageKey}`,
+                        error,
+                    );
+                }
+
+                return {
+                    fileSize: buffer.length,
+                    width: finalMetadata.width,
+                    height: finalMetadata.height,
+                    newStorageKey: finalStorageKey,
+                    newMimeType: currentMimeType,
+                    newFilename,
+                };
+            }
+        }
+
+        // Upload the processed file back to S3 (same key)
+        await this.uploadToS3(buffer, storageKey, currentMimeType);
+
+        return {
+            fileSize: buffer.length,
+            width: finalMetadata.width,
+            height: finalMetadata.height,
+        };
     }
 
     /**

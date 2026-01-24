@@ -26,6 +26,9 @@ import {
     Tab,
     Snackbar,
     Tooltip,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
 } from "@mui/material";
 import {
     Upload,
@@ -36,8 +39,11 @@ import {
     Close,
     Add,
     DeleteOutline,
+    ExpandMore,
 } from "@mui/icons-material";
 import { formatFileSize, getAcceptedFileTypes } from "./utils";
+import { PostProcessingBuilder } from "./PostProcessingBuilder";
+import type { PostProcessingOperation } from "./types";
 
 export interface FileWithOptions {
     file: File;
@@ -63,6 +69,7 @@ export interface UploadOptions {
     folder?: string;
     tags?: string[];
     generateVariants?: boolean;
+    postProcessings?: PostProcessingOperation[];
 }
 
 interface FileUploadConfig {
@@ -149,6 +156,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         folder: "",
                         tags: [],
                         generateVariants: file.type.startsWith("image/"),
+                        postProcessings: [],
                     },
                 });
             });
@@ -232,10 +240,10 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         folder: currentFormData.folder || undefined,
                         tags:
                             currentFormData.tags &&
-                            currentFormData.tags.length > 0
+                                currentFormData.tags.length > 0
                                 ? currentFormData.tags.filter(
-                                      (t): t is string => Boolean(t),
-                                  )
+                                    (t): t is string => Boolean(t),
+                                )
                                 : undefined,
                         generateVariants: currentFormData.generateVariants,
                     };
@@ -290,10 +298,10 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         folder: currentFormData.folder || undefined,
                         tags:
                             currentFormData.tags &&
-                            currentFormData.tags.length > 0
+                                currentFormData.tags.length > 0
                                 ? currentFormData.tags.filter(
-                                      (t): t is string => Boolean(t),
-                                  )
+                                    (t): t is string => Boolean(t),
+                                )
                                 : undefined,
                         generateVariants: currentFormData.generateVariants,
                     };
@@ -395,8 +403,8 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         tags:
                             formData.tags && formData.tags.length > 0
                                 ? formData.tags.filter((t): t is string =>
-                                      Boolean(t),
-                                  )
+                                    Boolean(t),
+                                )
                                 : undefined,
                         generateVariants: formData.generateVariants,
                     };
@@ -424,8 +432,8 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                     tags:
                         currentFormData.tags && currentFormData.tags.length > 0
                             ? currentFormData.tags.filter((t): t is string =>
-                                  Boolean(t),
-                              )
+                                Boolean(t),
+                            )
                             : undefined,
                     generateVariants: currentFormData.generateVariants,
                 };
@@ -470,6 +478,9 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         ? data.tags.filter((t): t is string => Boolean(t))
                         : undefined,
                 generateVariants: data.generateVariants,
+                // Preserve postProcessings from the config (managed by PostProcessingBuilder)
+                postProcessings:
+                    updatedConfigs[currentTab].options.postProcessings,
             };
         }
 
@@ -645,7 +656,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         {currentFile && (
                             <Card variant="outlined">
                                 {currentPreview &&
-                                (isCurrentFileImage || isCurrentFileVideo) ? (
+                                    (isCurrentFileImage || isCurrentFileVideo) ? (
                                     <Box
                                         sx={{
                                             position: "relative",
@@ -881,6 +892,71 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                         </Box>
                                     }
                                 />
+                            )}
+
+                            {/* Post-Upload Processing (for images) */}
+                            {isCurrentFileImage && (
+                                <Accordion
+                                    disableGutters
+                                    elevation={0}
+                                    sx={{
+                                        border: 1,
+                                        borderColor: "divider",
+                                        borderRadius: 1,
+                                        "&:before": { display: "none" },
+                                    }}
+                                >
+                                    <AccordionSummary
+                                        expandIcon={<ExpandMore />}
+                                        sx={{
+                                            minHeight: 48,
+                                            "& .MuiAccordionSummary-content": {
+                                                my: 0,
+                                            },
+                                        }}
+                                    >
+                                        <Stack
+                                            direction="row"
+                                            alignItems="center"
+                                            spacing={1}
+                                        >
+                                            <Typography variant="body2">
+                                                Post-Upload Processing
+                                            </Typography>
+                                            {fileConfigs[currentTab]?.options
+                                                .postProcessings &&
+                                                fileConfigs[currentTab].options
+                                                    .postProcessings!.length >
+                                                0 && (
+                                                    <Chip
+                                                        label={`${fileConfigs[currentTab].options.postProcessings!.length} step${fileConfigs[currentTab].options.postProcessings!.length > 1 ? "s" : ""}`}
+                                                        size="small"
+                                                        color="primary"
+                                                    />
+                                                )}
+                                        </Stack>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <PostProcessingBuilder
+                                            operations={
+                                                fileConfigs[currentTab]?.options
+                                                    .postProcessings || []
+                                            }
+                                            onChange={(operations) => {
+                                                setFileConfigs((prev) => {
+                                                    const updated = [...prev];
+                                                    if (updated[currentTab]) {
+                                                        updated[
+                                                            currentTab
+                                                        ].options.postProcessings =
+                                                            operations;
+                                                    }
+                                                    return updated;
+                                                });
+                                            }}
+                                        />
+                                    </AccordionDetails>
+                                </Accordion>
                             )}
                         </Stack>
 

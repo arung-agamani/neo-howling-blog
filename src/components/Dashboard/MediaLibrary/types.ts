@@ -170,9 +170,51 @@ export interface InitiateUploadResponse {
     };
 }
 
+// Post-processing operation types (gadgets)
+export type PostProcessingType = "resize" | "compress" | "convertFormat";
+
+// Base interface for post-processing operations
+export interface BasePostProcessingOperation {
+    type: PostProcessingType;
+}
+
+// Resize operation config
+export interface ResizeOperation extends BasePostProcessingOperation {
+    type: "resize";
+    config: {
+        width?: number;
+        height?: number;
+        fit?: "cover" | "contain" | "fill" | "inside" | "outside";
+    };
+}
+
+// Compress operation config
+export interface CompressOperation extends BasePostProcessingOperation {
+    type: "compress";
+    config: {
+        quality?: number; // 1-100
+    };
+}
+
+// Convert format operation config
+export interface ConvertFormatOperation extends BasePostProcessingOperation {
+    type: "convertFormat";
+    config: {
+        format: "jpeg" | "png" | "webp" | "avif";
+        quality?: number; // 1-100
+    };
+}
+
+// Union type for all post-processing operations
+export type PostProcessingOperation =
+    | ResizeOperation
+    | CompressOperation
+    | ConvertFormatOperation;
+
 // Parameters for processing upload
 export interface ProcessUploadParams {
     generateVariants?: boolean;
+    postProcessings?: PostProcessingOperation[];
 }
 
 // Response from processing upload

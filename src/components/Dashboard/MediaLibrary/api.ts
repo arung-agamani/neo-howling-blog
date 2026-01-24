@@ -16,6 +16,7 @@ import type {
     InitiateUploadResponse,
     ProcessUploadParams,
     ProcessUploadResponse,
+    PostProcessingOperation,
 } from "./types";
 import {
     rewriteMediaItemToCDN,
@@ -173,9 +174,11 @@ export async function uploadMedia(params: {
     tags?: string[];
     metadata?: Record<string, any>;
     generateVariants?: boolean;
+    postProcessings?: PostProcessingOperation[];
     onProgress?: (progress: number) => void;
 }): Promise<{ success: boolean; message: string; data: MediaItem }> {
-    const { file, generateVariants, onProgress, ...metadata } = params;
+    const { file, generateVariants, postProcessings, onProgress, ...metadata } =
+        params;
 
     // Step 1: Initiate upload to get presigned URL
     const initiateResponse = await initiateUpload({
@@ -197,9 +200,10 @@ export async function uploadMedia(params: {
         // Step 2: Upload file directly to S3
         await uploadToPresignedUrl(uploadUrl, file, onProgress);
 
-        // Step 3: Process the uploaded asset
+        // Step 3: Process the uploaded asset (with optional post-processing)
         const processResponse = await processUpload(assetId, {
             generateVariants,
+            postProcessings,
         });
 
         return {

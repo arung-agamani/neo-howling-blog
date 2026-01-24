@@ -10,9 +10,43 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { FlattenErrors } from "@/lib/ZodError";
 
+// Post-processing operation schemas
+const ResizeOperationSchema = z.object({
+    type: z.literal("resize"),
+    config: z.object({
+        width: z.number().positive().optional(),
+        height: z.number().positive().optional(),
+        fit: z
+            .enum(["cover", "contain", "fill", "inside", "outside"])
+            .optional(),
+    }),
+});
+
+const CompressOperationSchema = z.object({
+    type: z.literal("compress"),
+    config: z.object({
+        quality: z.number().min(1).max(100).optional(),
+    }),
+});
+
+const ConvertFormatOperationSchema = z.object({
+    type: z.literal("convertFormat"),
+    config: z.object({
+        format: z.enum(["jpeg", "png", "webp", "avif"]),
+        quality: z.number().min(1).max(100).optional(),
+    }),
+});
+
+const PostProcessingOperationSchema = z.discriminatedUnion("type", [
+    ResizeOperationSchema,
+    CompressOperationSchema,
+    ConvertFormatOperationSchema,
+]);
+
 // Validation schema for process request
 const ProcessUploadSchema = z.object({
     generateVariants: z.boolean().optional().default(false),
+    postProcessings: z.array(PostProcessingOperationSchema).optional(),
 });
 
 // POST /api/v1/media/[id]/process - Process an uploaded asset
@@ -38,11 +72,12 @@ export async function POST(
             });
         }
 
-        const { generateVariants } = parseResult.data;
+        const { generateVariants, postProcessings } = parseResult.data;
 
         // Process the uploaded asset
         const asset = await assetService.processUpload(params.id, {
             generateVariants,
+            postProcessings,
         });
 
         if (!asset) {
