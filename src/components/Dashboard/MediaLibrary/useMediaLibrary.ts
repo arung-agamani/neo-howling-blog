@@ -293,6 +293,7 @@ export function useMediaLibrary(
     );
 
     // File upload handler with individual file options
+    // Uses presigned URL flow: initiate -> upload to S3 -> process
     const handleFileUpload = useCallback(
         async (filesWithOptions: FileWithOptions[]) => {
             if (!filesWithOptions || filesWithOptions.length === 0) return;
@@ -312,8 +313,8 @@ export function useMediaLibrary(
             for (let i = 0; i < filesWithOptions.length; i++) {
                 const { file, options } = filesWithOptions[i];
 
-                // Validate file size
-                const validationError = getFileValidationError(file, 50);
+                // Validate file size (increased limit to 500MB for presigned uploads)
+                const validationError = getFileValidationError(file, 500);
                 if (validationError) {
                     uploadResults.push({
                         success: false,
@@ -324,10 +325,21 @@ export function useMediaLibrary(
                 }
 
                 try {
-                    // Upload with individual file options
+                    // Upload with individual file options using presigned URL flow
+                    // The uploadMedia function now handles the 3-step process:
+                    // 1. Initiate upload (get presigned URL)
+                    // 2. Upload to S3 directly
+                    // 3. Process the uploaded asset
                     await uploadMedia({
                         file,
                         ...options,
+                        onProgress: (progress) => {
+                            setUploadProgress((prev) => {
+                                const newProgress = [...prev];
+                                newProgress[i] = progress;
+                                return newProgress;
+                            });
+                        },
                     });
 
                     uploadResults.push({
@@ -335,7 +347,7 @@ export function useMediaLibrary(
                         filename: file.name,
                     });
 
-                    // Update progress
+                    // Ensure progress shows 100% on completion
                     setUploadProgress((prev) => {
                         const newProgress = [...prev];
                         newProgress[i] = 100;

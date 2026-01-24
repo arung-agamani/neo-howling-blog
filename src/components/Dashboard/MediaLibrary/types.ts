@@ -49,6 +49,8 @@ export interface MediaItem {
     uploadedAt: string;
     updatedAt: string;
     deletedAt?: number; // Unix timestamp (-1 = not deleted)
+    uploadStatus?: UploadStatus; // Status of the upload process
+    statusMessage?: string; // Error message or status details
 }
 
 export type MediaType =
@@ -132,6 +134,52 @@ export interface MediaUploadParams {
     tags?: string[];
     metadata?: Record<string, any>;
     generateVariants?: boolean;
+}
+
+// Upload status enum matching Prisma schema
+export type UploadStatus =
+    | "Pending"
+    | "Uploaded"
+    | "Processing"
+    | "Completed"
+    | "Failed";
+
+// Parameters for initiating presigned URL upload
+export interface InitiateUploadParams {
+    filename: string;
+    mimeType: string;
+    fileSize: number;
+    title?: string;
+    altText?: string;
+    caption?: string;
+    description?: string;
+    folder?: string;
+    tags?: string[];
+    metadata?: Record<string, any>;
+}
+
+// Response from initiating upload
+export interface InitiateUploadResponse {
+    success: boolean;
+    message: string;
+    data: {
+        assetId: string;
+        uploadUrl: string;
+        storageKey: string;
+        expiresAt: string;
+    };
+}
+
+// Parameters for processing upload
+export interface ProcessUploadParams {
+    generateVariants?: boolean;
+}
+
+// Response from processing upload
+export interface ProcessUploadResponse {
+    success: boolean;
+    message: string;
+    data: MediaItem;
 }
 
 export interface MediaUpdateParams {

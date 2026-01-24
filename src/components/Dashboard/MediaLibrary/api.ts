@@ -12,6 +12,10 @@ import type {
     ImageFormat,
     CropCoordinates,
     ImageTransforms,
+    InitiateUploadParams,
+    InitiateUploadResponse,
+    ProcessUploadParams,
+    ProcessUploadResponse,
 } from "./types";
 import {
     rewriteMediaItemToCDN,
@@ -75,7 +79,89 @@ export async function listMedia(
 }
 
 /**
- * Upload a new media file
+ * Step 1: Initiate upload - get presigned URL and asset ID
+ */
+export async function initiateUpload(
+    params: InitiateUploadParams,
+): Promise<InitiateUploadResponse> {
+    return apiFetch<InitiateUploadResponse>(`${API_BASE}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(params),
+    });
+}
+
+/**
+ * Step 2: Upload file directly to S3 using presigned URL
+ */
+export async function uploadToPresignedUrl(
+    uploadUrl: string,
+    file: File,
+    onProgress?: (progress: number) => void,
+): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener("progress", (event) => {
+            if (event.lengthComputable && onProgress) {
+                const progress = Math.round((event.loaded / event.total) * 100);
+                onProgress(progress);
+            }
+        });
+
+        xhr.addEventListener("load", () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve();
+            } else {
+                reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+        });
+
+        xhr.addEventListener("error", () => {
+            reject(new Error("Upload failed due to network error"));
+        });
+
+        xhr.addEventListener("abort", () => {
+            reject(new Error("Upload was aborted"));
+        });
+
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
+    });
+}
+
+/**
+ * Step 3: Process the uploaded asset (extract metadata, generate variants)
+ */
+export async function processUpload(
+    assetId: string,
+    params: ProcessUploadParams = {},
+): Promise<ProcessUploadResponse> {
+    const response = await apiFetch<ProcessUploadResponse>(
+        `${API_BASE}/${assetId}/process`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(params),
+        },
+    );
+
+    // Rewrite URLs to use CDN
+    const cdnConfig = getCDNConfig();
+    return {
+        ...response,
+        data: rewriteMediaItemToCDN(response.data, cdnConfig),
+    };
+}
+
+/**
+ * Complete upload flow: initiate -> upload to S3 -> process
+ * This is the main function for uploading media with the new presigned URL flow
  */
 export async function uploadMedia(params: {
     file: File;
@@ -87,36 +173,45 @@ export async function uploadMedia(params: {
     tags?: string[];
     metadata?: Record<string, any>;
     generateVariants?: boolean;
+    onProgress?: (progress: number) => void;
 }): Promise<{ success: boolean; message: string; data: MediaItem }> {
-    const formData = new FormData();
-    formData.append("file", params.file);
+    const { file, generateVariants, onProgress, ...metadata } = params;
 
-    if (params.title) formData.append("title", params.title);
-    if (params.altText) formData.append("altText", params.altText);
-    if (params.caption) formData.append("caption", params.caption);
-    if (params.description) formData.append("description", params.description);
-    if (params.folder) formData.append("folder", params.folder);
-    if (params.tags) formData.append("tags", JSON.stringify(params.tags));
-    if (params.metadata)
-        formData.append("metadata", JSON.stringify(params.metadata));
-    if (params.generateVariants)
-        formData.append("generateVariants", params.generateVariants.toString());
-
-    const response = await apiFetch<{
-        success: boolean;
-        message: string;
-        data: MediaItem;
-    }>(`${API_BASE}`, {
-        method: "POST",
-        body: formData,
+    // Step 1: Initiate upload to get presigned URL
+    const initiateResponse = await initiateUpload({
+        filename: file.name,
+        mimeType: file.type,
+        fileSize: file.size,
+        ...metadata,
     });
 
-    // Rewrite URLs to use CDN
-    const cdnConfig = getCDNConfig();
-    return {
-        ...response,
-        data: rewriteMediaItemToCDN(response.data, cdnConfig),
-    };
+    if (!initiateResponse.success) {
+        throw new Error(
+            initiateResponse.message || "Failed to initiate upload",
+        );
+    }
+
+    const { assetId, uploadUrl } = initiateResponse.data;
+
+    try {
+        // Step 2: Upload file directly to S3
+        await uploadToPresignedUrl(uploadUrl, file, onProgress);
+
+        // Step 3: Process the uploaded asset
+        const processResponse = await processUpload(assetId, {
+            generateVariants,
+        });
+
+        return {
+            success: true,
+            message: "Media uploaded successfully",
+            data: processResponse.data,
+        };
+    } catch (error) {
+        // If upload or processing fails, the asset record may need cleanup
+        // The backend will mark it as failed, and it can be cleaned up later
+        throw error;
+    }
 }
 
 /**

@@ -29,10 +29,14 @@ const ListMediaQuerySchema = z.object({
     includeDeleted: z.coerce.boolean().optional().default(false),
 });
 
-const UploadMediaSchema = z.object({
+// Schema for initiating presigned URL upload
+const InitiateUploadSchema = z.object({
     filename: z.string().min(1),
     mimeType: z.string().min(1),
-    fileSize: z.number().positive(),
+    fileSize: z
+        .number()
+        .positive()
+        .max(500 * 1024 * 1024), // Max 500MB
     title: z.string().optional(),
     altText: z.string().optional(),
     caption: z.string().optional(),
@@ -40,7 +44,6 @@ const UploadMediaSchema = z.object({
     folder: z.string().optional(),
     tags: z.array(z.string()).optional(),
     metadata: z.record(z.string(), z.any()).optional(),
-    generateVariants: z.boolean().optional().default(false),
 });
 
 // GET /api/v1/media - List media with filtering and pagination
@@ -101,7 +104,8 @@ export async function GET(req: NextRequest) {
     }
 }
 
-// POST /api/v1/media - Upload media with metadata
+// POST /api/v1/media - Initiate presigned URL upload
+// Returns asset ID and presigned URL for direct upload to S3
 export async function POST(req: NextRequest) {
     if (!(await verifyRole(req, ["admin", "editor"]))) {
         return Unauthorized();
@@ -116,20 +120,25 @@ export async function POST(req: NextRequest) {
             return Unauthorized({ message: "User ID not found in token" });
         }
 
-        const formData = await req.formData();
-        const file = formData.get("file") as File | null;
+        const body = await req.json();
 
-        if (!file) {
-            return BadRequest({ message: "No file provided" });
+        // Parse and validate request body
+        const parseResult = InitiateUploadSchema.safeParse(body);
+
+        if (!parseResult.success) {
+            return BadRequest({
+                message: "Invalid upload parameters",
+                errors: FlattenErrors(parseResult.error),
+            });
         }
 
-        // Convert file to buffer
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
-        // Parse metadata from form data
-        const title = formData.get("title")?.toString();
-        const originalFilename = file.name;
+        const {
+            filename: originalFilename,
+            mimeType,
+            fileSize,
+            title,
+            ...rest
+        } = parseResult.data;
 
         // Generate filename with timestamp prefix and title-based name
         const timestamp = Date.now();
@@ -143,7 +152,7 @@ export async function POST(req: NextRequest) {
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, "-")
                 .replace(/^-+|-+$/g, "")
-                .substring(0, 50); // Limit length
+                .substring(0, 50);
         };
 
         // Use title if provided, otherwise use original filename
@@ -157,60 +166,36 @@ export async function POST(req: NextRequest) {
         // Construct new filename: timestamp-basename.ext
         const newFilename = `${timestamp}-${baseFilename}${fileExtension}`;
 
-        const metadata = {
+        // Initiate the upload - creates pending asset and returns presigned URL
+        const result = await assetService.initiateUpload({
             filename: newFilename,
-            mimeType: file.type,
-            fileSize: file.size,
-            title: title,
-            altText: formData.get("altText")?.toString(),
-            caption: formData.get("caption")?.toString(),
-            description: formData.get("description")?.toString(),
-            folder: formData.get("folder")?.toString(),
-            tags: formData.get("tags")
-                ? JSON.parse(formData.get("tags") as string)
-                : undefined,
-            metadata: formData.get("metadata")
-                ? JSON.parse(formData.get("metadata") as string)
-                : undefined,
-            generateVariants: formData.get("generateVariants") === "true",
-        };
-
-        const parseResult = UploadMediaSchema.safeParse(metadata);
-
-        if (!parseResult.success) {
-            return BadRequest({
-                message: "Invalid upload parameters",
-                errors: FlattenErrors(parseResult.error),
-            });
-        }
-
-        const { filename, mimeType, generateVariants, ...uploadParams } =
-            parseResult.data;
-
-        const asset = await assetService.uploadAsset({
-            file: buffer,
-            filename,
             mimeType,
+            fileSize,
             uploaderId: token.sub,
-            generateVariants,
-            ...uploadParams,
+            title,
+            ...rest,
         });
 
         return NextResponse.json(
             {
                 success: true,
-                message: "Media uploaded successfully",
-                data: asset,
+                message: "Upload initiated successfully",
+                data: {
+                    assetId: result.assetId,
+                    uploadUrl: result.uploadUrl,
+                    storageKey: result.storageKey,
+                    expiresAt: result.expiresAt.toISOString(),
+                },
             },
             { status: 201 },
         );
     } catch (error) {
-        console.error("Error uploading media:", error);
+        console.error("Error initiating upload:", error);
         return InternalServerError({
             message:
                 error instanceof Error
                     ? error.message
-                    : "Failed to upload media",
+                    : "Failed to initiate upload",
         });
     }
 }

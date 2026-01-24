@@ -6,6 +6,7 @@ import {
     PrismaClient,
     AssetType,
     RemoteLocation,
+    UploadStatus,
     Prisma,
 } from "@prisma/client";
 import prisma from "@/utils/prisma";
@@ -120,6 +121,34 @@ export interface AssetFilters {
     uploaderId?: string;
     folder?: string;
     deletedAt?: number | { not: number };
+}
+
+// Parameters for initiating a presigned URL upload
+export interface InitiateUploadParams {
+    filename: string;
+    mimeType: string;
+    fileSize: number;
+    uploaderId: string;
+    title?: string;
+    altText?: string;
+    caption?: string;
+    description?: string;
+    folder?: string;
+    tags?: string[];
+    metadata?: Record<string, any>;
+}
+
+// Response from initiating upload
+export interface InitiateUploadResponse {
+    assetId: string;
+    uploadUrl: string;
+    storageKey: string;
+    expiresAt: Date;
+}
+
+// Parameters for processing an uploaded asset
+export interface ProcessUploadParams {
+    generateVariants?: boolean;
 }
 
 // Image dimension presets similar to WordPress
@@ -491,6 +520,307 @@ export class AssetService {
             key: storagePath,
             url: this.generateAssetUrl(storagePath),
         };
+    }
+
+    /**
+     * Initiate a presigned URL upload flow
+     * Creates a pending asset record and returns the presigned URL for direct upload
+     */
+    async initiateUpload(
+        params: InitiateUploadParams,
+    ): Promise<InitiateUploadResponse> {
+        const {
+            filename,
+            mimeType,
+            fileSize,
+            uploaderId,
+            title,
+            altText,
+            caption,
+            description,
+            folder,
+            tags,
+            metadata,
+        } = params;
+
+        // Generate unique slug
+        const slug = await this.generateUniqueSlug(filename);
+
+        // Generate storage path
+        const storagePath = this.generateStoragePath(filename, folder);
+
+        // Generate URL
+        const url = this.generateAssetUrl(storagePath);
+
+        // Determine asset type from MIME type
+        const assetType = this.getAssetTypeFromMime(mimeType);
+
+        // Create pending asset record
+        const asset = await this.db.assets.create({
+            data: {
+                filename,
+                title: title || path.parse(filename).name,
+                slug,
+                path: storagePath,
+                url,
+                mimeType,
+                fileSize,
+                type: assetType,
+                altText,
+                caption,
+                description,
+                remoteLocation: RemoteLocation.S3,
+                bucketName: this.bucketName,
+                storageKey: storagePath,
+                folder:
+                    folder ||
+                    `${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, "0")}`,
+                tags: tags || [],
+                uploaderId,
+                metadata: metadata || {},
+                usageCount: 0,
+                uploadStatus: UploadStatus.Pending,
+            },
+        });
+
+        // Generate presigned URL with 10 minute expiration
+        const expiresIn = 600;
+        const command = new PutObjectCommand({
+            Bucket: this.bucketName,
+            Key: storagePath,
+            ContentType: mimeType,
+            ContentLength: fileSize,
+        });
+
+        const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn });
+
+        return {
+            assetId: asset.id,
+            uploadUrl,
+            storageKey: storagePath,
+            expiresAt: new Date(Date.now() + expiresIn * 1000),
+        };
+    }
+
+    /**
+     * Process an uploaded asset (after file has been uploaded via presigned URL)
+     * Extracts metadata, generates variants if requested
+     */
+    async processUpload(assetId: string, params: ProcessUploadParams = {}) {
+        const { generateVariants = false } = params;
+
+        // Get the asset
+        const asset = await this.db.assets.findUnique({
+            where: { id: assetId },
+            include: {
+                uploader: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+                variants: true,
+            },
+        });
+
+        if (!asset) {
+            throw new Error("Asset not found");
+        }
+
+        // Verify upload status
+        if (
+            asset.uploadStatus !== UploadStatus.Pending &&
+            asset.uploadStatus !== UploadStatus.Uploaded
+        ) {
+            if (asset.uploadStatus === UploadStatus.Completed) {
+                // Already processed, just return the asset
+                return asset;
+            }
+            throw new Error(`Invalid asset status: ${asset.uploadStatus}`);
+        }
+
+        // Update status to processing
+        await this.db.assets.update({
+            where: { id: assetId },
+            data: { uploadStatus: UploadStatus.Processing },
+        });
+
+        try {
+            // Verify file exists in S3
+            const headCommand = new HeadObjectCommand({
+                Bucket: this.bucketName,
+                Key: asset.storageKey!,
+            });
+
+            let actualFileSize: number;
+            try {
+                const headResponse = await s3Client.send(headCommand);
+                actualFileSize = headResponse.ContentLength || asset.fileSize;
+            } catch (error) {
+                // File doesn't exist in S3
+                await this.db.assets.update({
+                    where: { id: assetId },
+                    data: {
+                        uploadStatus: UploadStatus.Failed,
+                        statusMessage:
+                            "File not found in storage. Upload may have failed.",
+                    },
+                });
+                throw new Error(
+                    "File not found in storage. Upload may have failed.",
+                );
+            }
+
+            // Extract metadata for images
+            let width: number | undefined;
+            let height: number | undefined;
+            let extractedMetadata: Record<string, any> =
+                (asset.metadata as Record<string, any>) || {};
+
+            if (asset.type === AssetType.Image) {
+                try {
+                    // Download file for metadata extraction
+                    const getCommand = new GetObjectCommand({
+                        Bucket: this.bucketName,
+                        Key: asset.storageKey!,
+                    });
+
+                    const response = await s3Client.send(getCommand);
+                    const arrayBuffer =
+                        await response.Body?.transformToByteArray();
+
+                    if (arrayBuffer) {
+                        const buffer = Buffer.from(arrayBuffer);
+                        const imageMetadata =
+                            await this.imageService.getMetadata(buffer);
+                        width = imageMetadata.width;
+                        height = imageMetadata.height;
+
+                        extractedMetadata = {
+                            ...extractedMetadata,
+                            imageMetadata: {
+                                format: imageMetadata.format,
+                                space: imageMetadata.space,
+                                channels: imageMetadata.channels,
+                                hasAlpha: imageMetadata.hasAlpha,
+                                orientation: imageMetadata.orientation,
+                                isProgressive: imageMetadata.isProgressive,
+                            },
+                        };
+                    }
+                } catch (error) {
+                    console.error("Failed to extract image metadata:", error);
+                }
+            }
+
+            // Update asset with extracted metadata
+            const updatedAsset = await this.db.assets.update({
+                where: { id: assetId },
+                data: {
+                    fileSize: actualFileSize,
+                    width,
+                    height,
+                    metadata: extractedMetadata,
+                    uploadStatus: UploadStatus.Completed,
+                    statusMessage: null,
+                },
+                include: {
+                    uploader: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                        },
+                    },
+                    variants: true,
+                },
+            });
+
+            // Generate image variants if requested and it's an image
+            if (generateVariants && asset.type === AssetType.Image) {
+                await this.generateImageVariantsForAsset(assetId, updatedAsset);
+            }
+
+            // Fetch the final asset with variants
+            return await this.db.assets.findUnique({
+                where: { id: assetId },
+                include: {
+                    uploader: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                        },
+                    },
+                    variants: true,
+                },
+            });
+        } catch (error) {
+            // Update status to failed
+            await this.db.assets.update({
+                where: { id: assetId },
+                data: {
+                    uploadStatus: UploadStatus.Failed,
+                    statusMessage:
+                        error instanceof Error
+                            ? error.message
+                            : "Processing failed",
+                },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Cancel a pending upload (delete the pending asset record)
+     */
+    async cancelUpload(assetId: string) {
+        const asset = await this.db.assets.findUnique({
+            where: { id: assetId },
+        });
+
+        if (!asset) {
+            throw new Error("Asset not found");
+        }
+
+        if (asset.uploadStatus !== UploadStatus.Pending) {
+            throw new Error("Can only cancel pending uploads");
+        }
+
+        // Try to delete the file from S3 if it exists
+        try {
+            await this.deleteFromS3(asset.storageKey!);
+        } catch (error) {
+            // Ignore errors - file might not exist yet
+        }
+
+        // Delete the asset record
+        await this.db.assets.delete({
+            where: { id: assetId },
+        });
+    }
+
+    /**
+     * Mark upload as completed (called after frontend confirms upload to S3)
+     */
+    async markUploadComplete(assetId: string) {
+        const asset = await this.db.assets.findUnique({
+            where: { id: assetId },
+        });
+
+        if (!asset) {
+            throw new Error("Asset not found");
+        }
+
+        if (asset.uploadStatus !== UploadStatus.Pending) {
+            throw new Error("Asset is not in pending status");
+        }
+
+        return await this.db.assets.update({
+            where: { id: assetId },
+            data: { uploadStatus: UploadStatus.Uploaded },
+        });
     }
 
     /**

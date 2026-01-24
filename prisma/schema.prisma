@@ -137,6 +137,10 @@ model assets {
   bucketName     String? // S3 bucket, GCS bucket name
   storageKey     String? // Actual key/path in remote storage
 
+  // Upload status tracking (for presigned URL uploads)
+  uploadStatus UploadStatus @default(Completed)
+  statusMessage String?     // Error message or status details
+
   // Organization
   folder String? // Virtual folder path like "/images/2024/01"
   tags   String[] // Array of tags for searching
@@ -201,4 +205,13 @@ enum RemoteLocation {
   Local // Self-hosted
   S3
   Other
+}
+
+// Status for tracking asset upload progress (for presigned URL uploads)
+enum UploadStatus {
+  Pending // Presigned URL generated, waiting for upload
+  Uploaded // File uploaded to storage, waiting for processing
+  Processing // Asset is being processed (metadata extraction, variants)
+  Completed // Fully processed and ready to use
+  Failed // Upload or processing failed
 }
