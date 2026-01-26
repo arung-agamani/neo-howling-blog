@@ -8,7 +8,9 @@ export const usePostsQuery = () => {
         queryKey: ["posts"],
         queryFn: async () => {
             try {
-                const response = await axios.get("/api/v1/posts");
+                const response = await axios.get(
+                    "/api/v1/posts?includeDiary=true&pageSize=1000",
+                );
                 return response.data.data;
             } catch (error) {
                 console.error("Error fetching posts:", error);
