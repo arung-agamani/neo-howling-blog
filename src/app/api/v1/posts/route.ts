@@ -21,6 +21,9 @@ const CreatePostSchema = z.object({
     blogContent: z.string(),
 }) satisfies z.ZodType<CreatePostPayload>;
 
+// Diary tags - posts with ALL of these tags are considered diary entries
+const DIARY_TAGS = ["log", "diary", "nikki"];
+
 // GET /api/v1/posts (list all posts)
 export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
@@ -90,8 +93,41 @@ export async function GET(req: NextRequest) {
         });
     }
 
-    // default behavior: return all posts
+    // Pagination parameters
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const pageSize = Math.max(
+        1,
+        Math.min(100, parseInt(searchParams.get("pageSize") || "10", 10)),
+    );
+    const skip = (page - 1) * pageSize;
+
+    // Filter parameters
+    const includeDiary = searchParams.get("includeDiary") === "true";
+
+    // Build where clause
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: any = {};
+
+    // If includeDiary is false, exclude posts that have ALL diary tags
+    if (!includeDiary) {
+        // Exclude posts that have all of ['log', 'diary', 'nikki'] tags
+        whereClause.NOT = {
+            AND: DIARY_TAGS.map((tag) => ({
+                tags: { has: tag },
+            })),
+        };
+    }
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.posts.count({
+        where: whereClause,
+    });
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    // default behavior: return paginated posts
     const posts = await prisma.posts.findMany({
+        where: whereClause,
         select: {
             id: true,
             title: true,
@@ -109,8 +145,23 @@ export async function GET(req: NextRequest) {
         orderBy: {
             datePosted: "desc",
         },
+        skip,
+        take: pageSize,
     });
-    return NextResponse.json({ success: true, errors: [], data: posts });
+
+    return NextResponse.json({
+        success: true,
+        errors: [],
+        data: posts,
+        pagination: {
+            page,
+            pageSize,
+            totalCount,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+        },
+    });
 }
 
 // POST /api/v1/posts (create new post)
