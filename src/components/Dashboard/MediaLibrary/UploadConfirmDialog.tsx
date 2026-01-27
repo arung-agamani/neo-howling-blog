@@ -43,6 +43,7 @@ import {
 } from "@mui/icons-material";
 import { formatFileSize, getAcceptedFileTypes } from "./utils";
 import { PostProcessingBuilder } from "./PostProcessingBuilder";
+import { usePostProcessingPresets } from "./usePostProcessingPresets";
 import type { PostProcessingOperation } from "./types";
 
 export interface FileWithOptions {
@@ -103,6 +104,19 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
     const dialogRef = useRef<HTMLDivElement>(null);
     const previewUrlsRef = useRef<Set<string>>(new Set());
 
+    // Post-processing presets hook
+    const {
+        isAvailable: presetsAvailable,
+        isLoading: presetsLoading,
+        presetNames,
+        defaultPresetName,
+        getPreset,
+        getDefaultPresetOperations,
+        savePreset,
+        deletePreset,
+        setDefaultPreset,
+    } = usePostProcessingPresets();
+
     const {
         register,
         handleSubmit,
@@ -130,6 +144,11 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
             const previews: string[] = [];
             const configs: FileUploadConfig[] = [];
 
+            // Get default preset operations (if available and preset exists)
+            const defaultOperations = presetsAvailable
+                ? getDefaultPresetOperations()
+                : [];
+
             files.forEach((file) => {
                 // Generate preview URL for images and videos
                 if (
@@ -145,6 +164,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
 
                 // Initialize config for each file
                 const fileName = file.name.replace(/\.[^/.]+$/, "");
+                const isImage = file.type.startsWith("image/");
                 configs.push({
                     file,
                     preview: "",
@@ -155,8 +175,9 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         description: "",
                         folder: "",
                         tags: [],
-                        generateVariants: file.type.startsWith("image/"),
-                        postProcessings: [],
+                        generateVariants: isImage,
+                        // Pre-fill with default preset operations for images
+                        postProcessings: isImage ? [...defaultOperations] : [],
                     },
                 });
             });
@@ -193,7 +214,14 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
             setFileConfigs([]);
             setCurrentTab(0);
         }
-    }, [open, files, internalFiles.length, setValue]);
+    }, [
+        open,
+        files,
+        internalFiles.length,
+        setValue,
+        presetsAvailable,
+        getDefaultPresetOperations,
+    ]);
 
     // Cleanup all preview URLs on unmount
     useEffect(() => {
@@ -240,10 +268,10 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         folder: currentFormData.folder || undefined,
                         tags:
                             currentFormData.tags &&
-                                currentFormData.tags.length > 0
+                            currentFormData.tags.length > 0
                                 ? currentFormData.tags.filter(
-                                    (t): t is string => Boolean(t),
-                                )
+                                      (t): t is string => Boolean(t),
+                                  )
                                 : undefined,
                         generateVariants: currentFormData.generateVariants,
                     };
@@ -298,10 +326,10 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         folder: currentFormData.folder || undefined,
                         tags:
                             currentFormData.tags &&
-                                currentFormData.tags.length > 0
+                            currentFormData.tags.length > 0
                                 ? currentFormData.tags.filter(
-                                    (t): t is string => Boolean(t),
-                                )
+                                      (t): t is string => Boolean(t),
+                                  )
                                 : undefined,
                         generateVariants: currentFormData.generateVariants,
                     };
@@ -403,8 +431,8 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         tags:
                             formData.tags && formData.tags.length > 0
                                 ? formData.tags.filter((t): t is string =>
-                                    Boolean(t),
-                                )
+                                      Boolean(t),
+                                  )
                                 : undefined,
                         generateVariants: formData.generateVariants,
                     };
@@ -432,8 +460,8 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                     tags:
                         currentFormData.tags && currentFormData.tags.length > 0
                             ? currentFormData.tags.filter((t): t is string =>
-                                Boolean(t),
-                            )
+                                  Boolean(t),
+                              )
                             : undefined,
                     generateVariants: currentFormData.generateVariants,
                 };
@@ -656,7 +684,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         {currentFile && (
                             <Card variant="outlined">
                                 {currentPreview &&
-                                    (isCurrentFileImage || isCurrentFileVideo) ? (
+                                (isCurrentFileImage || isCurrentFileVideo) ? (
                                     <Box
                                         sx={{
                                             position: "relative",
@@ -927,7 +955,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                                 .postProcessings &&
                                                 fileConfigs[currentTab].options
                                                     .postProcessings!.length >
-                                                0 && (
+                                                    0 && (
                                                     <Chip
                                                         label={`${fileConfigs[currentTab].options.postProcessings!.length} step${fileConfigs[currentTab].options.postProcessings!.length > 1 ? "s" : ""}`}
                                                         size="small"
@@ -954,6 +982,19 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                                     return updated;
                                                 });
                                             }}
+                                            // Preset feature props
+                                            presetsAvailable={presetsAvailable}
+                                            presetsLoading={presetsLoading}
+                                            presetNames={presetNames}
+                                            defaultPresetName={
+                                                defaultPresetName
+                                            }
+                                            onGetPreset={getPreset}
+                                            onSavePreset={savePreset}
+                                            onDeletePreset={deletePreset}
+                                            onSetDefaultPreset={
+                                                setDefaultPreset
+                                            }
                                         />
                                     </AccordionDetails>
                                 </Accordion>

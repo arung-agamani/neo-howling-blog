@@ -341,3 +341,56 @@ export interface CropMediaResponse {
     message: string;
     data: MediaVariant;
 }
+
+// ============================================
+// Post Processing Presets Types
+// ============================================
+
+/**
+ * Single preset entry containing operations and metadata
+ */
+export interface PostProcessingPreset {
+    operations: PostProcessingOperation[];
+    description?: string;
+    createdAt: string; // ISO date string
+    updatedAt?: string; // ISO date string
+}
+
+/**
+ * The complete presets configuration stored in the config database
+ * Config key: "media.postProcessing.presets"
+ */
+export interface PostProcessingPresetsConfig {
+    /** Name of the default preset, or null if no default */
+    default: string | null;
+    /** Map of preset names to their configurations */
+    presets: Record<string, PostProcessingPreset>;
+}
+
+/**
+ * Config API response types
+ */
+export interface ConfigItem {
+    id: string;
+    key: string;
+    value: string;
+    description: string;
+}
+
+export interface ConfigApiResponse {
+    success: boolean;
+    message?: string;
+    data: ConfigItem;
+}
+
+export interface ConfigApiListResponse {
+    success: boolean;
+    count: number;
+    data: ConfigItem[];
+}
+
+/**
+ * Constant for the config key used to store post-processing presets
+ */
+export const POST_PROCESSING_PRESETS_CONFIG_KEY =
+    "media.postProcessing.presets";

@@ -19,6 +19,15 @@ import {
     Tooltip,
     Collapse,
     Alert,
+    Menu,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Divider,
+    ListItemIcon,
+    ListItemText,
+    CircularProgress,
 } from "@mui/material";
 import {
     Add,
@@ -31,6 +40,12 @@ import {
     ArrowDownward,
     ExpandMore,
     ExpandLess,
+    Save,
+    BookmarkBorder,
+    Bookmark,
+    DeleteOutline,
+    Star,
+    StarBorder,
 } from "@mui/icons-material";
 import type {
     PostProcessingOperation,
@@ -38,16 +53,37 @@ import type {
     ResizeOperation,
     CompressOperation,
     ConvertFormatOperation,
+    PostProcessingPreset,
 } from "./types";
 
-interface PostProcessingBuilderProps {
+export interface PostProcessingBuilderProps {
     operations: PostProcessingOperation[];
     onChange: (operations: PostProcessingOperation[]) => void;
     disabled?: boolean;
+    /** Whether presets feature is available */
+    presetsAvailable?: boolean;
+    /** Loading state for presets */
+    presetsLoading?: boolean;
+    /** List of available preset names */
+    presetNames?: string[];
+    /** Name of the default preset */
+    defaultPresetName?: string | null;
+    /** Get a preset by name */
+    onGetPreset?: (name: string) => PostProcessingPreset | null;
+    /** Save current operations as a preset */
+    onSavePreset?: (
+        name: string,
+        operations: PostProcessingOperation[],
+        description?: string,
+    ) => Promise<boolean>;
+    /** Delete a preset */
+    onDeletePreset?: (name: string) => Promise<boolean>;
+    /** Set a preset as default */
+    onSetDefaultPreset?: (name: string | null) => Promise<boolean>;
 }
 
 // Helper to create default operations
-const createDefaultOperation = (
+export const createDefaultOperation = (
     type: PostProcessingType,
 ): PostProcessingOperation => {
     switch (type) {
@@ -418,14 +454,333 @@ const ConvertFormatConfig: React.FC<{
     </Stack>
 );
 
+// Save Preset Dialog
+interface SavePresetDialogProps {
+    open: boolean;
+    onClose: () => void;
+    onSave: (name: string, description: string) => Promise<void>;
+    existingPresetNames: string[];
+    isSaving: boolean;
+}
+
+const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
+    open,
+    onClose,
+    onSave,
+    existingPresetNames,
+    isSaving,
+}) => {
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSave = async () => {
+        const trimmedName = name.trim();
+
+        if (!trimmedName) {
+            setError("Preset name is required");
+            return;
+        }
+
+        if (existingPresetNames.includes(trimmedName)) {
+            setError(
+                "A preset with this name already exists. It will be overwritten.",
+            );
+        }
+
+        await onSave(trimmedName, description.trim());
+        setName("");
+        setDescription("");
+        setError(null);
+    };
+
+    const handleClose = () => {
+        setName("");
+        setDescription("");
+        setError(null);
+        onClose();
+    };
+
+    const isOverwrite = existingPresetNames.includes(name.trim());
+
+    return (
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+            <DialogTitle>Save as Preset</DialogTitle>
+            <DialogContent>
+                <Stack spacing={2} sx={{ mt: 1 }}>
+                    <TextField
+                        label="Preset Name"
+                        value={name}
+                        onChange={(e) => {
+                            setName(e.target.value);
+                            setError(null);
+                        }}
+                        fullWidth
+                        autoFocus
+                        error={!!error && !isOverwrite}
+                        helperText={
+                            isOverwrite
+                                ? "This will overwrite the existing preset"
+                                : error
+                        }
+                        placeholder="e.g., Blog Images, Thumbnails"
+                    />
+                    <TextField
+                        label="Description (optional)"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        fullWidth
+                        multiline
+                        rows={2}
+                        placeholder="Brief description of what this preset does"
+                    />
+                </Stack>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose} disabled={isSaving}>
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleSave}
+                    variant="contained"
+                    disabled={!name.trim() || isSaving}
+                    startIcon={
+                        isSaving ? <CircularProgress size={16} /> : <Save />
+                    }
+                >
+                    {isOverwrite ? "Overwrite" : "Save"}
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
+// Manage Presets Dialog
+interface ManagePresetsDialogProps {
+    open: boolean;
+    onClose: () => void;
+    presetNames: string[];
+    defaultPresetName: string | null;
+    onGetPreset: (name: string) => PostProcessingPreset | null;
+    onDeletePreset: (name: string) => Promise<boolean>;
+    onSetDefaultPreset: (name: string | null) => Promise<boolean>;
+    onLoadPreset: (name: string) => void;
+}
+
+const ManagePresetsDialog: React.FC<ManagePresetsDialogProps> = ({
+    open,
+    onClose,
+    presetNames,
+    defaultPresetName,
+    onGetPreset,
+    onDeletePreset,
+    onSetDefaultPreset,
+    onLoadPreset,
+}) => {
+    const [processingPreset, setProcessingPreset] = useState<string | null>(
+        null,
+    );
+
+    const handleSetDefault = async (name: string) => {
+        setProcessingPreset(name);
+        const newDefault = defaultPresetName === name ? null : name;
+        await onSetDefaultPreset(newDefault);
+        setProcessingPreset(null);
+    };
+
+    const handleDelete = async (name: string) => {
+        if (!confirm(`Are you sure you want to delete the preset "${name}"?`)) {
+            return;
+        }
+        setProcessingPreset(name);
+        await onDeletePreset(name);
+        setProcessingPreset(null);
+    };
+
+    const handleLoad = (name: string) => {
+        onLoadPreset(name);
+        onClose();
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+            <DialogTitle>Manage Presets</DialogTitle>
+            <DialogContent>
+                {presetNames.length === 0 ? (
+                    <Typography
+                        color="text.secondary"
+                        sx={{ py: 2, textAlign: "center" }}
+                    >
+                        No presets saved yet. Create your first preset by
+                        configuring operations and clicking &quot;Save as
+                        Preset&quot;.
+                    </Typography>
+                ) : (
+                    <Stack spacing={1} sx={{ mt: 1 }}>
+                        {presetNames.map((name) => {
+                            const preset = onGetPreset(name);
+                            const isDefault = defaultPresetName === name;
+                            const isProcessing = processingPreset === name;
+
+                            return (
+                                <Card
+                                    key={name}
+                                    variant="outlined"
+                                    sx={{
+                                        bgcolor: isDefault
+                                            ? "action.selected"
+                                            : "background.paper",
+                                    }}
+                                >
+                                    <CardContent
+                                        sx={{
+                                            py: 1.5,
+                                            "&:last-child": { pb: 1.5 },
+                                        }}
+                                    >
+                                        <Stack
+                                            direction="row"
+                                            alignItems="center"
+                                            justifyContent="space-between"
+                                        >
+                                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                <Stack
+                                                    direction="row"
+                                                    alignItems="center"
+                                                    spacing={1}
+                                                >
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        noWrap
+                                                    >
+                                                        {name}
+                                                    </Typography>
+                                                    {isDefault && (
+                                                        <Chip
+                                                            label="Default"
+                                                            size="small"
+                                                            color="primary"
+                                                            icon={
+                                                                <Star fontSize="small" />
+                                                            }
+                                                        />
+                                                    )}
+                                                </Stack>
+                                                {preset?.description && (
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                        noWrap
+                                                    >
+                                                        {preset.description}
+                                                    </Typography>
+                                                )}
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                    display="block"
+                                                >
+                                                    {preset?.operations
+                                                        .length || 0}{" "}
+                                                    operation(s)
+                                                </Typography>
+                                            </Box>
+                                            <Stack
+                                                direction="row"
+                                                spacing={0.5}
+                                            >
+                                                <Tooltip
+                                                    title={
+                                                        isDefault
+                                                            ? "Unset as default"
+                                                            : "Set as default"
+                                                    }
+                                                >
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() =>
+                                                            handleSetDefault(
+                                                                name,
+                                                            )
+                                                        }
+                                                        disabled={isProcessing}
+                                                        color={
+                                                            isDefault
+                                                                ? "primary"
+                                                                : "default"
+                                                        }
+                                                    >
+                                                        {isProcessing ? (
+                                                            <CircularProgress
+                                                                size={16}
+                                                            />
+                                                        ) : isDefault ? (
+                                                            <Star fontSize="small" />
+                                                        ) : (
+                                                            <StarBorder fontSize="small" />
+                                                        )}
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Load preset">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() =>
+                                                            handleLoad(name)
+                                                        }
+                                                        disabled={isProcessing}
+                                                    >
+                                                        <BookmarkBorder fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Delete preset">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() =>
+                                                            handleDelete(name)
+                                                        }
+                                                        disabled={isProcessing}
+                                                        color="error"
+                                                    >
+                                                        <DeleteOutline fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Stack>
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </Stack>
+                )}
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Close</Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
 export const PostProcessingBuilder: React.FC<PostProcessingBuilderProps> = ({
     operations,
     onChange,
     disabled,
+    presetsAvailable = false,
+    presetsLoading = false,
+    presetNames = [],
+    defaultPresetName = null,
+    onGetPreset,
+    onSavePreset,
+    onDeletePreset,
+    onSetDefaultPreset,
 }) => {
     const [addMenuAnchor, setAddMenuAnchor] = useState<null | HTMLElement>(
         null,
     );
+    const [presetMenuAnchor, setPresetMenuAnchor] =
+        useState<null | HTMLElement>(null);
+    const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+    const [manageDialogOpen, setManageDialogOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleAddOperation = useCallback(
         (type: PostProcessingType) => {
@@ -478,25 +833,184 @@ export const PostProcessingBuilder: React.FC<PostProcessingBuilderProps> = ({
         [operations, onChange],
     );
 
+    const handleLoadPreset = useCallback(
+        (name: string) => {
+            if (!onGetPreset) return;
+            const preset = onGetPreset(name);
+            if (preset) {
+                onChange([...preset.operations]);
+            }
+            setPresetMenuAnchor(null);
+        },
+        [onGetPreset, onChange],
+    );
+
+    const handleSavePreset = useCallback(
+        async (name: string, description: string) => {
+            if (!onSavePreset) return;
+            setIsSaving(true);
+            const success = await onSavePreset(name, operations, description);
+            setIsSaving(false);
+            if (success) {
+                setSaveDialogOpen(false);
+            }
+        },
+        [onSavePreset, operations],
+    );
+
+    const handleClearOperations = useCallback(() => {
+        onChange([]);
+    }, [onChange]);
+
     return (
         <Box>
-            <Typography
-                variant="subtitle2"
-                sx={{ mb: 1, display: "flex", alignItems: "center", gap: 1 }}
+            {/* Header */}
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ mb: 1 }}
             >
-                Post-Upload Processing
-                {operations.length > 0 && (
-                    <Chip
-                        label={`${operations.length} step${operations.length > 1 ? "s" : ""}`}
-                        size="small"
-                        color="primary"
-                    />
-                )}
-            </Typography>
+                <Typography
+                    variant="subtitle2"
+                    sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
+                    Post-Upload Processing
+                    {operations.length > 0 && (
+                        <Chip
+                            label={`${operations.length} step${operations.length > 1 ? "s" : ""}`}
+                            size="small"
+                            color="primary"
+                        />
+                    )}
+                </Typography>
 
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: "block" }}>
+                {/* Presets dropdown - only shown if presets are available */}
+                {presetsAvailable && (
+                    <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="Load or manage presets">
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={(e) =>
+                                    setPresetMenuAnchor(e.currentTarget)
+                                }
+                                disabled={disabled || presetsLoading}
+                                startIcon={
+                                    presetsLoading ? (
+                                        <CircularProgress size={14} />
+                                    ) : (
+                                        <Bookmark fontSize="small" />
+                                    )
+                                }
+                                sx={{ minWidth: 0, px: 1 }}
+                            >
+                                Presets
+                            </Button>
+                        </Tooltip>
+
+                        {/* Presets Menu */}
+                        <Menu
+                            anchorEl={presetMenuAnchor}
+                            open={Boolean(presetMenuAnchor)}
+                            onClose={() => setPresetMenuAnchor(null)}
+                            anchorOrigin={{
+                                vertical: "bottom",
+                                horizontal: "right",
+                            }}
+                            transformOrigin={{
+                                vertical: "top",
+                                horizontal: "right",
+                            }}
+                        >
+                            {presetNames.length > 0 && (
+                                <>
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{
+                                            px: 2,
+                                            py: 0.5,
+                                            display: "block",
+                                        }}
+                                    >
+                                        Load Preset
+                                    </Typography>
+                                    {presetNames.map((name) => (
+                                        <MenuItem
+                                            key={name}
+                                            onClick={() =>
+                                                handleLoadPreset(name)
+                                            }
+                                        >
+                                            <ListItemIcon>
+                                                {defaultPresetName === name ? (
+                                                    <Star
+                                                        fontSize="small"
+                                                        color="primary"
+                                                    />
+                                                ) : (
+                                                    <BookmarkBorder fontSize="small" />
+                                                )}
+                                            </ListItemIcon>
+                                            <ListItemText
+                                                primary={name}
+                                                secondary={
+                                                    defaultPresetName === name
+                                                        ? "Default"
+                                                        : undefined
+                                                }
+                                            />
+                                        </MenuItem>
+                                    ))}
+                                    <Divider />
+                                </>
+                            )}
+                            <MenuItem
+                                onClick={() => {
+                                    setPresetMenuAnchor(null);
+                                    setSaveDialogOpen(true);
+                                }}
+                                disabled={operations.length === 0}
+                            >
+                                <ListItemIcon>
+                                    <Save fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText primary="Save as Preset" />
+                            </MenuItem>
+                            <MenuItem
+                                onClick={() => {
+                                    setPresetMenuAnchor(null);
+                                    setManageDialogOpen(true);
+                                }}
+                            >
+                                <ListItemIcon>
+                                    <Bookmark fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText primary="Manage Presets" />
+                            </MenuItem>
+                        </Menu>
+                    </Stack>
+                )}
+            </Stack>
+
+            <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mb: 2, display: "block" }}
+            >
                 Add processing steps to modify the original image after upload.
                 Operations are applied in order.
+                {presetsAvailable &&
+                    defaultPresetName &&
+                    presetNames.includes(defaultPresetName) && (
+                        <Chip
+                            label={`Default: ${defaultPresetName}`}
+                            size="small"
+                            sx={{ ml: 1 }}
+                            variant="outlined"
+                        />
+                    )}
             </Typography>
 
             {/* Operation list */}
@@ -519,7 +1033,13 @@ export const PostProcessingBuilder: React.FC<PostProcessingBuilderProps> = ({
             )}
 
             {/* Add operation buttons */}
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack
+                direction="row"
+                spacing={1}
+                flexWrap="wrap"
+                useFlexGap
+                alignItems="center"
+            >
                 <Button
                     size="small"
                     variant="outlined"
@@ -547,6 +1067,21 @@ export const PostProcessingBuilder: React.FC<PostProcessingBuilderProps> = ({
                 >
                     Convert
                 </Button>
+
+                {operations.length > 0 && (
+                    <>
+                        <Divider orientation="vertical" flexItem />
+                        <Button
+                            size="small"
+                            color="error"
+                            onClick={handleClearOperations}
+                            disabled={disabled}
+                            startIcon={<Delete />}
+                        >
+                            Clear All
+                        </Button>
+                    </>
+                )}
             </Stack>
 
             {operations.length === 0 && (
@@ -558,6 +1093,34 @@ export const PostProcessingBuilder: React.FC<PostProcessingBuilderProps> = ({
                     No processing steps added. The image will be uploaded as-is.
                 </Typography>
             )}
+
+            {/* Save Preset Dialog */}
+            {presetsAvailable && onSavePreset && (
+                <SavePresetDialog
+                    open={saveDialogOpen}
+                    onClose={() => setSaveDialogOpen(false)}
+                    onSave={handleSavePreset}
+                    existingPresetNames={presetNames}
+                    isSaving={isSaving}
+                />
+            )}
+
+            {/* Manage Presets Dialog */}
+            {presetsAvailable &&
+                onGetPreset &&
+                onDeletePreset &&
+                onSetDefaultPreset && (
+                    <ManagePresetsDialog
+                        open={manageDialogOpen}
+                        onClose={() => setManageDialogOpen(false)}
+                        presetNames={presetNames}
+                        defaultPresetName={defaultPresetName}
+                        onGetPreset={onGetPreset}
+                        onDeletePreset={onDeletePreset}
+                        onSetDefaultPreset={onSetDefaultPreset}
+                        onLoadPreset={handleLoadPreset}
+                    />
+                )}
         </Box>
     );
 };
