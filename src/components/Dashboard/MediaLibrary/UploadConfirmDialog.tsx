@@ -133,7 +133,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
             description: "",
             folder: "",
             tags: [],
-            generateVariants: true,
+            generateVariants: false,
         },
     });
 
@@ -175,7 +175,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         description: "",
                         folder: "",
                         tags: [],
-                        generateVariants: isImage,
+                        generateVariants: false,
                         // Pre-fill with default preset operations for images
                         postProcessings: isImage ? [...defaultOperations] : [],
                     },
@@ -261,6 +261,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                 const updated = [...prev];
                 if (updated[currentTab]) {
                     updated[currentTab].options = {
+                        ...updated[currentTab].options,
                         title: currentFormData.title || undefined,
                         altText: currentFormData.altText || undefined,
                         caption: currentFormData.caption || undefined,
@@ -290,7 +291,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                             description: "",
                             folder: currentFormData.folder || "",
                             tags: [],
-                            generateVariants: file.type.startsWith("image/"),
+                            generateVariants: false,
                         },
                     };
                 });
@@ -319,6 +320,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                 const updated = [...prev];
                 if (updated[currentTab]) {
                     updated[currentTab].options = {
+                        ...updated[currentTab].options,
                         title: currentFormData.title || undefined,
                         altText: currentFormData.altText || undefined,
                         caption: currentFormData.caption || undefined,
@@ -423,6 +425,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                 const updated = [...prev];
                 if (updated[currentTab]) {
                     updated[currentTab].options = {
+                        ...updated[currentTab].options,
                         title: formData.title || undefined,
                         altText: formData.altText || undefined,
                         caption: formData.caption || undefined,
@@ -452,6 +455,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
             const updated = [...prev];
             if (updated[currentTab]) {
                 updated[currentTab].options = {
+                    ...updated[currentTab].options,
                     title: currentFormData.title || undefined,
                     altText: currentFormData.altText || undefined,
                     caption: currentFormData.caption || undefined,
