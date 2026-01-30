@@ -302,6 +302,7 @@ export default function Page() {
                         .map((t) => t.trim())
                         .filter(Boolean),
                     title: title,
+                    bannerUrl: bannerUrl,
                 });
 
                 setHasUnsavedChanges(false);

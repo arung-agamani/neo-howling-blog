@@ -7,8 +7,14 @@ import { toast } from "react-toastify";
 import "quilljs-markdown/dist/quilljs-markdown-common-style.css";
 import "react-quill-new/dist/quill.snow.css";
 import "./EditorOverride.css";
-import { buildS3Url, APP_BAR_HEIGHT } from "@/constants";
+import { APP_BAR_HEIGHT } from "@/constants";
 import { PostMetadata } from "@/types";
+import {
+    initiateUpload,
+    uploadToPresignedUrl,
+    processUpload,
+} from "@/components/Dashboard/MediaLibrary/api";
+import type { PostProcessingOperation } from "@/components/Dashboard/MediaLibrary/types";
 
 interface Props {
     page: PostMetadata;
@@ -21,71 +27,100 @@ interface Props {
 Quill.register("modules/QuillMarkdown", QuillMarkdown, true);
 Quill.register("modules/blotFormatter", QuillBlotFormatter, true);
 
-async function uploadFile(file: File): Promise<string> {
-    const date = new Date();
-    const buf = new Uint8Array(4);
-    const randPrefix = Buffer.from(crypto.getRandomValues(buf)).toString("hex");
-    const filename = `${randPrefix}_${file.name}`;
+// Default post-processing: convert to JPEG with quality 100
+const DEFAULT_POST_PROCESSINGS: PostProcessingOperation[] = [
+    {
+        type: "convertFormat",
+        config: {
+            format: "jpeg",
+            quality: 100,
+        },
+    },
+];
 
-    const s3Url = buildS3Url(
-        date.getFullYear(),
-        date.getMonth() + 1,
-        date.getDate(),
-        filename,
-    );
+// Default tags for media uploaded from editor
+const DEFAULT_TAGS = ["post-media"];
 
-    // Check if file already exists
+/**
+ * Check if a string is a valid image URL
+ */
+function isValidImageUrl(text: string): boolean {
+    if (!text) return false;
+
     try {
-        const head = await fetch(s3Url, { method: "HEAD" });
-        if (head.ok) {
-            toast.info(`File ${filename} has already been uploaded.`);
-            return s3Url;
-        }
-    } catch {
-        // File doesn't exist, continue with upload
-    }
+        const url = new URL(text);
 
+        // Must be http or https
+        if (!["http:", "https:"].includes(url.protocol)) {
+            return false;
+        }
+
+        // Get pathname without query string
+        const pathname = url.pathname.toLowerCase();
+
+        // Check for common image extensions
+        const imageExtensions = [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".webp",
+            ".svg",
+            ".bmp",
+            ".avif",
+            ".ico",
+            ".tiff",
+            ".tif",
+        ];
+
+        return imageExtensions.some((ext) => pathname.endsWith(ext));
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Upload file using the /api/v1/media flow with resource tracking and tagging
+ */
+async function uploadFile(file: File): Promise<string> {
     toast.info(`Uploading ${file.name}...`);
 
     try {
-        const presignedUrlResponse = await fetch(
-            `${window.location.origin}/api/v1/assets`,
-            {
-                method: "POST",
-                headers: {
-                    "content-type": "application/json",
-                },
-                body: JSON.stringify({
-                    name: filename,
-                    size: file.size,
-                    mime: file.type,
-                    date: {
-                        year: date.getFullYear(),
-                        month: date.getMonth() + 1,
-                        day: date.getDate(),
-                    },
-                }),
-            },
-        );
-
-        const presignedUrl = await presignedUrlResponse.json();
-
-        const uploadResponse = await fetch(presignedUrl.data, {
-            method: "PUT",
-            headers: {
-                "Content-Length": String(file.size),
-            },
-            body: file,
+        // Step 1: Initiate upload to get presigned URL and asset ID
+        const initiateResponse = await initiateUpload({
+            filename: file.name,
+            mimeType: file.type,
+            fileSize: file.size,
+            tags: DEFAULT_TAGS,
         });
 
-        if (!uploadResponse.ok) {
+        if (!initiateResponse.success) {
             throw new Error(
-                `Upload failed with status ${uploadResponse.status}`,
+                initiateResponse.message || "Failed to initiate upload",
+            );
+        }
+
+        const { assetId, uploadUrl } = initiateResponse.data;
+
+        // Step 2: Upload file directly to S3 using presigned URL
+        await uploadToPresignedUrl(uploadUrl, file);
+
+        // Step 3: Process the uploaded asset with post-processing
+        const processResponse = await processUpload(assetId, {
+            generateVariants: false,
+            postProcessings: DEFAULT_POST_PROCESSINGS,
+        });
+
+        if (!processResponse.success) {
+            throw new Error(
+                processResponse.message || "Failed to process upload",
             );
         }
 
         toast.success(`File ${file.name} has been successfully uploaded`);
-        return s3Url;
+
+        // Return the final URL from the processed asset (already CDN-rewritten)
+        return processResponse.data.url;
     } catch (error) {
         toast.error(`Error when uploading ${file.name}`);
         console.error(error);
@@ -234,23 +269,43 @@ const Editor: React.FC<Props> = ({
     };
 
     const handlePaste = (event: ClipboardEvent) => {
+        if (!quillRef.current) return;
+
         const clipboard = event.clipboardData;
-        if (!clipboard?.items) return;
+        if (!clipboard) return;
 
         const IMAGE_MIME_REGEX = /^image\/(jpe?g|gif|png|svg|webp)$/i;
 
-        for (let i = 0; i < clipboard.items.length; i++) {
-            const item = clipboard.items[i];
-            if (IMAGE_MIME_REGEX.test(item.type)) {
-                const file = item.getAsFile();
-                if (file) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.stopImmediatePropagation();
-                    handleImageInsert(file);
-                    break;
+        // Check for image files first (e.g., screenshot paste)
+        if (clipboard.items) {
+            for (let i = 0; i < clipboard.items.length; i++) {
+                const item = clipboard.items[i];
+                if (IMAGE_MIME_REGEX.test(item.type)) {
+                    const file = item.getAsFile();
+                    if (file) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.stopImmediatePropagation();
+                        handleImageInsert(file);
+                        return;
+                    }
                 }
             }
+        }
+
+        // Check for pasted text that is an image URL
+        const pastedText = clipboard.getData("text/plain")?.trim();
+        if (pastedText && isValidImageUrl(pastedText)) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            const editor = quillRef.current.getEditor();
+            const range = editor.getSelection() || {
+                index: editor.getLength(),
+            };
+            editor.insertEmbed(range.index, "image", pastedText, "user");
+            editor.setSelection(range.index + 1, 0);
         }
     };
 
@@ -304,6 +359,7 @@ const Editor: React.FC<Props> = ({
                     image: imageHandler,
                 },
             },
+
             QuillMarkdown: {},
             blotFormatter: true,
             syntax: true,
