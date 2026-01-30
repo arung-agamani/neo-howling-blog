@@ -215,3 +215,21 @@ enum UploadStatus {
   Completed // Fully processed and ready to use
   Failed // Upload or processing failed
 }
+
+// Internal Analytics - Page View Tracking
+model PageView {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  path       String   // The page path (e.g., "/post/123")
+  referrer   String?  // Where the user came from
+  userAgent  String?  // Raw user agent string
+  deviceType String?  // Parsed: "desktop", "mobile", "tablet", "bot"
+  browser    String?  // Parsed browser name
+  os         String?  // Parsed operating system
+  visitorId  String?  // Anonymous visitor identifier (cookie-based)
+  timestamp  DateTime @default(now()) @db.Date
+
+  @@index([path])
+  @@index([timestamp])
+  @@index([visitorId])
+  @@index([deviceType])
+}

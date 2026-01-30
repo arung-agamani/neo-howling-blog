@@ -3,6 +3,7 @@ import { Blockquote, Heading, Lead, Link } from "@/components/Typography";
 import DarkModeToggler from "@/components/UserPageV2/DarkModeToggler";
 import GithubCard from "@/components/UserPageV2/GithubCard";
 import TopDivWrapper from "@/components/UserPageV2/TopDivWrapper";
+import { PageViewTracker } from "@/hooks/usePageView";
 
 import "./globals.css";
 import "./user-style.css";
@@ -37,6 +38,7 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
             </head>
             <body>
                 <Provider>
+                    <PageViewTracker />
                     <JotaiProvider>
                         <TopDivWrapper>
                             <div className="bg-orange-950/50 min-h-screen w-full mx-auto">

@@ -2,6 +2,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
 import { Provider } from "./ThemeProvider";
+import { PageViewTracker } from "@/hooks/usePageView";
 export const metadata = {
     title: "Howling Blog",
     icons: {
@@ -18,6 +19,7 @@ export default function RootLayout({
         <html suppressHydrationWarning>
             <body className="flex flex-col">
                 <Provider>
+                    <PageViewTracker />
                     <Navbar />
                     {children}
                     <Footer />
