@@ -185,6 +185,23 @@ const PostsTable: React.FC<PostsTableProps> = ({
                 ],
             },
             {
+                accessorKey: "datePosted",
+                header: "Date Created",
+                size: 150,
+                Cell: ({ row }) =>
+                    row.original.datePosted
+                        ? new Date(row.original.datePosted).toLocaleDateString(
+                              "en-US",
+                              {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                              },
+                          )
+                        : "N/A",
+                sortingFn: "datetime",
+            },
+            {
                 accessorKey: "updatedAt",
                 header: "Last Updated",
                 size: 150,
