@@ -234,3 +234,102 @@ export const emptyHelloResponse: THelloResponse = {
         lastAccess: undefined,
     },
 };
+
+// Tag Management Types
+export interface Tag {
+    id: string;
+    name: string;
+    count: number;
+    posts: string[];
+    description?: string | null;
+    color?: string | null;
+    aliases?: string[];
+}
+
+export interface TagWithDetails extends Tag {
+    relatedTags?: {
+        name: string;
+        coOccurrences: number;
+    }[];
+    stats?: {
+        totalPosts: number;
+        publishedPosts: number;
+        draftPosts: number;
+        deletedPosts: number;
+    };
+}
+
+export interface TagsListResponse {
+    tags: Tag[];
+    pagination: {
+        total: number;
+        limit: number;
+        offset: number;
+        hasMore: boolean;
+    };
+    stats: {
+        total: number;
+        active: number;
+        orphaned: number;
+        topTags: { name: string; count: number }[];
+    };
+}
+
+export interface CreateTagPayload {
+    name: string;
+    description?: string;
+    color?: string;
+    aliases?: string[];
+}
+
+export interface UpdateTagPayload {
+    name?: string;
+    description?: string | null;
+    color?: string | null;
+    aliases?: string[];
+}
+
+export interface MergeTagsPayload {
+    sourceTags: string[];
+    targetTag: string;
+    keepAsAliases?: boolean;
+    deleteSourceTags?: boolean;
+}
+
+export interface MergeTagsPreview {
+    preview: true;
+    sourceTags: {
+        name: string;
+        count: number;
+        aliases: string[];
+    }[];
+    targetTag: {
+        name: string;
+        count: number;
+        aliases?: string[];
+        willBeCreated?: boolean;
+    };
+    affectedPosts: {
+        id: string;
+        title: string;
+    }[];
+    summary: {
+        tagsToMerge: number;
+        postsToUpdate: number;
+        resultingPostCount: number;
+    };
+}
+
+export interface MergeTagsResponse {
+    success: boolean;
+    message: string;
+    targetTag: Tag;
+    mergedTags: string[];
+    postsUpdated: number;
+    aliasesAdded: string[];
+}
+
+export type TagStatusFilter = "all" | "active" | "orphaned";
+export type TagSortBy = "count" | "name" | "createdAt";
+export type TagSortOrder = "asc" | "desc";
+export type TagViewMode = "table" | "card";

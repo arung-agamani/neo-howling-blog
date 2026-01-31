@@ -60,11 +60,14 @@ model sessions {
 }
 
 model tags {
-  id    String   @id @default(auto()) @map("_id") @db.ObjectId
-  v     Int?     @map("__v")
-  count Int
-  name  String   @unique
-  posts String[]
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  v           Int?     @map("__v")
+  count       Int
+  name        String   @unique
+  posts       String[]
+  description String?  @db.String
+  color       String?  // Hex color code (e.g., "#FF5733")
+  aliases     String[] // Alternative names that map to this tag
 }
 
 model userauths {
