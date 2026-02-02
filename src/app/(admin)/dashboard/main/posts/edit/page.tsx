@@ -10,6 +10,7 @@ import axios from "@/utils/axios";
 import dynamic from "next/dynamic";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
 import { PostMetadata } from "@/types";
 import { APP_BAR_HEIGHT } from "@/constants";
 import Typography from "@/components/Typography";
@@ -21,6 +22,7 @@ import {
     useTheme,
 } from "@mui/material";
 import { MediaLibrary } from "@/components/Dashboard/MediaLibrary";
+import { useAutosave } from "@/hooks/useAutosave";
 
 const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
     ssr: false,
@@ -44,6 +46,41 @@ interface PanelContentProps {
     isSaving: boolean;
     saveHandler: () => void;
     setMediaLibOpen: (value: boolean) => void;
+    // Autosave props
+    lastAutosave: Date | null;
+    isAutosaveScheduled: boolean;
+    autosaveInterval: number;
+}
+
+/**
+ * Format the autosave interval for display
+ */
+function formatInterval(ms: number): string {
+    const seconds = Math.round(ms / 1000);
+    if (seconds < 60) {
+        return `${seconds}s`;
+    }
+    const minutes = Math.round(seconds / 60);
+    return `${minutes}m`;
+}
+
+/**
+ * Format the last autosave time for display
+ */
+function formatLastAutosave(date: Date | null): string {
+    if (!date) return "Never";
+
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSeconds = Math.round(diffMs / 1000);
+
+    if (diffSeconds < 5) return "Just now";
+    if (diffSeconds < 60) return `${diffSeconds}s ago`;
+
+    const diffMinutes = Math.round(diffSeconds / 60);
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+    return date.toLocaleTimeString();
 }
 
 const PanelContent = ({
@@ -63,6 +100,9 @@ const PanelContent = ({
     isSaving,
     saveHandler,
     setMediaLibOpen,
+    lastAutosave,
+    isAutosaveScheduled,
+    autosaveInterval,
 }: PanelContentProps) => (
     <Box
         className="flex flex-col h-full"
@@ -155,6 +195,29 @@ const PanelContent = ({
         </Box>
         <Typography.Divider />
         <Box className="flex flex-col gap-2 mb-4 mx-4">
+            {/* Autosave status indicator */}
+            <Box className="flex flex-col gap-1 text-center text-xs text-gray-500 mb-1">
+                <Tooltip
+                    title={`Autosave every ${formatInterval(autosaveInterval)} of inactivity`}
+                >
+                    <span>
+                        {isAutosaveScheduled && hasUnsavedChanges ? (
+                            <span className="text-blue-500">
+                                ⏱ Autosave pending...
+                            </span>
+                        ) : lastAutosave ? (
+                            <span className="text-green-600">
+                                ✓ Last autosave:{" "}
+                                {formatLastAutosave(lastAutosave)}
+                            </span>
+                        ) : (
+                            <span>
+                                Autosave: {formatInterval(autosaveInterval)}
+                            </span>
+                        )}
+                    </span>
+                </Tooltip>
+            </Box>
             <Chip
                 label={
                     hasUnsavedChanges ? "Unsaved Changes" : "All Changes Saved"
@@ -190,6 +253,9 @@ export default function Page() {
     const [rightPanelOpen, setRightPanelOpen] = useState(true);
     const [mediaLibOpen, setMediaLibOpen] = useState(false);
 
+    // Track current post ID (for autosave to update URL after creating draft)
+    const [currentPostId, setCurrentPostId] = useState<string | null>(null);
+
     // Controlled state for form fields
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -205,6 +271,12 @@ export default function Page() {
     // Responsive detection
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+    // Sync currentPostId with URL param
+    useEffect(() => {
+        const id = searchParams?.get("id");
+        setCurrentPostId(id || null);
+    }, [searchParams]);
 
     useEffect(() => {
         (async () => {
@@ -264,75 +336,138 @@ export default function Page() {
             });
     }, []);
 
-    const saveHandler = useCallback(async () => {
-        const id = searchParams?.get("id");
-        const isUpdate = !!id;
+    /**
+     * Core save function that handles both creating new posts and updating existing ones.
+     * @param isAutosave - If true, uses silent notifications and updates URL without full redirect
+     */
+    const saveHandler = useCallback(
+        async (isAutosave: boolean = false) => {
+            // Use currentPostId which stays in sync, or fall back to URL param
+            const id = currentPostId || searchParams?.get("id");
+            const isUpdate = !!id;
 
-        setIsSaving(true);
+            setIsSaving(true);
 
-        try {
-            if (isUpdate) {
-                await axios.patch("/api/v1/posts/" + id, {
-                    id,
-                    op: "update",
-                    blogContent: content,
-                    title: title,
-                    description: description,
-                    bannerUrl: bannerUrl,
-                    tags: tags
-                        .split(",")
-                        .map((t) => t.trim())
-                        .filter(Boolean),
-                });
+            try {
+                if (isUpdate) {
+                    await axios.patch("/api/v1/posts/" + id, {
+                        id,
+                        op: "update",
+                        blogContent: content,
+                        title: title,
+                        description: description,
+                        bannerUrl: bannerUrl,
+                        tags: tags
+                            .split(",")
+                            .map((t) => t.trim())
+                            .filter(Boolean),
+                    });
 
-                setHasUnsavedChanges(false);
-                toast.success("Post updated!", {
-                    position: "top-center",
-                    autoClose: 3000,
-                    closeOnClick: true,
-                    theme: "light",
-                });
-            } else {
-                const res = await axios.post("/api/v1/posts", {
-                    author: page.author || "Shirayuki Haruka", // TODO: Get from auth context
-                    blogContent: content,
-                    description: description,
-                    tags: tags
-                        .split(",")
-                        .map((t) => t.trim())
-                        .filter(Boolean),
-                    title: title,
-                    bannerUrl: bannerUrl,
-                });
+                    setHasUnsavedChanges(false);
+                    if (!isAutosave) {
+                        toast.success("Post updated!", {
+                            position: "top-center",
+                            autoClose: 3000,
+                            closeOnClick: true,
+                            theme: "light",
+                        });
+                    }
+                } else {
+                    // Creating a new post (auto-draft)
+                    const res = await axios.post("/api/v1/posts", {
+                        author: page.author || "Shirayuki Haruka", // TODO: Get from auth context
+                        blogContent: content || "<p></p>",
+                        description: description || "Draft",
+                        tags: tags
+                            .split(",")
+                            .map((t) => t.trim())
+                            .filter(Boolean),
+                        title: title || "Untitled Draft",
+                        bannerUrl: bannerUrl,
+                    });
 
-                setHasUnsavedChanges(false);
-                toast.success("Post created!", {
-                    onClose: () => {
-                        router.push(
-                            `/dashboard/main/posts/edit?id=${res.data.data.id}`,
+                    setHasUnsavedChanges(false);
+                    const newPostId = res.data.data.id;
+
+                    // Update currentPostId so subsequent autosaves update instead of create
+                    setCurrentPostId(newPostId);
+
+                    if (isAutosave) {
+                        // For autosave, silently update URL without full navigation
+                        window.history.replaceState(
+                            null,
+                            "",
+                            `/dashboard/main/posts/edit?id=${newPostId}`,
                         );
-                    },
-                    autoClose: 2000,
-                });
+                    } else {
+                        toast.success("Post created!", {
+                            onClose: () => {
+                                router.push(
+                                    `/dashboard/main/posts/edit?id=${newPostId}`,
+                                );
+                            },
+                            autoClose: 2000,
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Save failed:", error);
+                if (!isAutosave) {
+                    toast.error(
+                        isUpdate
+                            ? "Post updating failed"
+                            : "Post creation failed",
+                    );
+                }
+                throw error; // Re-throw for autosave error handling
+            } finally {
+                setIsSaving(false);
             }
+        },
+        [
+            currentPostId,
+            searchParams,
+            content,
+            title,
+            description,
+            bannerUrl,
+            tags,
+            page.author,
+            router,
+        ],
+    );
+
+    /**
+     * Autosave handler - wraps saveHandler for autosave-specific behavior
+     */
+    const autosaveHandler = useCallback(async () => {
+        try {
+            await saveHandler(true);
         } catch (error) {
-            console.error("Save failed:", error);
-            toast.error(
-                isUpdate ? "Post updating failed" : "Post creation failed",
-            );
-        } finally {
-            setIsSaving(false);
+            // Autosave errors are logged but not shown to user
+            console.error("Autosave failed:", error);
         }
-    }, [
-        searchParams,
-        content,
-        title,
-        description,
-        bannerUrl,
-        tags,
-        page.author,
-        router,
-    ]);
+    }, [saveHandler]);
+
+    /**
+     * Manual save handler - wraps saveHandler for button clicks
+     */
+    const manualSaveHandler = useCallback(() => {
+        saveHandler(false);
+    }, [saveHandler]);
+
+    // Autosave hook integration
+    const {
+        config: autosaveConfig,
+        lastAutosave,
+        isScheduled: isAutosaveScheduled,
+    } = useAutosave({
+        onSave: autosaveHandler,
+        hasUnsavedChanges,
+        isSaving,
+        enabled: true,
+        dependencies: [content, title, description, bannerUrl, tags],
+    });
 
     if (loading) return <h1>Loading...</h1>;
 
@@ -425,8 +560,11 @@ export default function Page() {
                             hasUnsavedChanges={hasUnsavedChanges}
                             setHasUnsavedChanges={setHasUnsavedChanges}
                             isSaving={isSaving}
-                            saveHandler={saveHandler}
+                            saveHandler={manualSaveHandler}
                             setMediaLibOpen={setMediaLibOpen}
+                            lastAutosave={lastAutosave}
+                            isAutosaveScheduled={isAutosaveScheduled}
+                            autosaveInterval={autosaveConfig.interval}
                         />
                     </div>
                 </div>
@@ -536,8 +674,11 @@ export default function Page() {
                             hasUnsavedChanges={hasUnsavedChanges}
                             setHasUnsavedChanges={setHasUnsavedChanges}
                             isSaving={isSaving}
-                            saveHandler={saveHandler}
+                            saveHandler={manualSaveHandler}
                             setMediaLibOpen={setMediaLibOpen}
+                            lastAutosave={lastAutosave}
+                            isAutosaveScheduled={isAutosaveScheduled}
+                            autosaveInterval={autosaveConfig.interval}
                         />
                     </Box>
                 </SwipeableDrawer>

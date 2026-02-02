@@ -29,6 +29,7 @@ interface PostData {
     datePosted: string;
     updatedAt?: string;
     bannerUrl?: string | null;
+    link: string | null;
 }
 
 interface PostsTableProps {
@@ -256,7 +257,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
             <Box sx={{ display: "flex", gap: 1 }}>
                 <Tooltip title="Open Post">
                     <Link
-                        href={`/post/${row.original.id}`}
+                        href={`/v2/post/${row.original.link}`}
                         rel="noopener noreferrer"
                         target="_blank"
                     >
