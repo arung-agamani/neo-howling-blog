@@ -19,6 +19,7 @@
         "@emotion/styled": "^11.11.0",
         "@hookform/resolvers": "^5.2.2",
         "@mdxeditor/editor": "^2.16.0",
+        "@monaco-editor/react": "^4.7.0",
         "@mui/icons-material": "^5.15.7",
         "@mui/material": "^5.15.7",
         "@mui/material-nextjs": "^5.0.0",

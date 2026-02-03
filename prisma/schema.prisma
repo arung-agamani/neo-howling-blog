@@ -99,10 +99,18 @@ model users {
 }
 
 model config {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  key         String @unique
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  key         String      @unique
   value       String
   description String
+  type        ConfigType? @default(string)
+}
+
+enum ConfigType {
+  string
+  number
+  boolean
+  json
 }
 
 enum Gender {

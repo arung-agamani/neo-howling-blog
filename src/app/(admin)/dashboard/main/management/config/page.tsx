@@ -4,7 +4,11 @@ import axios from "@/utils/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider/Divider";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
+import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { AxiosResponse } from "axios";
@@ -14,11 +18,14 @@ import { toast } from "react-toastify";
 import { z } from "zod";
 import Parameter from "./Parameter";
 
+export type ConfigType = "string" | "number" | "boolean" | "json";
+
 export interface Config {
     id: string;
     key: string;
     value: string;
     description: string;
+    type?: ConfigType;
 }
 
 interface ConfigAPIGetResponse {
@@ -31,10 +38,13 @@ interface ConfigAPIPostResponse {
     data: any;
 }
 
+const ConfigTypeEnum = z.enum(["string", "number", "boolean", "json"]);
+
 const ConfigSchema = z.object({
     key: z.string(),
     value: z.string(),
     description: z.string().optional(),
+    type: ConfigTypeEnum.optional().default("string"),
 });
 
 export default function Page() {
@@ -42,6 +52,12 @@ export default function Page() {
     const [configs, setConfigs] = useState<Config[]>([]);
     const { handleSubmit, control, reset } = useForm({
         resolver: zodResolver(ConfigSchema),
+        defaultValues: {
+            key: "",
+            value: "",
+            description: "",
+            type: "string" as ConfigType,
+        },
     });
 
     async function fetchConfigs() {
@@ -67,6 +83,7 @@ export default function Page() {
         >("/api/v1/config", data, { withCredentials: true });
         toast.info(res.data.message);
         await fetchConfigs();
+        reset();
         toast.info("Config refetched");
     }
 
@@ -120,8 +137,27 @@ export default function Page() {
                             {...field}
                             variant="outlined"
                             label="Parameter Description"
-                            className=" col-span-2"
+                            className=""
                         />
+                    )}
+                />
+                <Controller
+                    name="type"
+                    control={control}
+                    render={({ field }) => (
+                        <FormControl fullWidth>
+                            <InputLabel id="type-select-label">Type</InputLabel>
+                            <Select
+                                {...field}
+                                labelId="type-select-label"
+                                label="Type"
+                            >
+                                <MenuItem value="string">String</MenuItem>
+                                <MenuItem value="number">Number</MenuItem>
+                                <MenuItem value="boolean">Boolean</MenuItem>
+                                <MenuItem value="json">JSON</MenuItem>
+                            </Select>
+                        </FormControl>
                     )}
                 />
                 <Button
@@ -138,7 +174,13 @@ export default function Page() {
             </Typography>
             <div className="gap-2 my-2">
                 {configs.map((config) => {
-                    return <Parameter key={config.id} config={config} />;
+                    return (
+                        <Parameter
+                            key={config.id}
+                            config={config}
+                            onDelete={fetchConfigs}
+                        />
+                    );
                 })}
             </div>
         </Paper>

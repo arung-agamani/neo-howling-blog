@@ -1,6 +1,6 @@
 import { verifyRole } from "@/hooks/useRoleAuth";
 import prisma from "@/utils/prisma";
-import { Prisma } from "@prisma/client";
+import { ConfigType, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
@@ -71,10 +71,13 @@ export async function GET(req: NextRequest) {
     });
 }
 
+const ConfigTypeEnum = z.enum(["string", "number", "boolean", "json"]);
+
 const CreateConfigSchema = z.object({
     key: z.string().min(1, "Key is required"),
     value: z.string(),
     description: z.string().optional().default(""),
+    type: ConfigTypeEnum.optional().default("string"),
 });
 
 const UpdateConfigSchema = z.object({
@@ -82,6 +85,7 @@ const UpdateConfigSchema = z.object({
     key: z.string().min(1, "Key is required"),
     value: z.string(),
     description: z.string().optional(),
+    type: ConfigTypeEnum.optional(),
 });
 
 type CreateConfigSchema = z.infer<typeof CreateConfigSchema>;
@@ -106,7 +110,7 @@ export async function POST(req: NextRequest) {
         return BadRequest({ error: validate.error });
     }
 
-    const { id, key, value, description } = validate.data;
+    const { id, key, value, description, type } = validate.data;
 
     try {
         const upsert = await prisma.config.upsert({
@@ -117,11 +121,13 @@ export async function POST(req: NextRequest) {
                 description,
                 key,
                 value,
+                type: type as ConfigType,
             },
             create: {
                 key,
                 value,
                 description: description || "",
+                type: (type as ConfigType) || "string",
             },
         });
 
@@ -170,7 +176,7 @@ export async function PUT(req: NextRequest) {
         return BadRequest({ error: validate.error });
     }
 
-    const { key, value, description } = validate.data;
+    const { key, value, description, type } = validate.data;
 
     try {
         const upsert = await prisma.config.upsert({
@@ -181,11 +187,13 @@ export async function PUT(req: NextRequest) {
                 description,
                 key,
                 value,
+                type: type as ConfigType,
             },
             create: {
                 key,
                 value,
                 description: description || "",
+                type: (type as ConfigType) || "string",
             },
         });
 
