@@ -10,6 +10,7 @@ import PostAdd from "@mui/icons-material/PostAdd";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Tag from "@mui/icons-material/Tag";
 import { adminRole, editorRole, guestRole, Role } from "./roles";
+import { Analytics } from "@mui/icons-material";
 
 export type TMenuItem = {
     name: string;
@@ -111,6 +112,13 @@ export const hierarchy: TMenuItem[] = [
                 name: "users",
                 link: "users",
                 icon: <PersonIcon />,
+                children: [],
+                role: adminRole,
+            },
+            {
+                name: "analytics",
+                link: "analytics",
+                icon: <Analytics />,
                 children: [],
                 role: adminRole,
             },

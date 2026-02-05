@@ -46,6 +46,22 @@ const ManagementPage = () => {
                         </CardContent>
                     </Card>
                 </Link>
+                <Link href={"management/analytics"}>
+                    <Card
+                        sx={{
+                            ":hover": {
+                                boxShadow: 10,
+                            },
+                        }}
+                    >
+                        <CardContent>
+                            <Typography variant="h4">Analytics</Typography>
+                            <Typography variant="body2">
+                                Detailed site traffic and visitor insights
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Link>
             </div>
         </div>
     );
