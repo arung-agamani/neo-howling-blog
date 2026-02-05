@@ -18,6 +18,7 @@ export interface RecommendedPost {
     description: string;
     bannerUrl: string | null;
     datePosted: Date;
+    link: string;
 }
 
 export interface PaginationMetadata {

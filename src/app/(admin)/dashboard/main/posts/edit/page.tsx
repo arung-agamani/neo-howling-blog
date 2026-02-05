@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import { MediaLibrary } from "@/components/Dashboard/MediaLibrary";
 import { useAutosave } from "@/hooks/useAutosave";
+import TagInput from "@/components/Dashboard/TagInput";
 
 const Editor = dynamic(() => import("@/components/Dashboard/Editor"), {
     ssr: false,
@@ -36,8 +37,8 @@ interface PanelContentProps {
     setDescription: (value: string) => void;
     bannerUrl: string;
     setBannerUrl: (value: string) => void;
-    tags: string;
-    setTags: (value: string) => void;
+    tags: string[];
+    setTags: (value: string[]) => void;
     bannerPreviewVisible: boolean;
     previewBannerUrl: (url: string) => void;
     imagePrevRef: React.RefObject<HTMLImageElement | null>;
@@ -157,19 +158,14 @@ const PanelContent = ({
                     setHasUnsavedChanges(true);
                 }}
             />
-            <TextField
-                label="Tags"
-                name="tags"
+            <TagInput
                 value={tags}
-                multiline
-                minRows={2}
-                fullWidth
-                margin="dense"
-                variant="outlined"
-                onChange={(e) => {
-                    setTags(e.target.value);
+                onChange={(newTags) => {
+                    setTags(newTags);
                     setHasUnsavedChanges(true);
                 }}
+                label="Tags"
+                placeholder="Add tags..."
             />
             {bannerPreviewVisible && bannerUrl && (
                 <img
@@ -260,7 +256,7 @@ export default function Page() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [bannerUrl, setBannerUrl] = useState("");
-    const [tags, setTags] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
     const [bannerPreviewVisible, setBannerPreviewVisible] = useState(false);
 
     const imagePrevRef = useRef<HTMLImageElement>(null);
@@ -292,7 +288,7 @@ export default function Page() {
                 setTitle(res.data.title || "");
                 setDescription(res.data.description || "");
                 setBannerUrl(res.data.bannerUrl || "");
-                setTags(res.data.tags?.join(", ") || "");
+                setTags(res.data.tags || []);
                 if (res.data.bannerUrl) {
                     setBannerPreviewVisible(true);
                 }
@@ -315,8 +311,8 @@ export default function Page() {
             setBannerUrl(page.bannerUrl || "");
             if (page.bannerUrl) setBannerPreviewVisible(true);
         }
-        if (page.tags !== undefined && tags === "")
-            setTags(page.tags?.join(", ") || "");
+        if (page.tags !== undefined && tags.length === 0)
+            setTags(page.tags || []);
     }, [page]);
 
     const previewBannerUrl = useCallback((url: string) => {
@@ -357,10 +353,7 @@ export default function Page() {
                         title: title,
                         description: description,
                         bannerUrl: bannerUrl,
-                        tags: tags
-                            .split(",")
-                            .map((t) => t.trim())
-                            .filter(Boolean),
+                        tags: tags,
                     });
 
                     setHasUnsavedChanges(false);
@@ -378,10 +371,7 @@ export default function Page() {
                         author: page.author || "Shirayuki Haruka", // TODO: Get from auth context
                         blogContent: content || "<p></p>",
                         description: description || "Draft",
-                        tags: tags
-                            .split(",")
-                            .map((t) => t.trim())
-                            .filter(Boolean),
+                        tags: tags,
                         title: title || "Untitled Draft",
                         bannerUrl: bannerUrl,
                     });

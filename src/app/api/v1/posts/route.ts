@@ -27,18 +27,29 @@ const DIARY_TAGS = ["log", "diary", "nikki"];
 // GET /api/v1/posts (list all posts)
 export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
-    // "related" query param is post ID to find related posts
+    // "related" query param is post ID or link to find related posts
     const related = searchParams.get("related");
     if (related) {
-        // validate if related is a valid mongodb ObjectId
-        if (!/^[a-fA-F0-9]{24}$/.test(related)) {
-            return BadRequest({ message: "Invalid post ID" });
+        // Decode URL-encoded identifier
+        const decodedRelated = decodeURIComponent(related);
+
+        // Check if it's a MongoDB ObjectId (24 hex characters)
+        const isObjectId = /^[a-fA-F0-9]{24}$/.test(decodedRelated);
+
+        // Find the post by either ID or link
+        let post;
+        if (isObjectId) {
+            post = await prisma.posts.findUnique({
+                where: { id: decodedRelated },
+                select: { id: true, tags: true },
+            });
+        } else {
+            post = await prisma.posts.findFirst({
+                where: { link: decodedRelated },
+                select: { id: true, tags: true },
+            });
         }
-        // search for related posts based on tags
-        const post = await prisma.posts.findUnique({
-            where: { id: related },
-            select: { tags: true },
-        });
+
         if (!post) {
             return BadRequest({ message: "Post not found" });
         }
@@ -49,7 +60,7 @@ export async function GET(req: NextRequest) {
                 where: {
                     isPublished: true,
                     deleted: false,
-                    id: { not: related },
+                    id: { not: post.id },
                 },
                 take: 5,
                 orderBy: { datePosted: "desc" },
@@ -72,7 +83,7 @@ export async function GET(req: NextRequest) {
             where: {
                 isPublished: true,
                 deleted: false,
-                id: { not: related },
+                id: { not: post.id },
                 tags: { hasSome: tags },
             },
             take: 5,
