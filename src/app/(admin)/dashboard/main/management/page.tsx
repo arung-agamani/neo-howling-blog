@@ -62,6 +62,23 @@ const ManagementPage = () => {
                         </CardContent>
                     </Card>
                 </Link>
+                <Link href={"management/api-keys"}>
+                    <Card
+                        sx={{
+                            ":hover": {
+                                boxShadow: 10,
+                            },
+                        }}
+                    >
+                        <CardContent>
+                            <Typography variant="h4">API Keys</Typography>
+                            <Typography variant="body2">
+                                Manage API keys for programmatic access to the
+                                v2 API
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Link>
             </div>
         </div>
     );

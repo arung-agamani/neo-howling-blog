@@ -9,6 +9,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import PostAdd from "@mui/icons-material/PostAdd";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Tag from "@mui/icons-material/Tag";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import { adminRole, editorRole, guestRole, Role } from "./roles";
 import { Analytics } from "@mui/icons-material";
 
@@ -121,6 +122,13 @@ export const hierarchy: TMenuItem[] = [
                 icon: <Analytics />,
                 children: [],
                 role: adminRole,
+            },
+            {
+                name: "API Keys",
+                link: "api-keys",
+                icon: <VpnKeyIcon />,
+                children: [],
+                role: editorRole,
             },
         ],
         icon: <SettingsIcon />,

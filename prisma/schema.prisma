@@ -51,6 +51,57 @@ model snippet {
   owner      users    @relation(fields: [ownerId], references: [id])
 }
 
+model apiKeys {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  name        String // User-friendly name for the key (e.g., "CI/CD Pipeline", "Mobile App")
+  description String? // Optional longer description of what this key is used for
+
+  // The key itself - only the hash is stored, prefix is kept for display/identification
+  keyHash   String @unique // SHA-256 hash of the full API key
+  keyPrefix String // First 8 chars for identification (e.g., "nhb_abcd...")
+
+  // Permissions / Scopes
+  scopes String[] // What the key can access: ["assets:read", "assets:write", "assets:delete"]
+
+  // Tracking
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  expiresAt  DateTime? // Optional expiration date
+  usageCount Int       @default(0) // Total number of times this key has been used
+
+  // Status
+  isActive  Boolean   @default(true)
+  revokedAt DateTime? // When the key was revoked (null if still active)
+
+  // Relationship - API key belongs to a user
+  userId String @db.ObjectId
+  user   users  @relation(fields: [userId], references: [id])
+
+  // Usage logs
+  usageLogs apiKeyUsageLogs[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model apiKeyUsageLogs {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  apiKeyId String  @db.ObjectId
+  apiKey   apiKeys @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  endpoint   String // The API endpoint that was called (e.g., "/api/v2/assets")
+  method     String // HTTP method (GET, POST, DELETE, etc.)
+  statusCode Int // Response status code
+  ipAddress  String? // Client IP address
+  userAgent  String? // Client user agent string
+  timestamp  DateTime @default(now())
+
+  @@index([apiKeyId])
+  @@index([timestamp])
+}
+
 model sessions {
   id      String @id @default(auto()) @map("_id") @db.ObjectId
   /// Field referred in an index, but found no data to define the type.
@@ -66,7 +117,7 @@ model tags {
   name        String   @unique
   posts       String[]
   description String?  @db.String
-  color       String?  // Hex color code (e.g., "#FF5733")
+  color       String? // Hex color code (e.g., "#FF5733")
   aliases     String[] // Alternative names that map to this tag
 }
 
@@ -96,6 +147,7 @@ model users {
 
   snippets snippet[]
   assets   assets[]
+  apiKeys  apiKeys[]
 }
 
 model config {
@@ -149,8 +201,8 @@ model assets {
   storageKey     String? // Actual key/path in remote storage
 
   // Upload status tracking (for presigned URL uploads)
-  uploadStatus UploadStatus @default(Completed)
-  statusMessage String?     // Error message or status details
+  uploadStatus  UploadStatus @default(Completed)
+  statusMessage String? // Error message or status details
 
   // Organization
   folder String? // Virtual folder path like "/images/2024/01"
@@ -230,13 +282,13 @@ enum UploadStatus {
 // Internal Analytics - Page View Tracking
 model PageView {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  path       String   // The page path (e.g., "/post/123")
-  referrer   String?  // Where the user came from
-  userAgent  String?  // Raw user agent string
-  deviceType String?  // Parsed: "desktop", "mobile", "tablet", "bot"
-  browser    String?  // Parsed browser name
-  os         String?  // Parsed operating system
-  visitorId  String?  // Anonymous visitor identifier (cookie-based)
+  path       String // The page path (e.g., "/post/123")
+  referrer   String? // Where the user came from
+  userAgent  String? // Raw user agent string
+  deviceType String? // Parsed: "desktop", "mobile", "tablet", "bot"
+  browser    String? // Parsed browser name
+  os         String? // Parsed operating system
+  visitorId  String? // Anonymous visitor identifier (cookie-based)
   timestamp  DateTime @default(now()) @db.Date
 
   @@index([path])
