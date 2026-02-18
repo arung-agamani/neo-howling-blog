@@ -37,36 +37,66 @@ The former holds everything that it needs to store the pages, users, basically e
 
 ### Prepare environment variables and configs
 
-The following table describes the environment variables used by the app.
+Put the required variables in a `.env` file in the project root directory (next to `package.json` and others).
 
-| Variable Name     | Description                           | Type   | Required | Default        |
-| ----------------- | ------------------------------------- | ------ | -------- | -------------- |
-| `DATABASE_URL`    | The Database access URL to MongoDb    | String | Yes      | ''             |
-| `JWT_SECRET`      | The secret used to encrypt JWT tokens | String | Yes      | ''             |
-| `AWS_ACCESS_KEY`  | Access Key for AWS User               | String | Yes      | ''             |
-| `AWS_SECRET_KEY`  | Secret Key for AWS User               | String | Yes      | ''             |
-| `SITE_NAME`       | The name of the website               | String | No       | 'Howling Blog' |
-| `NEXTAUTH_SECRET` | Secret Key for Authentication         | String | Yes      | ''             |
+#### Server-side environment variables
 
-Put the required variables in `.env` file in the project root directory (next to `package.json` and others)
+| Variable Name              | Description                                          | Required | Default |
+| -------------------------- | ---------------------------------------------------- | -------- | ------- |
+| `DATABASE_URL`             | MongoDB connection URL (used by Prisma)              | Yes      | —       |
+| `NEXTAUTH_SECRET`          | Secret used by NextAuth.js to sign/encrypt tokens    | Yes      | —       |
+| `NEXTAUTH_URL`             | Canonical URL of the app (required in production)    | Yes      | —       |
+| `JWT_SECRET`               | Secret used to sign legacy JWT tokens                | Yes      | —       |
+| `AWS_ACCESS_KEY_UPLOADER`  | AWS IAM access key for S3 asset uploads              | Yes      | —       |
+| `AWS_SECRET_KEY_UPLOADER`  | AWS IAM secret key for S3 asset uploads              | Yes      | —       |
+| `BUCKET_NAME`              | Name of the AWS S3 bucket used for asset storage     | Yes      | —       |
+| `CDN_BASE_URL`             | Base URL of the CDN that fronts the S3 bucket        | No       | —       |
+
+#### Client-side environment variables (`NEXT_PUBLIC_`)
+
+| Variable Name              | Description                                                              | Required | Default                          |
+| -------------------------- | ------------------------------------------------------------------------ | -------- | -------------------------------- |
+| `NEXT_PUBLIC_CDN_ENABLED`  | Set to `false` to disable CDN URL rewriting in the media library         | No       | `true`                           |
+| `NEXT_PUBLIC_CDN_HOST`     | CDN host used to rewrite asset URLs (e.g. `https://cdn.example.com`)     | No       | `https://cdn.howlingmoon.dev`    |
+
+> **Note:** The AWS S3 client is hard-coded to the `ap-southeast-1` region. If you use a different region, update [src/utils/aws-client.ts](src/utils/aws-client.ts).
+
+#### Build-time environment variables
+
+| Variable Name | Description                                          | Required | Default |
+| ------------- | ---------------------------------------------------- | -------- | ------- |
+| `ANALYZE`     | Set to `true` to enable `@next/bundle-analyzer`      | No       | `false` |
 
 ### Development and Deployment
 
 As this is a standard Next.js project, development can be started by using the `dev` script defined in `package.json`, as well as creating deployment builds with `build` script. This repo mainly uses `pnpm`.
 
-### Application Special Configs
+### Application Runtime Configs
 
-1. `ALLOW_USER_CREATION`: Set to `FALSE` (case-sensitive) to disable user creation through /api/signupv2 route
-2. `LOGIN_BACKGROUND_IMAGE`: Set to direct link of an image to change login page background.
+These settings are stored in the database (via the `/api/v1/config` endpoint) and can be managed from the admin dashboard settings page.
 
-# TODO
+| Config Key                | Description                                                               | Value type |
+| ------------------------- | ------------------------------------------------------------------------- | ---------- |
+| `ALLOW_USER_CREATION`     | Set to `FALSE` (case-sensitive) to disable new user registration          | String     |
+| `LOGIN_BACKGROUND_IMAGE`  | Direct URL of an image to use as the login page background                | String     |
 
--   WYSIWYG Editor : Done
--   Post CRUD : Done
--   Tags CRUD
--   Snippets CRUD
--   User Management : Ongoing
--   Assets Management : Done
--   RBAC : Done
--   Template Designer
--   Post as Building Blocks
+# Roadmap
+
+## ✅ Shipped
+
+- [x] WYSIWYG Editor
+- [x] Post CRUD
+- [x] Tags CRUD
+- [x] Snippets CRUD
+- [x] User Management
+- [x] Assets Management
+- [x] Role-Based Access Control (RBAC)
+- [x] API Key Management
+- [x] Analytics (page views)
+- [x] CDN Support for Media Library
+- [x] Application Config Management (via dashboard)
+
+## 🔜 Upcoming
+
+- [ ] Template Designer
+- [ ] Post as Building Blocks
