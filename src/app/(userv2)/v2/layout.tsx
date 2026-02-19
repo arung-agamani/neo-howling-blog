@@ -10,6 +10,8 @@ import "./user-style.css";
 import { Provider } from "./ThemeProvider";
 import { JotaiProvider } from "@/components/UserPageV2/JotaiProvider";
 import BapakBapak from "@/components/UserPageV2/BapakBapak";
+import MobilePreferencesButton from "@/components/UserPageV2/MobilePreferencesButton";
+import MobileScrollTop from "@/components/UserPageV2/MobileScrollTop";
 import NextLink from "next/link";
 import MainContentWrapper from "./MainContentWrapper";
 interface Props {}
@@ -110,6 +112,8 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
                                     </div>
                                 </div>
                             </div>
+                            <MobileScrollTop />
+                            <MobilePreferencesButton />
                         </TopDivWrapper>
                     </JotaiProvider>
                 </Provider>
