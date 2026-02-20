@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --gallery-bg: #09090f;
+    --gallery-surface: #12121c;
+    --gallery-surface-2: #1a1a28;
+    --gallery-border: rgba(255, 255, 255, 0.07);
+    --gallery-accent: #8b7cf6;
+    --gallery-accent-glow: rgba(139, 124, 246, 0.35);
+    --gallery-text: #e4e4f0;
+    --gallery-text-muted: #8888a8;
+}
+
+body {
+    background-color: var(--gallery-bg);
+    color: var(--gallery-text);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gallery-surface);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3a3a5a;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5050aa;
+}
+
+/* Lightbox slide transition */
+@keyframes lightboxSlideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.lightbox-content {
+    animation: lightboxSlideIn 0.25s ease;
+}
