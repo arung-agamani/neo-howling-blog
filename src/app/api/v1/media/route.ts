@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { FlattenErrors } from "@/lib/ZodError";
 import { getToken } from "next-auth/jwt";
+import { revalidatePath } from "next/cache";
 
 // Validation schemas
 const ListMediaQuerySchema = z.object({
@@ -175,6 +176,8 @@ export async function POST(req: NextRequest) {
             title,
             ...rest,
         });
+
+        revalidatePath("/gallery");
 
         return NextResponse.json(
             {

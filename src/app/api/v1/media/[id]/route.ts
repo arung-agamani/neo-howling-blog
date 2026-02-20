@@ -7,6 +7,7 @@ import {
 import { verifyRole } from "@/hooks/useRoleAuth";
 import { assetService } from "@/services/AssetService";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { FlattenErrors } from "@/lib/ZodError";
 
@@ -81,6 +82,8 @@ export async function PATCH(
             parseResult.data,
         );
 
+        revalidatePath("/gallery");
+
         return NextResponse.json({
             success: true,
             message: "Media updated successfully",
@@ -121,6 +124,8 @@ export async function DELETE(
         const permanent = searchParams.get("permanent") === "true";
 
         await assetService.deleteAsset(params.id, permanent);
+
+        revalidatePath("/gallery");
 
         return NextResponse.json({
             success: true,
