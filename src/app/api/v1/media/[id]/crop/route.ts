@@ -7,6 +7,7 @@ import {
 import { verifyRole } from "@/hooks/useRoleAuth";
 import { assetService } from "@/services/AssetService";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { FlattenErrors } from "@/lib/ZodError";
 
@@ -76,6 +77,15 @@ export async function POST(
                 transforms,
             },
         );
+
+        // Revalidate the gallery when a "banner" variant is added to an asset
+        // that already carries the "banner" tag (it now has a proper bannerUrl).
+        if (variantName === "banner") {
+            const asset = await assetService.getAssetById(params.id);
+            if (asset?.tags?.includes("banner")) {
+                revalidatePath("/gallery");
+            }
+        }
 
         return NextResponse.json(
             {
