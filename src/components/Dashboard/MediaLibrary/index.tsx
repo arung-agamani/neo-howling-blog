@@ -143,10 +143,33 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
         handleViewItem,
         handleOpenCropper,
         handleCustomCrop,
+        handleConfirmSelection,
     } = useMediaLibrary({ onSelect, selectionMode });
 
     // State for mobile detail panel drawer
     const [mobileDetailOpen, setMobileDetailOpen] = React.useState(false);
+
+    // Stable callbacks for the detail panel to avoid re-creating on every render
+    const handleDetailClose = React.useCallback(() => {
+        setSelectedItem(null);
+        setMobileDetailOpen(false);
+    }, [setSelectedItem]);
+
+    const handleDetailDelete = React.useCallback(
+        (permanent?: boolean) => {
+            setDialogState({
+                permanentDelete: permanent || false,
+                deleteDialogOpen: true,
+            });
+        },
+        [setDialogState],
+    );
+
+    // Derive confirm selection handler — only provided in single-select picker mode
+    const confirmSelection =
+        onSelect && selectionMode === "single"
+            ? handleConfirmSelection
+            : undefined;
 
     // Open mobile drawer when item is selected on mobile
     React.useEffect(() => {
@@ -159,34 +182,6 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
     const handleCloseMobileDetail = () => {
         setMobileDetailOpen(false);
     };
-
-    // Detail Panel Component (shared between desktop and mobile)
-    const DetailPanelContent = () => (
-        <MediaDetailPanel
-            item={selectedItem}
-            onClose={() => {
-                setSelectedItem(null);
-                if (isMobile) {
-                    setMobileDetailOpen(false);
-                }
-            }}
-            onUpdate={handleUpdateItem}
-            onDelete={(permanent) => {
-                setDialogState({
-                    permanentDelete: permanent || false,
-                    deleteDialogOpen: true,
-                });
-            }}
-            onDownload={handleDownloadItem}
-            onGenerateVariants={handleGenerateVariants}
-            onDeleteVariant={handleDeleteVariant}
-            onCustomCrop={handleOpenCropper}
-            onResize={handleResize}
-            onOptimize={handleOptimize}
-            onConvert={handleConvert}
-            isProcessing={loadingState.isProcessing}
-        />
-    );
 
     return (
         <Box
@@ -564,6 +559,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                                             onSelect={handleSelectItem}
                                             onView={handleViewItem}
                                             onDownload={handleDownloadItem}
+                                            isMobile={isMobile}
                                         />
                                     ))}
                                 </TableBody>
@@ -592,7 +588,23 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                 </Box>
 
                 {/* Detail Panel - Desktop: Side panel */}
-                {!isMobile && <DetailPanelContent />}
+                {!isMobile && (
+                    <MediaDetailPanel
+                        item={selectedItem}
+                        onClose={handleDetailClose}
+                        onUpdate={handleUpdateItem}
+                        onDelete={handleDetailDelete}
+                        onDownload={handleDownloadItem}
+                        onGenerateVariants={handleGenerateVariants}
+                        onDeleteVariant={handleDeleteVariant}
+                        onCustomCrop={handleOpenCropper}
+                        onResize={handleResize}
+                        onOptimize={handleOptimize}
+                        onConvert={handleConvert}
+                        isProcessing={loadingState.isProcessing}
+                        onConfirmSelection={confirmSelection}
+                    />
+                )}
             </Box>
 
             {/* Mobile: Floating button to open detail panel when item selected */}
@@ -707,7 +719,21 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                                     backgroundColor: "white",
                                 }}
                             >
-                                <DetailPanelContent />
+                                <MediaDetailPanel
+                                    item={selectedItem}
+                                    onClose={handleDetailClose}
+                                    onUpdate={handleUpdateItem}
+                                    onDelete={handleDetailDelete}
+                                    onDownload={handleDownloadItem}
+                                    onGenerateVariants={handleGenerateVariants}
+                                    onDeleteVariant={handleDeleteVariant}
+                                    onCustomCrop={handleOpenCropper}
+                                    onResize={handleResize}
+                                    onOptimize={handleOptimize}
+                                    onConvert={handleConvert}
+                                    isProcessing={loadingState.isProcessing}
+                                    onConfirmSelection={confirmSelection}
+                                />
                             </Box>
                         </Box>
                     </Slide>

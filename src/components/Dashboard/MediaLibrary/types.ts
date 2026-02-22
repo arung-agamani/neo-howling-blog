@@ -79,6 +79,7 @@ export interface MediaItemComponentProps {
 
 export interface MediaListItemProps extends MediaItemComponentProps {
     onDownload: (item: MediaItem) => void;
+    isMobile?: boolean;
 }
 
 export interface MediaDetailPanelProps {
@@ -98,6 +99,8 @@ export interface MediaDetailPanelProps {
     onOptimize: (quality?: number) => Promise<void>;
     onConvert: (format: ImageFormat, quality?: number) => Promise<void>;
     isProcessing?: boolean;
+    /** When provided, shows a "Use Selected" button for confirming selection (e.g. in picker mode) */
+    onConfirmSelection?: () => void;
 }
 
 // API Request/Response types

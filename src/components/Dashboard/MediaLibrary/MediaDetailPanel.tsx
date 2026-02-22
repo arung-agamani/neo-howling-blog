@@ -92,7 +92,7 @@ const InfoRow: React.FC<{ label: string; value: string | React.ReactNode }> = ({
  * Shows detailed information, edit form, variants, and image processing actions
  * Always visible as a side panel - displays placeholder when no item selected
  */
-export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
+export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = React.memo(({
     item,
     onClose,
     onUpdate,
@@ -105,6 +105,7 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
     onOptimize,
     onConvert,
     isProcessing = false,
+    onConfirmSelection,
 }) => {
     // Form state
     const [title, setTitle] = useState("");
@@ -781,6 +782,28 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
                 </Stack>
             </Box>
 
+            {/* Selection confirmation button (shown in picker/single-select mode) */}
+            {onConfirmSelection && (
+                <Box
+                    sx={{
+                        p: 2,
+                        borderTop: 1,
+                        borderColor: "divider",
+                        flexShrink: 0,
+                    }}
+                >
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        size="large"
+                        onClick={onConfirmSelection}
+                    >
+                        Use Selected
+                    </Button>
+                </Box>
+            )}
+
             {/* Resize Dialog */}
             <Dialog
                 open={resizeDialogOpen}
@@ -1069,4 +1092,6 @@ export const MediaDetailPanel: React.FC<MediaDetailPanelProps> = ({
             </Dialog>
         </Box>
     );
-};
+});
+
+MediaDetailPanel.displayName = "MediaDetailPanel";

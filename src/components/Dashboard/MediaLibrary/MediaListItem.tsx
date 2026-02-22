@@ -9,8 +9,6 @@ import {
     Tooltip,
     Chip,
     Stack,
-    useMediaQuery,
-    useTheme,
 } from "@mui/material";
 import { Download, Visibility } from "@mui/icons-material";
 import { MediaListItemProps } from "./types";
@@ -29,15 +27,14 @@ import {
  * Displays media as a table row with thumbnail, metadata, and actions
  * Updated to work with new API types
  */
-export const MediaListItem: React.FC<MediaListItemProps> = ({
+export const MediaListItem: React.FC<MediaListItemProps> = React.memo(({
     item,
     isSelected,
     onSelect,
     onView,
     onDownload,
+    isMobile = false,
 }) => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const Icon = getFileIcon(item.type);
     const thumbnailUrl = isImage(item) ? getThumbnailUrl(item) : null;
     const hasVariants = item.variants && item.variants.length > 0;
@@ -234,4 +231,6 @@ export const MediaListItem: React.FC<MediaListItemProps> = ({
             </TableCell>
         </TableRow>
     );
-};
+});
+
+MediaListItem.displayName = "MediaListItem";

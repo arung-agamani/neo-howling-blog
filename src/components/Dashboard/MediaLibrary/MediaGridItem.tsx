@@ -24,7 +24,7 @@ import {
  * Displays media as a card with thumbnail, checkbox, and basic info
  * Updated to work with new API types and display variant indicators
  */
-export const MediaGridItem: React.FC<MediaItemComponentProps> = ({
+export const MediaGridItem: React.FC<MediaItemComponentProps> = React.memo(({
     item,
     isSelected,
     onSelect,
@@ -197,4 +197,6 @@ export const MediaGridItem: React.FC<MediaItemComponentProps> = ({
             </CardActionArea>
         </Card>
     );
-};
+});
+
+MediaGridItem.displayName = "MediaGridItem";

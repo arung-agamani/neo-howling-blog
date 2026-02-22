@@ -150,6 +150,7 @@ export interface UseMediaLibraryReturn {
         coordinates: CropCoordinates,
         transforms: ImageTransforms,
     ) => Promise<void>;
+    handleConfirmSelection: () => void;
 }
 
 export function useMediaLibrary(
@@ -171,6 +172,9 @@ export function useMediaLibrary(
 
     const searchQuery = watch("search");
     const filterType = watch("filterType");
+
+    // Debounced search value — used for actual API calls to avoid fetching on every keystroke
+    const [debouncedSearch, setDebouncedSearch] = useState("");
 
     // View state
     const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -242,7 +246,7 @@ export function useMediaLibrary(
                     filterType === "all"
                         ? undefined
                         : (filterType as MediaType),
-                search: searchQuery || undefined,
+                search: debouncedSearch || undefined,
                 limit: itemsPerPage,
                 offset: (currentPage - 1) * itemsPerPage,
                 orderBy: "uploadedAt",
@@ -263,16 +267,17 @@ export function useMediaLibrary(
         } finally {
             setLoadingState((prev) => ({ ...prev, isLoading: false }));
         }
-    }, [filterType, searchQuery, currentPage, itemsPerPage]);
+    }, [filterType, debouncedSearch, currentPage, itemsPerPage]);
 
     // Initial load and refetch on filter/page change
     useEffect(() => {
         fetchMedia();
     }, [fetchMedia]);
 
-    // Debounced search
+    // Debounced search — waits 300ms after typing stops before triggering API call
     useEffect(() => {
         const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
             setCurrentPage(1);
         }, 300);
         return () => clearTimeout(timer);
@@ -753,16 +758,18 @@ export function useMediaLibrary(
         [selectedItem],
     );
 
-    // View item handler
-    const handleViewItem = useCallback(
-        (item: MediaItem) => {
-            setSelectedItem(item);
-            if (onSelect && selectionMode === "single") {
-                onSelect(item);
-            }
-        },
-        [onSelect, selectionMode],
-    );
+    // View item handler — only sets the preview, does NOT trigger onSelect
+    // Users must explicitly confirm selection via handleConfirmSelection
+    const handleViewItem = useCallback((item: MediaItem) => {
+        setSelectedItem(item);
+    }, []);
+
+    // Confirm selection handler — triggers onSelect callback for the currently selected item
+    const handleConfirmSelection = useCallback(() => {
+        if (selectedItem && onSelect) {
+            onSelect(selectedItem);
+        }
+    }, [selectedItem, onSelect]);
 
     // Open cropper dialog handler
     const handleOpenCropper = useCallback((item: MediaItem) => {
@@ -900,5 +907,6 @@ export function useMediaLibrary(
         handleViewItem,
         handleOpenCropper,
         handleCustomCrop,
+        handleConfirmSelection,
     };
 }
