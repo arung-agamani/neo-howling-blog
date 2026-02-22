@@ -13,7 +13,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import SaveAlt from "@mui/icons-material/SaveAlt";
 import { useEffect, useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
 import { toast } from "react-toastify";
 import BackgroundColorSection from "./BackgroundColorSection";
 import BackgroundImageSection from "./BackgroundImageSection";
@@ -86,7 +86,7 @@ export default function GalleryConfigForm() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    const { handleSubmit, control, reset } = useForm<GalleryConfigFormValues>({
+    const methods = useForm<GalleryConfigFormValues>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
             backgroundType: "color",
@@ -100,6 +100,7 @@ export default function GalleryConfigForm() {
             overlayColor: "rgba(0,0,0,0.6)",
         },
     });
+    const { handleSubmit, control, reset } = methods;
 
     // Live values for the preview
     const watchedValues = useWatch({ control });
@@ -143,6 +144,12 @@ export default function GalleryConfigForm() {
                 },
                 { withCredentials: true },
             );
+            // Bust the Next.js cache for the public gallery page.
+            await axios.post(
+                "/api/v1/revalidate",
+                { paths: ["/gallery"] },
+                { withCredentials: true },
+            );
             toast.success("Gallery configuration saved");
         } catch {
             toast.error("Failed to save gallery configuration");
@@ -171,6 +178,7 @@ export default function GalleryConfigForm() {
     }
 
     return (
+        <FormProvider {...methods}>
         <Paper sx={{ padding: "2rem" }}>
             <Typography variant="h4">Gallery Configuration</Typography>
             <Typography variant="body1" color="text.secondary" mt={0.5}>
@@ -248,5 +256,6 @@ export default function GalleryConfigForm() {
                 </Button>
             </form>
         </Paper>
+        </FormProvider>
     );
 }

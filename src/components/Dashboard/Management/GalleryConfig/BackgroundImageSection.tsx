@@ -8,8 +8,18 @@ import Select from "@mui/material/Select";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { Control, Controller, useWatch } from "react-hook-form";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
+import PermMediaOutlinedIcon from "@mui/icons-material/PermMediaOutlined";
+import { useState } from "react";
+import { Control, Controller, useWatch, useFormContext } from "react-hook-form";
 import type { GalleryConfigFormValues } from "./formSchema";
+import { MediaLibrary } from "@/components/Dashboard/MediaLibrary";
+import type { MediaItem } from "@/components/Dashboard/MediaLibrary/types";
 
 interface BackgroundImageSectionProps {
     control: Control<GalleryConfigFormValues>;
@@ -19,27 +29,77 @@ export default function BackgroundImageSection({
     control,
 }: BackgroundImageSectionProps) {
     const overlayEnabled = useWatch({ control, name: "overlayEnabled" });
+    const { setValue } = useFormContext<GalleryConfigFormValues>();
+    const [mediaOpen, setMediaOpen] = useState(false);
+
+    function handleMediaSelect(item: MediaItem) {
+        setValue("imageUrl", item.url, { shouldValidate: true });
+        setMediaOpen(false);
+    }
 
     return (
         <div className="flex flex-col gap-4">
-            {/* Image URL */}
-            <Controller
-                name="imageUrl"
-                control={control}
-                render={({ field, fieldState }) => (
-                    <TextField
-                        {...field}
-                        label="Image URL"
-                        placeholder="https://example.com/background.jpg"
-                        helperText={
-                            fieldState.error?.message ??
-                            "Full URL of the background image"
-                        }
-                        error={!!fieldState.error}
-                        fullWidth
+            {/* Image URL + picker button */}
+            <div className="flex gap-2 items-start">
+                <Controller
+                    name="imageUrl"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                        <TextField
+                            {...field}
+                            label="Image URL"
+                            placeholder="https://example.com/background.jpg"
+                            helperText={
+                                fieldState.error?.message ??
+                                "Full URL of the background image"
+                            }
+                            error={!!fieldState.error}
+                            fullWidth
+                        />
+                    )}
+                />
+                <Button
+                    variant="outlined"
+                    startIcon={<PermMediaOutlinedIcon />}
+                    onClick={() => setMediaOpen(true)}
+                    sx={{ mt: "4px", whiteSpace: "nowrap", height: 56 }}
+                >
+                    Media Library
+                </Button>
+            </div>
+
+            {/* Media Library dialog */}
+            <Dialog
+                open={mediaOpen}
+                onClose={() => setMediaOpen(false)}
+                maxWidth="xl"
+                fullWidth
+                PaperProps={{ sx: { height: "90vh" } }}
+            >
+                <DialogTitle
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        pb: 1,
+                    }}
+                >
+                    Pick a background image
+                    <IconButton
+                        aria-label="close"
+                        onClick={() => setMediaOpen(false)}
+                        size="small"
+                    >
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers sx={{ p: 0, overflow: "hidden" }}>
+                    <MediaLibrary
+                        selectionMode="single"
+                        onSelect={handleMediaSelect}
                     />
-                )}
-            />
+                </DialogContent>
+            </Dialog>
 
             <div className="grid grid-cols-2 gap-4">
                 {/* Size */}
