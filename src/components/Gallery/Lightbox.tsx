@@ -99,6 +99,7 @@ export default function Lightbox({
             <DialogPrimitive.Content
                 className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 md:p-8 focus:outline-none"
                 onOpenAutoFocus={(e) => e.preventDefault()}
+                onClick={onClose}
             >
                 <DialogPrimitive.Title className="sr-only">
                     {image.title ?? "Image lightbox"}
@@ -129,7 +130,7 @@ export default function Lightbox({
                     <div className="relative w-full flex items-center justify-center">
                         {/* Prev button */}
                         <button
-                            onClick={onPrev}
+                            onClick={(e) => { e.stopPropagation(); onPrev(); }}
                             disabled={!hasPrev}
                             className={cn(
                                 "absolute left-0 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center",
@@ -145,7 +146,7 @@ export default function Lightbox({
                         </button>
 
                         {/* Image */}
-                        <div className="relative max-h-[65vh] w-full flex items-center justify-center mx-12 md:mx-16">
+                        <div className="relative max-h-[65vh] w-full flex items-center justify-center mx-12 md:mx-16" onClick={(e) => e.stopPropagation()}>
                             {!imgLoaded && (
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="w-10 h-10 rounded-full border-2 border-[#8b7cf6]/30 border-t-[#8b7cf6] animate-spin" />
@@ -170,7 +171,7 @@ export default function Lightbox({
 
                         {/* Next button */}
                         <button
-                            onClick={onNext}
+                            onClick={(e) => { e.stopPropagation(); onNext(); }}
                             disabled={!hasNext}
                             className={cn(
                                 "absolute right-0 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center",
@@ -187,7 +188,7 @@ export default function Lightbox({
                     </div>
 
                     {/* Info panel */}
-                    <div className="w-full max-w-2xl flex flex-col items-center gap-2.5 text-center">
+                    <div className="w-full max-w-2xl flex flex-col items-center gap-2.5 text-center" onClick={(e) => e.stopPropagation()}>
                         {image.title && (
                             <h2 className="text-white text-lg md:text-xl font-semibold leading-tight">
                                 {image.title}
@@ -259,7 +260,7 @@ export default function Lightbox({
                     </div>
 
                     {/* Thumbnail filmstrip */}
-                    <div className="hidden md:flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 px-2">
+                    <div className="hidden md:flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 px-2" onClick={(e) => e.stopPropagation()}>
                         {images.map((img, i) => (
                             <button
                                 key={img.id}

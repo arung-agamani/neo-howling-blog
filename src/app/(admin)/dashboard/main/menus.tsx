@@ -10,6 +10,7 @@ import PostAdd from "@mui/icons-material/PostAdd";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Tag from "@mui/icons-material/Tag";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import WallpaperOutlinedIcon from "@mui/icons-material/WallpaperOutlined";
 import { adminRole, editorRole, guestRole, Role } from "./roles";
 import { Analytics } from "@mui/icons-material";
 
@@ -129,6 +130,13 @@ export const hierarchy: TMenuItem[] = [
                 icon: <VpnKeyIcon />,
                 children: [],
                 role: editorRole,
+            },
+            {
+                name: "Gallery",
+                link: "gallery",
+                icon: <WallpaperOutlinedIcon />,
+                children: [],
+                role: adminRole,
             },
         ],
         icon: <SettingsIcon />,
