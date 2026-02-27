@@ -275,7 +275,7 @@ export default function Lightbox({
                                 aria-label={`Jump to ${img.title || `image ${i + 1}`}`}
                             >
                                 <img
-                                    src={img.bannerUrl ?? img.url}
+                                    src={rewriteUrlToCDN(img.bannerUrl ?? img.url)}
                                     alt=""
                                     className="w-full h-full object-cover"
                                     loading="lazy"
