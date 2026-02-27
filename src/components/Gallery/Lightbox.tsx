@@ -10,6 +10,7 @@ import {
     Calendar,
 } from "lucide-react";
 import { cn } from "@/utils/index";
+import { rewriteUrlToCDN } from "@/components/Dashboard/MediaLibrary/cdn-config";
 import type { GalleryImage } from "./types";
 import { PLATFORM_MAP, detectPlatform, pickSourceUrl } from "./platforms";
 import { extractUrls, renderDescriptionText } from "./utils";
@@ -153,7 +154,7 @@ export default function Lightbox({
                                 </div>
                             )}
                             <img
-                                src={image.url}
+                                src={rewriteUrlToCDN(image.url)}
                                 alt={
                                     image.altText ||
                                     image.title ||
