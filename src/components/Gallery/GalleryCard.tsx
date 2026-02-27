@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Image as ImageIcon, ZoomIn } from "lucide-react";
 import { cn } from "@/utils/index";
+import { rewriteUrlToCDN } from "@/components/Dashboard/MediaLibrary/cdn-config";
 import type { GalleryImage } from "./types";
 import { useImageLoader } from "./useImageLoader";
 
@@ -13,7 +14,7 @@ interface GalleryCardProps {
 }
 
 export default function GalleryCard({ image, index, onClick }: GalleryCardProps) {
-    const cardSrc = image.bannerUrl ?? image.url;
+    const cardSrc = rewriteUrlToCDN(image.bannerUrl ?? image.url);
     const { loaded, imgRef, onLoad, onError } = useImageLoader(cardSrc);
     const [hovered, setHovered] = React.useState(false);
 

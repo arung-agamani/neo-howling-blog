@@ -9,6 +9,9 @@ export const metadata: Metadata = {
         description: "Source of banner images used across the Howling Blog website.",
         type: "website",
     },
+    icons: {
+        icon: "/favicon.png",
+    },
 };
 
 export default function GalleryLayout({
