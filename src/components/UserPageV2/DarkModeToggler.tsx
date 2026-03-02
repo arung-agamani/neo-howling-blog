@@ -1,6 +1,6 @@
 "use client";
 
-import { usePreferences } from "@/app/(userv2)/v2/ThemeProvider";
+import { usePreferences } from "@/app/(user)/ThemeProvider";
 import { useTheme } from "next-themes";
 import React, { useEffect, useState } from "react";
 import { Text } from "../Typography";

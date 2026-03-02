@@ -1,5 +1,5 @@
 "use client";
-import { ApiV1Response, RecommendedPost } from "@/app/(userv2)/v2/APIContract";
+import { ApiV1Response, RecommendedPost } from "@/app/(user)/APIContract";
 import Link from "next/link";
 import React, { useState, useEffect, useCallback } from "react";
 import { useInView } from "react-intersection-observer";
@@ -43,7 +43,7 @@ const RecommendedPosts: React.FC<Props> = ({ postId }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {recommendedPosts.data.slice(0, 3).map((post) => (
                                 <Link
-                                    href={`/v2/post/${post.link || post.id}`}
+                                    href={`/post/${post.link || post.id}`}
                                     key={post.id}
                                     className="bg-slate-100 dark:bg-gray-800 border-0 border-slate-300 dark:border-slate-900 dark:shadow-sm dark:shadow-slate-600 rounded-lg overflow-hidden shadow-sm shadow-slate-400 hover:shadow-md hover:shadow-slate-400 transition-shadow duration-300"
                                 >

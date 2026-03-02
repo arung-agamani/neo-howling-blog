@@ -63,7 +63,7 @@ export default function PostCard({ post }: PostCardProps) {
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                     <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/v2/post/${post.link}`} target="_blank">
+                        <Link href={`/post/${post.link}`} target="_blank">
                             <Eye className="w-4 h-4" />
                         </Link>
                     </Button>

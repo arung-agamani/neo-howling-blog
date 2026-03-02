@@ -1,0 +1,88 @@
+/* eslint-disable @next/next/no-img-element */
+// "use client";
+import Link from "next/link";
+
+import FloatingContainer from "@/components/FloatingContainer";
+import ScrollTop from "@/components/ScrollTop";
+import prisma from "@/utils/prisma";
+import { headers } from "next/headers";
+
+export default async function Page() {
+    const header = await headers(); // trigger dynamic
+    const posts = await prisma.posts.findMany({
+        select: {
+            id: true,
+            author: true,
+            bannerUrl: true,
+            title: true,
+            description: true,
+            datePosted: true,
+            tags: true,
+        },
+        where: {
+            isPublished: true,
+        },
+        orderBy: {
+            datePosted: "desc",
+        },
+        take: 8,
+    });
+
+    return (
+        <div className=" bg-slate-600 dark:bg-gray-900 pt-2 flex flex-col justify-center max-w-lg lg:max-w-none mx-auto pb-12 lg:px-16 transition-colors duration-100">
+
+            <p className="text-3xl lg:text-5xl text-white px-2 mb-4 font-thin lg:text-left text-center self-center">
+                Recent Posts
+            </p>
+            <div className="flex">
+                <div className="flex flex-col flex-grow max-w-5xl mx-auto">
+                    {posts.length > 0 &&
+                        posts.map((x: any) => (
+                            <div
+                                key={x.id}
+                                className="pb-4 mx-auto mb-4 bg-white dark:bg-slate-800 lg:rounded-lg 
+                    shadow w-full flex flex-col transition-colors duration-200"
+                            >
+                                {x.tags
+                                    ? x.tags.filter((y: string) => y.length)
+                                        .length > 0 && (
+                                        <div className="uppercase font-bold text-orange-500 px-8 pt-4 transition-colors duration-200">
+                                            {x.tags.map((tag: string) => (
+                                                <Link
+                                                    href={`/tag/${tag
+                                                        .trim()
+                                                        .toLowerCase()}`}
+                                                    key={tag}
+                                                    className="hover:underline hover:text-orange-700 mr-2"
+                                                >
+                                                    {tag.trim()}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )
+                                    : null}
+                                <Link href={`post/${x.id}`}>
+                                    <p className="text-black dark:text-gray-50 text-2xl lg:text-4xl font-bold px-8 mt-4 transition-colors duration-200">
+                                        {x.title}
+                                    </p>
+                                    <p className="text-gray-700 dark:text-gray-300 px-8 py-4 lg:py-8 text-lg lg:text-xl font-light transition-colors duration-200">
+                                        {x.description}
+                                    </p>
+                                </Link>
+                            </div>
+                        ))}
+                    <Link href={"/page/2"}>
+                        <div className="justify-center hover:cursor-pointer">
+                            <p className="text-2xl text-slate-800 dark:text-slate-200 px-2 py-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-300 self-center text-center">
+                                More Posts
+                            </p>
+                        </div>
+                    </Link>
+                </div>
+            </div>
+            <FloatingContainer>
+                <ScrollTop />
+            </FloatingContainer>
+        </div>
+    );
+}

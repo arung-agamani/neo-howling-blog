@@ -169,7 +169,7 @@ export async function generateMetadata(props: {
             description:
                 postData?.description ||
                 "The requested post could not be found.",
-            url: `https://blog.howlingmoon.dev/v2/post/${identifier}`,
+            url: `https://blog.howlingmoon.dev/post/${identifier}`,
             images: [
                 {
                     url:
@@ -211,7 +211,7 @@ export default async function PostDetailPage({
                     <ol className="flex space-x-2 text-sm">
                         <li>
                             <Link
-                                href="/v2"
+                                href="/"
                                 className="text-blue-600 dark:text-blue-400 hover:underline"
                             >
                                 Home

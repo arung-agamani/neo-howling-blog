@@ -257,7 +257,7 @@ const PostsTable: React.FC<PostsTableProps> = ({
             <Box sx={{ display: "flex", gap: 1 }}>
                 <Tooltip title="Open Post">
                     <Link
-                        href={`/v2/post/${row.original.link}`}
+                        href={`/post/${row.original.link}`}
                         rel="noopener noreferrer"
                         target="_blank"
                     >

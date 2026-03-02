@@ -1,4 +1,4 @@
-import { Post, PaginationMetadata } from "@/app/(userv2)/v2/APIContract";
+import { Post, PaginationMetadata } from "@/app/(user)/APIContract";
 import { atom } from "jotai";
 
 export interface PostsState {

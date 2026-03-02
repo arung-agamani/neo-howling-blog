@@ -1,4 +1,4 @@
-import { Post } from "@/app/(userv2)/v2/APIContract";
+import { Post } from "@/app/(user)/APIContract";
 import startCase from "lodash.startcase";
 import Link from "@/components/UserPageV2/LoaderLink";
 import React from "react";
@@ -70,7 +70,7 @@ const PostList: React.FC<Props> = ({ posts }) => {
                         <div className="flex-grow flex flex-col justify-center">
                             <Heading level={4} className="md:w-2/3">
                                 <Link
-                                    href={`/v2/post/${post.link}`}
+                                    href={`/post/${post.link}`}
                                     className="hover:underline"
                                 >
                                     {post.title}

@@ -32,9 +32,9 @@ export default function Navbar() {
                         <div>
                             <TabLink target="/snippet" label="Snippets" />
                         </div>
-                        <div>
+                        {/* <div>
                             <TabLink target="/v2" label="V2" />
-                        </div>
+                        </div> */}
                     </div>
                     {/* <span className="flex-grow"></span> */}
                     <div className="ml-auto hidden lg:block">

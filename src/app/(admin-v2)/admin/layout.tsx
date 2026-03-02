@@ -2,7 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
-import "../../(userv2)/v2/globals.css";
+import "../../(user)/globals.css";
 
 export default function AdminLayout({
     children,

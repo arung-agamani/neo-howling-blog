@@ -32,7 +32,7 @@ import {
 } from "@mdxeditor/editor";
 
 import "@mdxeditor/editor/style.css";
-import "../../../../../(user)/post/[id]/github-markdown.css";
+import "../../../../../(legacy-user)/legacy/post/[id]/github-markdown.css";
 import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "@/utils/axios";

@@ -41,8 +41,8 @@ const sidebarNav = [
         icon: <Settings className="w-4 h-4 mr-2" />,
     },
     {
-        label: "Go to V2 User Page",
-        href: "/v2",
+        label: "Go to User Page",
+        href: "/",
         icon: <Settings className="w-4 h-4 mr-2" />,
     },
 ];
