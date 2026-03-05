@@ -107,7 +107,7 @@ async function uploadFile(file: File): Promise<string> {
 
         // Step 3: Process the uploaded asset with post-processing
         const processResponse = await processUpload(assetId, {
-            generateVariants: false,
+            generateThumbnail: false,
             postProcessings: DEFAULT_POST_PROCESSINGS,
         });
 
