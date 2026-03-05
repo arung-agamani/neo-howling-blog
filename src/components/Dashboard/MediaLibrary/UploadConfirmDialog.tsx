@@ -69,7 +69,7 @@ export interface UploadOptions {
     description?: string;
     folder?: string;
     tags?: string[];
-    generateVariants?: boolean;
+    generateThumbnail?: boolean;
     postProcessings?: PostProcessingOperation[];
 }
 
@@ -86,7 +86,7 @@ interface UploadFormData {
     description: string;
     folder: string;
     tags: string[];
-    generateVariants: boolean;
+    generateThumbnail: boolean;
 }
 
 export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
@@ -133,7 +133,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
             description: "",
             folder: "",
             tags: [],
-            generateVariants: false,
+            generateThumbnail: false,
         },
     });
 
@@ -175,7 +175,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                         description: "",
                         folder: "",
                         tags: [],
-                        generateVariants: false,
+                        generateThumbnail: false,
                         // Pre-fill with default preset operations for images
                         postProcessings: isImage ? [...defaultOperations] : [],
                     },
@@ -197,8 +197,8 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                 setValue("folder", firstConfig.options.folder || "");
                 setValue("tags", firstConfig.options.tags || []);
                 setValue(
-                    "generateVariants",
-                    firstConfig.options.generateVariants || false,
+                    "generateThumbnail",
+                    firstConfig.options.generateThumbnail || false,
                 );
             }
         } else if (!open) {
@@ -274,7 +274,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                       (t): t is string => Boolean(t),
                                   )
                                 : undefined,
-                        generateVariants: currentFormData.generateVariants,
+                        generateThumbnail: currentFormData.generateThumbnail,
                     };
                 }
 
@@ -291,7 +291,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                             description: "",
                             folder: currentFormData.folder || "",
                             tags: [],
-                            generateVariants: false,
+                            generateThumbnail: false,
                         },
                     };
                 });
@@ -333,7 +333,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                       (t): t is string => Boolean(t),
                                   )
                                 : undefined,
-                        generateVariants: currentFormData.generateVariants,
+                        generateThumbnail: currentFormData.generateThumbnail,
                     };
                 }
 
@@ -437,7 +437,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                       Boolean(t),
                                   )
                                 : undefined,
-                        generateVariants: formData.generateVariants,
+                        generateThumbnail: formData.generateThumbnail,
                     };
                 }
                 return updated;
@@ -467,7 +467,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                   Boolean(t),
                               )
                             : undefined,
-                    generateVariants: currentFormData.generateVariants,
+                    generateThumbnail: currentFormData.generateThumbnail,
                 };
             }
             return updated;
@@ -489,8 +489,8 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                 ),
             );
             setValue(
-                "generateVariants",
-                config.options.generateVariants || false,
+                "generateThumbnail",
+                config.options.generateThumbnail || false,
             );
         }
     };
@@ -509,7 +509,7 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                     data.tags && data.tags.length > 0
                         ? data.tags.filter((t): t is string => Boolean(t))
                         : undefined,
-                generateVariants: data.generateVariants,
+                generateThumbnail: data.generateThumbnail,
                 // Preserve postProcessings from the config (managed by PostProcessingBuilder)
                 postProcessings:
                     updatedConfigs[currentTab].options.postProcessings,
@@ -894,12 +894,12 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                 )}
                             />
 
-                            {/* Generate Variants (for images) */}
+                            {/* Generate Thumbnail (for images) */}
                             {isCurrentFileImage && (
                                 <FormControlLabel
                                     control={
                                         <Controller
-                                            name="generateVariants"
+                                            name="generateThumbnail"
                                             control={control}
                                             render={({ field }) => (
                                                 <Switch
@@ -912,14 +912,14 @@ export const UploadConfirmDialog: React.FC<UploadConfirmDialogProps> = ({
                                     label={
                                         <Box>
                                             <Typography variant="body2">
-                                                Generate image variants
+                                                Generate thumbnail
                                             </Typography>
                                             <Typography
                                                 variant="caption"
                                                 color="text.secondary"
                                             >
-                                                Automatically create thumbnails
-                                                and optimized versions
+                                                Automatically create a thumbnail
+                                                for this image
                                             </Typography>
                                         </Box>
                                     }

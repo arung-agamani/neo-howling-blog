@@ -216,7 +216,7 @@ export type PostProcessingOperation =
 
 // Parameters for processing upload
 export interface ProcessUploadParams {
-    generateVariants?: boolean;
+    generateThumbnail?: boolean;
     postProcessings?: PostProcessingOperation[];
 }
 

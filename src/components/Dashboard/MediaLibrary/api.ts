@@ -173,11 +173,11 @@ export async function uploadMedia(params: {
     folder?: string;
     tags?: string[];
     metadata?: Record<string, any>;
-    generateVariants?: boolean;
+    generateThumbnail?: boolean;
     postProcessings?: PostProcessingOperation[];
     onProgress?: (progress: number) => void;
 }): Promise<{ success: boolean; message: string; data: MediaItem }> {
-    const { file, generateVariants, postProcessings, onProgress, ...metadata } =
+    const { file, generateThumbnail, postProcessings, onProgress, ...metadata } =
         params;
 
     // Step 1: Initiate upload to get presigned URL
@@ -202,7 +202,7 @@ export async function uploadMedia(params: {
 
         // Step 3: Process the uploaded asset (with optional post-processing)
         const processResponse = await processUpload(assetId, {
-            generateVariants,
+            generateThumbnail,
             postProcessings,
         });
 

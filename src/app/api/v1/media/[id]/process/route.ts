@@ -45,7 +45,7 @@ const PostProcessingOperationSchema = z.discriminatedUnion("type", [
 
 // Validation schema for process request
 const ProcessUploadSchema = z.object({
-    generateVariants: z.boolean().optional().default(false),
+    generateThumbnail: z.boolean().optional().default(false),
     postProcessings: z.array(PostProcessingOperationSchema).optional(),
 });
 
@@ -72,11 +72,11 @@ export async function POST(
             });
         }
 
-        const { generateVariants, postProcessings } = parseResult.data;
+        const { generateThumbnail, postProcessings } = parseResult.data;
 
         // Process the uploaded asset
         const asset = await assetService.processUpload(params.id, {
-            generateVariants,
+            generateThumbnail,
             postProcessings,
         });
 

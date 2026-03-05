@@ -148,7 +148,7 @@ export interface InitiateUploadResponse {
 
 // Parameters for processing an uploaded asset
 export interface ProcessUploadParams {
-    generateVariants?: boolean;
+    generateThumbnail?: boolean;
     postProcessings?: PostProcessingOperation[];
 }
 
@@ -649,7 +649,7 @@ export class AssetService {
      * Extracts metadata, applies post-processing operations, generates variants if requested
      */
     async processUpload(assetId: string, params: ProcessUploadParams = {}) {
-        const { generateVariants = false, postProcessings = [] } = params;
+        const { generateThumbnail = false, postProcessings = [] } = params;
 
         // Get the asset
         const asset = await this.db.assets.findUnique({
@@ -843,9 +843,11 @@ export class AssetService {
                 },
             });
 
-            // Generate image variants if requested and it's an image
-            if (generateVariants && asset.type === AssetType.Image) {
-                await this.generateImageVariantsForAsset(assetId, updatedAsset);
+            // Generate thumbnail if requested and it's an image
+            if (generateThumbnail && asset.type === AssetType.Image) {
+                await this.generateImageVariantsForAsset(assetId, updatedAsset, [
+                    "thumbnail",
+                ]);
             }
 
             // Fetch the final asset with variants
