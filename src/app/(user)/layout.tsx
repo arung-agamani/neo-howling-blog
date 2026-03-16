@@ -14,9 +14,10 @@ import MobilePreferencesButton from "@/components/UserPageV2/MobilePreferencesBu
 import MobileScrollTop from "@/components/UserPageV2/MobileScrollTop";
 import NextLink from "next/link";
 import MainContentWrapper from "./MainContentWrapper";
+import { Metadata } from "next";
 interface Props {}
 
-export const metadata = {
+export const metadata: Metadata = {
     title: "Howling Blog",
     icons: {
         icon: "/favicon.png",
@@ -61,12 +62,12 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
                                     </Lead>
                                 </div>
                                 <div className="flex mx-auto gap-x-2 max-w-[1536px]">
-                                    <div className="flex-[3] flex-col mx-auto">
+                                    <div className="flex-[3] flex-col mx-auto" id="main-content">
                                         <MainContentWrapper>
                                             {children}
                                         </MainContentWrapper>
                                     </div>
-                                    <div className="hidden lg:flex flex-[1] max-w-lg bg-white/70 contrast:bg-white dark:bg-slate-800/30 dark:contrast:bg-slate-800 p-4">
+                                    <div className="hidden lg:flex flex-[1] max-w-lg bg-white/70 contrast:bg-white dark:bg-slate-800/30 dark:contrast:bg-slate-800 p-4" id="sidebar">
                                         <div className="sticky top-[15%]">
                                             <Heading
                                                 level={6}
@@ -108,6 +109,19 @@ const V2Layout: React.FC<PropsWithChildren<Props>> = ({ children }) => {
                                                 </Link>
                                                 .
                                             </Blockquote>
+                                            <Heading
+                                                level={6}
+                                                className="mt-2 border-b-2 border-slate-800 dark:border-white"
+                                            >
+                                                Gallery
+                                            </Heading>
+                                            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                                                Check out the{" "}
+                                                <Link href="/gallery">
+                                                    gallery
+                                                </Link>
+                                                {" "}for a collection of images used on post banners.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

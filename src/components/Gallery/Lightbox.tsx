@@ -8,6 +8,7 @@ import {
     X,
     Tag,
     Calendar,
+    Download,
 } from "lucide-react";
 import { cn } from "@/utils/index";
 import { rewriteUrlToCDN } from "@/components/Dashboard/MediaLibrary/cdn-config";
@@ -23,6 +24,38 @@ interface LightboxProps {
     onPrev: () => void;
     onNext: () => void;
     onJumpTo: (index: number) => void;
+}
+
+function BannerDownloadButton({
+    url,
+    onDownload,
+}: {
+    url: string;
+    onDownload: (url: string, variant: "original" | "banner") => void;
+}) {
+    const [dims, setDims] = React.useState<{ w: number; h: number } | null>(null);
+
+    React.useEffect(() => {
+        setDims(null);
+        const img = new Image();
+        img.onload = () => setDims({ w: img.naturalWidth, h: img.naturalHeight });
+        img.src = url;
+    }, [url]);
+
+    return (
+        <button
+            onClick={() => onDownload(url, "banner")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 hover:bg-white/20 text-white/70 hover:text-white border border-white/10 hover:border-white/25 transition-all"
+        >
+            <Download className="w-3 h-3" />
+            <span>
+                Banner
+                {dims && (
+                    <span className="ml-1 opacity-60">{dims.w}×{dims.h}</span>
+                )}
+            </span>
+        </button>
+    );
 }
 
 export default function Lightbox({
@@ -74,6 +107,29 @@ export default function Lightbox({
             return null;
         }
     }, [image.uploadedAt]);
+
+    const handleDownload = React.useCallback(
+        async (url: string, variant: "original" | "banner") => {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                const ext = url.split("?")[0].split(".").pop() ?? "jpg";
+                const baseName = image.slug || image.id;
+                const filename = variant === "banner"
+                    ? `${baseName}-banner.${ext}`
+                    : `${baseName}.${ext}`;
+                const a = document.createElement("a");
+                a.href = objectUrl;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(objectUrl);
+            } catch {
+                window.open(url, "_blank");
+            }
+        },
+        [image.slug, image.id],
+    );
 
     const descUrls = React.useMemo(
         () => (image.description ? extractUrls(image.description) : []),
@@ -220,6 +276,28 @@ export default function Lightbox({
                                 />
                             </div>
                         )}
+
+                        {/* Download buttons */}
+                        <div className="flex items-center justify-center gap-2 mt-0.5">
+                            <button
+                                onClick={() => handleDownload(rewriteUrlToCDN(image.url), "original")}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 hover:bg-white/20 text-white/70 hover:text-white border border-white/10 hover:border-white/25 transition-all"
+                            >
+                                <Download className="w-3 h-3" />
+                                <span>
+                                    Original
+                                    {image.width && image.height && (
+                                        <span className="ml-1 opacity-60">{image.width}×{image.height}</span>
+                                    )}
+                                </span>
+                            </button>
+                            {image.bannerUrl && (
+                                <BannerDownloadButton
+                                    url={rewriteUrlToCDN(image.bannerUrl)}
+                                    onDownload={handleDownload}
+                                />
+                            )}
+                        </div>
 
                         <div className="flex flex-wrap items-center justify-center gap-2.5 mt-0.5">
                             {image.tags.length > 0 && (
