@@ -3,98 +3,14 @@ import Link from "next/link";
 import prisma from "@/utils/prisma";
 import { slugFromTitle } from "@/utils/slug";
 import {
-    Blockquote,
     Heading,
     Lead,
-    Text,
     Muted,
 } from "@/components/Typography";
-import { Fragment, jsx, jsxs } from "react/jsx-runtime";
-import { unified } from "unified";
-import rehypeParse from "rehype-parse";
-import rehypeReact from "rehype-react";
+import PostContentRenderer from "@/components/PostContentRenderer";
 import RecommendedPosts from "@/components/UserPageV2/RecommendedPost";
 import { Metadata } from "next";
 import PageReadySignal from "@/components/UserPageV2/PageReadySignal";
-
-const makeHeading = (level: 1 | 2 | 3 | 4 | 5 | 6 | undefined = 1) => {
-    const c = ({ children }: { children: React.ReactNode }) => {
-        return (
-            <Heading level={level} className="mt-4 mb-2">
-                {children}
-            </Heading>
-        );
-    };
-    return c;
-};
-
-const CustomParagraph = ({ children }: { children: React.ReactNode }) => {
-    return <Text className="mb-4 leading-relaxed">{children}</Text>;
-};
-
-const CustomUnorderedList = ({ children }: { children: React.ReactNode }) => {
-    return (
-        <ul
-            className="my-6 ml-6 space-y-2 list-disc marker:text-blue-500 dark:marker:text-blue-400
-                       text-slate-900 dark:text-slate-100"
-        >
-            {children}
-        </ul>
-    );
-};
-
-const CustomOrderedList = ({ children }: { children: React.ReactNode }) => {
-    return (
-        <ol
-            className="my-6 ml-6 space-y-2 list-decimal marker:text-blue-500 dark:marker:text-blue-400
-                       marker:font-semibold text-slate-900 dark:text-slate-100"
-        >
-            {children}
-        </ol>
-    );
-};
-
-const CustomListItem = ({ children }: { children: React.ReactNode }) => {
-    return (
-        <li
-            className="pl-2 leading-relaxed hover:text-blue-600 dark:hover:text-blue-300
-                       transition-colors duration-200"
-        >
-            {children}
-        </li>
-    );
-};
-
-// Custom blockquote component
-const CustomBlockquote = ({ children }: { children: React.ReactNode }) => {
-    return <Blockquote className="my-6">{children}</Blockquote>;
-};
-
-const componentMap: any = {
-    h1: makeHeading(3),
-    h2: makeHeading(4),
-    h3: makeHeading(5),
-    h4: makeHeading(6),
-    h5: makeHeading(6),
-    h6: makeHeading(6),
-    p: CustomParagraph,
-    ul: CustomUnorderedList,
-    ol: CustomOrderedList,
-    li: CustomListItem,
-    blockquote: CustomBlockquote,
-    img: (props: any) => (
-        <img {...props} className="my-4" alt={props.alt || "Post image"} />
-    ),
-    // img: (props: any) => <span>Debug Image</span>,
-    a: (props: any) => (
-        <a
-            {...props}
-            className="text-blue-600 dark:text-blue-400 hover:underline"
-            style={{ overflowWrap: "break-word", wordWrap: "break-word" }}
-        />
-    ),
-    // a: (props: any) => <span>Debug link</span>
-};
 
 async function findPostByIdentifier(identifier: string) {
     // Decode URL-encoded identifier (e.g., %E6%97%A5%E8%A8%98 -> 日記)
@@ -192,18 +108,6 @@ export default async function PostDetailPage({
     const { identifier } = await params;
     const postData = await findPostByIdentifier(identifier);
 
-    const processor = unified()
-        .use(rehypeParse, { fragment: true })
-        .use(rehypeReact, {
-            Fragment: Fragment,
-            jsx: jsx,
-            jsxs: jsxs,
-            components: componentMap,
-        });
-
-    const content = processor.processSync(
-        postData?.blogContent || "<p>No content available.</p>",
-    ).result;
     return (
         <PageReadySignal>
             <div className="p-6 bg-white/85 contrast:bg-white dark:bg-slate-800/55 dark:contrast:bg-slate-800 shadow">
@@ -239,15 +143,7 @@ export default async function PostDetailPage({
                     )}{" "}
                 </Muted>
                 <div className="dark:border-b-slate-700 border-b-slate-300 border-b" />
-                <div
-                    className="overflow-hidden"
-                    style={{
-                        overflowWrap: "break-word",
-                        wordWrap: "normal",
-                    }}
-                >
-                    {content}
-                </div>
+                <PostContentRenderer html={postData?.blogContent ?? ""} />
                 <hr />
                 <RecommendedPosts postId={identifier} />
             </div>
