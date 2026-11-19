@@ -6,6 +6,7 @@ import {
 } from "@/app/api/responses";
 import { verifyRole } from "@/hooks/useRoleAuth";
 import { assetService } from "@/services/AssetService";
+import { resolveEditorUploadConfig } from "@/services/editorUploadConfig";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { FlattenErrors } from "@/lib/ZodError";
@@ -47,6 +48,8 @@ const PostProcessingOperationSchema = z.discriminatedUnion("type", [
 const ProcessUploadSchema = z.object({
     generateThumbnail: z.boolean().optional().default(false),
     postProcessings: z.array(PostProcessingOperationSchema).optional(),
+    /** Editor uploads use the configured post-processing chain. */
+    origin: z.literal("editor").optional(),
 });
 
 // POST /api/v1/media/[id]/process - Process an uploaded asset
@@ -72,12 +75,20 @@ export async function POST(
             });
         }
 
-        const { generateThumbnail, postProcessings } = parseResult.data;
+        const { generateThumbnail, postProcessings, origin } =
+            parseResult.data;
+
+        // Editor uploads ignore client-supplied post-processing and use the
+        // server-side configured chain instead.
+        const effectivePostProcessings =
+            origin === "editor"
+                ? (await resolveEditorUploadConfig()).config.postProcessings
+                : postProcessings;
 
         // Process the uploaded asset
         const asset = await assetService.processUpload(params.id, {
             generateThumbnail,
-            postProcessings,
+            postProcessings: effectivePostProcessings,
         });
 
         if (!asset) {

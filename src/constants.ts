@@ -24,3 +24,9 @@ export function buildS3Url(
  * Height of the app bar/navbar in pixels
  */
 export const APP_BAR_HEIGHT = 64;
+
+/**
+ * Hard cap for media uploads in bytes. Mirrors the media route's initiate
+ * schema; shared so client-side validation and the server agree.
+ */
+export const MAX_MEDIA_UPLOAD_BYTES = 500 * 1024 * 1024;

@@ -5,6 +5,7 @@ import {
 } from "@/app/api/responses";
 import { verifyRole } from "@/hooks/useRoleAuth";
 import { assetService } from "@/services/AssetService";
+import { resolveEditorUploadConfig } from "@/services/editorUploadConfig";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { FlattenErrors } from "@/lib/ZodError";
@@ -45,6 +46,12 @@ const InitiateUploadSchema = z.object({
     folder: z.string().optional(),
     tags: z.array(z.string()).optional(),
     metadata: z.record(z.string(), z.any()).optional(),
+    /**
+     * Marks the request as coming from the v2 editor. Editor uploads are
+     * governed by the `editor.upload.*` config, which overrides folder/tags
+     * (and later post-processing) server-side.
+     */
+    origin: z.literal("editor").optional(),
 });
 
 // GET /api/v1/media - List media with filtering and pagination
@@ -138,8 +145,39 @@ export async function POST(req: NextRequest) {
             mimeType,
             fileSize,
             title,
+            origin,
             ...rest
         } = parseResult.data;
+
+        // Editor uploads are governed by config, not client-supplied values.
+        let editorUpload:
+            | { folder: string; tags: string[] }
+            | undefined;
+        if (origin === "editor") {
+            const { config } = await resolveEditorUploadConfig();
+            if (!config.enabled) {
+                return BadRequest({
+                    message: "Editor image uploads are disabled",
+                });
+            }
+            if (!config.allowedMimeTypes.includes(mimeType)) {
+                return BadRequest({
+                    message: `Unsupported file type '${mimeType}'. Allowed: ${config.allowedMimeTypes.join(", ")}`,
+                });
+            }
+            if (fileSize > config.maxBytes) {
+                return BadRequest({
+                    message: `File exceeds the ${(
+                        config.maxBytes /
+                        (1024 * 1024)
+                    ).toFixed(1)} MiB limit for editor uploads`,
+                });
+            }
+            editorUpload = {
+                folder: config.folder,
+                tags: config.tags,
+            };
+        }
 
         // Generate filename with timestamp prefix and title-based name
         const timestamp = Date.now();
@@ -175,6 +213,7 @@ export async function POST(req: NextRequest) {
             uploaderId: token.sub,
             title,
             ...rest,
+            ...editorUpload,
         });
 
         revalidatePath("/gallery");

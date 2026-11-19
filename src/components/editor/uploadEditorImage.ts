@@ -1,44 +1,40 @@
 import { uploadMedia } from "@/components/Dashboard/MediaLibrary/api";
 
-/** Max inline image size: 10 MiB. Larger files belong in Media Library. */
-export const MAX_INLINE_IMAGE_BYTES = 10 * 1024 * 1024;
-
-const ACCEPTED_IMAGE_TYPES: Record<string, true> = {
-    "image/jpeg": true,
-    "image/png": true,
-    "image/gif": true,
-    "image/webp": true,
-    "image/avif": true,
-    "image/svg+xml": true,
-};
+/** The subset of editor upload config the client needs for pre-flight UX. */
+export interface EditorUploadLimits {
+    enabled: boolean;
+    maxBytes: number;
+    allowedMimeTypes: string[];
+}
 
 export class ImageUploadError extends Error {}
 
 /**
- * Guarded uploadFile for BlockNote editors. Rejects non-images and oversize
- * files before hitting the presigned-URL flow; BlockNote surfaces thrown
- * errors on the in-progress block, so failures never silently vanish.
+ * Upload an image for the editor. Pre-flight checks mirror the server-side
+ * config enforcement so users get immediate feedback, but the authoritative
+ * limits, storage folder, tags, and post-processing come from the server.
  */
 export async function uploadEditorImage(
     file: File,
-    _blockId?: string,
+    limits: EditorUploadLimits,
 ): Promise<string> {
-    if (!file.type.startsWith("image/") || !ACCEPTED_IMAGE_TYPES[file.type]) {
+    if (!limits.enabled) {
+        throw new ImageUploadError("Editor image uploads are disabled.");
+    }
+    if (!limits.allowedMimeTypes.includes(file.type)) {
         throw new ImageUploadError(
-            `Unsupported image type "${file.type || "unknown"}". Use JPEG, PNG, GIF, WebP, AVIF, or SVG.`,
+            `Unsupported image type "${file.type || "unknown"}". Allowed: ${limits.allowedMimeTypes.join(", ")}.`,
         );
     }
-    if (file.size > MAX_INLINE_IMAGE_BYTES) {
+    if (file.size > limits.maxBytes) {
         throw new ImageUploadError(
-            `Image is ${(file.size / 1024 / 1024).toFixed(1)} MiB — limit is 10 MiB. Use Media Library for larger files.`,
+            `Image is ${(file.size / 1024 / 1024).toFixed(1)} MiB — limit is ${(
+                limits.maxBytes /
+                (1024 * 1024)
+            ).toFixed(1)} MiB.`,
         );
     }
-    const result = await uploadMedia({
-        // No leading slash: AssetService interpolates folder raw into
-        // `${base}/${folder}/${file}` — a leading slash yields `//` in the URL.
-        folder: "images/post-inline",
-        tags: ["post-inline"],
-        file,
-    });
+
+    const result = await uploadMedia({ file, origin: "editor" });
     return result.data.url;
 }

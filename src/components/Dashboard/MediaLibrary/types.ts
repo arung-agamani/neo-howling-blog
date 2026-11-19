@@ -159,6 +159,8 @@ export interface InitiateUploadParams {
     folder?: string;
     tags?: string[];
     metadata?: Record<string, any>;
+    /** Marks the upload as editor-originated so the server applies config. */
+    origin?: "editor";
 }
 
 // Response from initiating upload
@@ -218,6 +220,8 @@ export type PostProcessingOperation =
 export interface ProcessUploadParams {
     generateThumbnail?: boolean;
     postProcessings?: PostProcessingOperation[];
+    /** Marks the upload as editor-originated so the server applies config. */
+    origin?: "editor";
 }
 
 // Response from processing upload

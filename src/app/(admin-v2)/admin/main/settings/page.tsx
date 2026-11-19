@@ -9,6 +9,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import ConfigManagement from "@/components/admin/settings/ConfigManagement";
+import UploadSettings from "@/components/admin/settings/UploadSettings";
 
 export default function SettingsPage() {
     return (
@@ -23,6 +24,7 @@ export default function SettingsPage() {
             <Tabs defaultValue="config" className="space-y-4">
                 <TabsList>
                     <TabsTrigger value="config">Configuration</TabsTrigger>
+                    <TabsTrigger value="uploads">Editor Uploads</TabsTrigger>
                     <TabsTrigger value="general" disabled>
                         General Settings
                     </TabsTrigger>
@@ -43,6 +45,23 @@ export default function SettingsPage() {
                         </CardHeader>
                         <CardContent>
                             <ConfigManagement />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="uploads" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Editor Paste/Drop Uploads</CardTitle>
+                            <CardDescription>
+                                Storage folder, limits, and image processing
+                                for images pasted or dropped into the v2 editor.
+                                Values without an override use the
+                                env-overridable defaults.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <UploadSettings />
                         </CardContent>
                     </Card>
                 </TabsContent>

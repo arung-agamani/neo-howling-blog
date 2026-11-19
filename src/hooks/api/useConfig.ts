@@ -1,11 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, post, put, del } from "@/lib/ky/client";
 
+/** Value types supported by the `config` model. */
+export type ConfigType = "string" | "number" | "boolean" | "json";
+
 export interface Config {
     id: string;
     key: string;
     value: string;
     description: string;
+    /** Null for legacy rows created before typed configs. */
+    type?: ConfigType | null;
 }
 
 export interface ConfigResponse {
@@ -17,6 +22,7 @@ export interface CreateConfigRequest {
     key: string;
     value: string;
     description?: string;
+    type?: ConfigType;
 }
 
 export interface UpdateConfigRequest {
@@ -24,6 +30,7 @@ export interface UpdateConfigRequest {
     key: string;
     value: string;
     description?: string;
+    type?: ConfigType;
 }
 
 export interface ConfigUpdateResponse {

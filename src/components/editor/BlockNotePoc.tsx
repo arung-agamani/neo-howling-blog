@@ -8,10 +8,24 @@ import "@blocknote/shadcn/style.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { uploadEditorImage } from "./uploadEditorImage";
 import { useInstantImageUpload } from "./useInstantImageUpload";
+import { useEditorUploadConfig } from "@/hooks/api/useEditorUploadConfig";
 import { blocksToCleanHtml } from "./blocksToCleanHtml";
 import PostContentRenderer from "@/components/PostContentRenderer";
+
+/** Pre-config fallback; the media route enforces the stored config. */
+const OPTIMISTIC_UPLOAD_LIMITS = {
+    enabled: true,
+    maxBytes: 10 * 1024 * 1024,
+    allowedMimeTypes: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/avif",
+        "image/svg+xml",
+    ],
+};
 
 /**
  * Quill-shaped sample HTML mirroring what v1 stores in posts.blogContent.
@@ -34,7 +48,22 @@ const BlockNotePoc: React.FC<BlockNotePocProps> = ({
     const [importError, setImportError] = useState<string | null>(null);
     const [uploadError, setUploadError] = useState<string | null>(null);
 
-    const { editorRef, uploadFile } = useInstantImageUpload();
+    const { data: uploadConfig } = useEditorUploadConfig();
+    // Optimistic defaults until config loads; the server enforces the real
+    // limits, and a failed config fetch must not disable pasting.
+    const limits = useMemo(
+        () =>
+            uploadConfig
+                ? {
+                      enabled: uploadConfig.config.enabled,
+                      maxBytes: uploadConfig.config.maxBytes,
+                      allowedMimeTypes: uploadConfig.config.allowedMimeTypes,
+                  }
+                : OPTIMISTIC_UPLOAD_LIMITS,
+        [uploadConfig],
+    );
+
+    const { editorRef, uploadFile } = useInstantImageUpload(limits);
 
     const editor = useMemo(
         () => BlockNoteEditor.create({ uploadFile }),

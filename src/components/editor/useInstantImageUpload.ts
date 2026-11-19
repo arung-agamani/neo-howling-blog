@@ -1,6 +1,9 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { BlockNoteEditor } from "@blocknote/core";
-import { uploadEditorImage } from "./uploadEditorImage";
+import {
+    uploadEditorImage,
+    type EditorUploadLimits,
+} from "./uploadEditorImage";
 
 /**
  * uploadFile with instant visual feedback. Returns a blob: URL synchronously
@@ -9,16 +12,29 @@ import { uploadEditorImage } from "./uploadEditorImage";
  *
  * Without this, paste/drop shows nothing until the full
  * initiate -> PUT -> process round-trip finishes.
+ *
+ * Limits are read through a ref so a late-arriving config does not change
+ * `uploadFile` identity and force the editor to be recreated.
  */
-export function useInstantImageUpload() {
+export function useInstantImageUpload(limits: EditorUploadLimits) {
     const editorRef = useRef<BlockNoteEditor | null>(null);
+    const limitsRef = useRef(limits);
+
+    useEffect(() => {
+        limitsRef.current = limits;
+    }, [limits]);
 
     const uploadFile = useMemo(
         () =>
             async (file: File, blockId?: string): Promise<string> => {
+                const currentLimits = limitsRef.current;
+                if (!currentLimits.enabled) {
+                    throw new Error("Editor image uploads are disabled.");
+                }
+
                 const previewUrl = URL.createObjectURL(file);
                 const editor = editorRef.current;
-                void uploadEditorImage(file)
+                void uploadEditorImage(file, currentLimits)
                     .then((cdnUrl) => {
                         URL.revokeObjectURL(previewUrl);
                         if (editor && blockId) {

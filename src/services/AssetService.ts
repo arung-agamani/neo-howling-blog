@@ -11,6 +11,7 @@ import {
 } from "@prisma/client";
 import prisma from "@/utils/prisma";
 import { s3Client } from "@/utils/aws-client";
+import { normalizeStorageFolder, DEFAULT_UPLOAD_BASE_PATH } from "@/utils/storagePath";
 import {
     PutObjectCommand,
     DeleteObjectCommand,
@@ -217,7 +218,7 @@ export class AssetService {
         db: PrismaClient = prisma,
         bucketName?: string,
         cdnBaseUrl?: string,
-        uploadBasePath: string = "akasha",
+        uploadBasePath: string = DEFAULT_UPLOAD_BASE_PATH,
         imageService?: ImageService,
     ) {
         this.db = db;
@@ -314,8 +315,12 @@ export class AssetService {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
 
-        if (folder) {
-            return `${this.uploadBasePath}/${folder}/${filename}`;
+        // Folder comes from clients and config; a stray leading slash would
+        // produce `//` in the public URL. Normalize before interpolating.
+        const normalizedFolder = folder ? normalizeStorageFolder(folder) : "";
+
+        if (normalizedFolder) {
+            return `${this.uploadBasePath}/${normalizedFolder}/${filename}`;
         }
 
         return `${this.uploadBasePath}/${year}/${month}/${filename}`;
