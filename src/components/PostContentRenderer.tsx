@@ -12,6 +12,13 @@ interface HtmlProps extends React.HTMLAttributes<HTMLElement> {
     children?: React.ReactNode;
     alt?: string;
     src?: string;
+    title?: string;
+    allow?: string;
+    allowFullScreen?: boolean;
+    loading?: "eager" | "lazy";
+    referrerPolicy?: React.HTMLAttributeReferrerPolicy;
+    width?: number | string;
+    height?: number | string;
 }
 
 const makeHeading = (level: 1 | 2 | 3 | 4 | 5 | 6 | undefined = 1) => {
@@ -83,6 +90,34 @@ const componentMap: RehypeComponents = {
     blockquote: CustomBlockquote,
     img: ({ children, ...props }: HtmlProps) => (
         <img {...props} className="my-4" alt={props.alt ?? "Post image"} />
+    ),
+    video: ({ children, ...props }: HtmlProps) => (
+        <video
+            {...props}
+            controls
+            preload="metadata"
+            className="my-6 w-full rounded-lg border bg-black"
+        />
+    ),
+    audio: ({ children, ...props }: HtmlProps) => (
+        <audio
+            {...props}
+            controls
+            preload="metadata"
+            className="my-4 w-full"
+        />
+    ),
+    iframe: ({ children, width, height, ...props }: HtmlProps) => (
+        // Embeds are stored as bare iframes; sizing is handled here so the
+        // stored HTML stays minimal and provider-agnostic.
+        <div className="my-6 aspect-video w-full overflow-hidden rounded-lg border bg-black">
+            <iframe
+                {...props}
+                allowFullScreen
+                loading="lazy"
+                className="h-full w-full"
+            />
+        </div>
     ),
     a: ({ children, ...props }: HtmlProps) => (
         <a

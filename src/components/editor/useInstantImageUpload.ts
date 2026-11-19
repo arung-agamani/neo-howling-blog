@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef } from "react";
-import type { BlockNoteEditor } from "@blocknote/core";
+
+/**
+ * The slice of a BlockNote editor this hook touches. Structural, so it accepts
+ * editors created with any schema (the v2 schema adds custom blocks).
+ */
+export interface MediaBlockEditor {
+    updateBlock(id: string, update: { props: { url: string } }): unknown;
+    removeBlocks(ids: string[]): unknown;
+}
 import {
     uploadEditorImage,
     type EditorUploadLimits,
@@ -17,7 +25,7 @@ import {
  * `uploadFile` identity and force the editor to be recreated.
  */
 export function useInstantImageUpload(limits: EditorUploadLimits) {
-    const editorRef = useRef<BlockNoteEditor | null>(null);
+    const editorRef = useRef<MediaBlockEditor | null>(null);
     const limitsRef = useRef(limits);
 
     useEffect(() => {

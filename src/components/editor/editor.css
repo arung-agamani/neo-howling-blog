@@ -1,0 +1,68 @@
+/*
+ * Editor-only affordances. Nothing here affects stored or rendered HTML.
+ */
+
+@keyframes editor-upload-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.55;
+    }
+}
+
+@keyframes editor-upload-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/*
+ * Images inserted by paste/drop start with a local `blob:` preview URL that
+ * is swapped for the CDN URL when the upload finishes. Anything not yet
+ * uploaded therefore matches `src^="blob:"` and gets a pulsing scrim plus a
+ * spinner, so it can't be mistaken for a finished image.
+ */
+.bn-file-block-content-wrapper:has(> img[src^="blob:"]) {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.bn-block-content[data-content-type="image"] img[src^="blob:"] {
+    animation: editor-upload-pulse 1.6s ease-in-out infinite;
+}
+
+.bn-file-block-content-wrapper:has(> img[src^="blob:"])::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(127, 127, 127, 0.18);
+    pointer-events: none;
+}
+
+.bn-file-block-content-wrapper:has(> img[src^="blob:"])::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    border-radius: 9999px;
+    border: 3px solid rgba(127, 127, 127, 0.35);
+    border-top-color: currentColor;
+    animation: editor-upload-spin 0.9s linear infinite;
+    pointer-events: none;
+}
+
+/* Respect reduced-motion: keep the scrim, drop the motion. */
+@media (prefers-reduced-motion: reduce) {
+    .bn-block-content[data-content-type="image"] img[src^="blob:"],
+    .bn-file-block-content-wrapper:has(> img[src^="blob:"])::before {
+        animation: none;
+    }
+}

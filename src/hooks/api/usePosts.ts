@@ -14,6 +14,7 @@ export interface Post {
     isPublished: boolean;
     deleted?: boolean;
     blogContent?: string;
+    blogContentDelta?: string | null;
 }
 
 export interface PostsResponse {
@@ -29,6 +30,7 @@ export interface CreatePostPayload {
     tags: string[];
     bannerUrl?: string;
     blogContent: string;
+    blogContentDelta?: string;
 }
 
 export interface UpdatePostPayload extends Partial<CreatePostPayload> {

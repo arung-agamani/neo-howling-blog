@@ -7,6 +7,23 @@ export interface EditorUploadLimits {
     allowedMimeTypes: string[];
 }
 
+/**
+ * Pre-config fallback used while settings load. The media route enforces the
+ * stored config, so an optimistic allow here can never bypass a real limit.
+ */
+export const OPTIMISTIC_UPLOAD_LIMITS: EditorUploadLimits = {
+    enabled: true,
+    maxBytes: 10 * 1024 * 1024,
+    allowedMimeTypes: [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/avif",
+        "image/svg+xml",
+    ],
+};
+
 export class ImageUploadError extends Error {}
 
 /**
@@ -20,6 +37,11 @@ export async function uploadEditorImage(
 ): Promise<string> {
     if (!limits.enabled) {
         throw new ImageUploadError("Editor image uploads are disabled.");
+    }
+    if (file.type.startsWith("video/") || file.type.startsWith("audio/")) {
+        throw new ImageUploadError(
+            "Video and audio uploads are not supported here yet. Upload the file in the Media Library, then insert it by URL.",
+        );
     }
     if (!limits.allowedMimeTypes.includes(file.type)) {
         throw new ImageUploadError(

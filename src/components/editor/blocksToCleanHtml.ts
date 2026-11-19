@@ -1,5 +1,10 @@
-import type { Block } from "@blocknote/core";
-import type { BlockNoteEditor } from "@blocknote/core";
+import type {
+    Block,
+    BlockNoteEditor,
+    BlockSchema,
+    InlineContentSchema,
+    StyleSchema,
+} from "@blocknote/core";
 
 /**
  * Serialize blocks to clean, semantic HTML for storage in posts.blogContent.
@@ -21,9 +26,13 @@ import type { BlockNoteEditor } from "@blocknote/core";
  * Everything else (bn-* wrappers, data-id/data-node-type, alignment spans,
  * color spans, highlight.js classes) is removed or unwrapped.
  */
-export function blocksToCleanHtml(
-    editor: BlockNoteEditor,
-    blocks?: Block[],
+export function blocksToCleanHtml<
+    BSchema extends BlockSchema,
+    ISchema extends InlineContentSchema,
+    SSchema extends StyleSchema,
+>(
+    editor: BlockNoteEditor<BSchema, ISchema, SSchema>,
+    blocks?: Block<BSchema, ISchema, SSchema>[],
 ): string {
     // ProseMirror trailing-break placeholder (U+FFFC OBJECT REPLACEMENT
     // CHARACTER). BlockNote's lossy exporter leaks it into empty blocks
@@ -42,6 +51,16 @@ const KEEP_ATTRS: Record<string, Record<string, true>> = {
     a: { href: true, title: true },
     img: { src: true, alt: true, title: true },
     pre: { "data-language": true },
+    iframe: {
+        src: true,
+        title: true,
+        allow: true,
+        allowfullscreen: true,
+        loading: true,
+        referrerpolicy: true,
+        width: true,
+        height: true,
+    },
     td: { colspan: true, rowspan: true },
     th: { colspan: true, rowspan: true },
 };

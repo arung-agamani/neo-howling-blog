@@ -2,30 +2,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BlockNoteEditor } from "@blocknote/core";
-import type { Block } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/shadcn";
 import "@blocknote/shadcn/style.css";
+import "./editor.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Film, Music, Youtube } from "lucide-react";
+import InsertMediaDialog, { nameFromUrl } from "./InsertMediaDialog";
+import type { MediaKind } from "./InsertMediaDialog";
 import { useInstantImageUpload } from "./useInstantImageUpload";
+import { OPTIMISTIC_UPLOAD_LIMITS } from "./uploadEditorImage";
 import { useEditorUploadConfig } from "@/hooks/api/useEditorUploadConfig";
 import { blocksToCleanHtml } from "./blocksToCleanHtml";
 import PostContentRenderer from "@/components/PostContentRenderer";
-
-/** Pre-config fallback; the media route enforces the stored config. */
-const OPTIMISTIC_UPLOAD_LIMITS = {
-    enabled: true,
-    maxBytes: 10 * 1024 * 1024,
-    allowedMimeTypes: [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-        "image/avif",
-        "image/svg+xml",
-    ],
-};
+import InsertYouTubeDialog from "./InsertYouTubeDialog";
+import type { YouTubeVideo } from "./youtube/parseYouTubeUrl";
+import { editorSchema } from "./schema";
 
 /**
  * Quill-shaped sample HTML mirroring what v1 stores in posts.blogContent.
@@ -47,6 +40,8 @@ const BlockNotePoc: React.FC<BlockNotePocProps> = ({
     const [blockCount, setBlockCount] = useState<number>(0);
     const [importError, setImportError] = useState<string | null>(null);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [mediaKind, setMediaKind] = useState<MediaKind | null>(null);
+    const [youtubeOpen, setYoutubeOpen] = useState(false);
 
     const { data: uploadConfig } = useEditorUploadConfig();
     // Optimistic defaults until config loads; the server enforces the real
@@ -66,7 +61,7 @@ const BlockNotePoc: React.FC<BlockNotePocProps> = ({
     const { editorRef, uploadFile } = useInstantImageUpload(limits);
 
     const editor = useMemo(
-        () => BlockNoteEditor.create({ uploadFile }),
+        () => BlockNoteEditor.create({ schema: editorSchema, uploadFile }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [],
     );
@@ -75,8 +70,8 @@ const BlockNotePoc: React.FC<BlockNotePocProps> = ({
         editorRef.current = editor;
     }, [editor, editorRef]);
 
-    const syncOutputs = (ed: BlockNoteEditor) => {
-        const doc: Block[] = ed.document;
+    const syncOutputs = (ed: typeof editor) => {
+        const doc = ed.document;
         setBlockCount(doc.length);
         // v2 schema payload: what would be stored in posts.blogContentDelta
         setBlockJson(
@@ -118,6 +113,42 @@ const BlockNotePoc: React.FC<BlockNotePocProps> = ({
         return () => window.removeEventListener("unhandledrejection", onError);
     }, []);
 
+    const insertBlockAtCursor = (
+        block: Parameters<typeof editor.insertBlocks>[0][number],
+    ) => {
+        try {
+            const cursor = editor.getTextCursorPosition().block;
+            const isEmptyParagraph =
+                Array.isArray(cursor.content) && cursor.content.length === 0;
+            if (isEmptyParagraph) {
+                editor.updateBlock(cursor.id, block);
+            } else {
+                editor.insertBlocks([block], cursor, "after");
+            }
+        } catch {
+            const lastBlock = editor.document[editor.document.length - 1];
+            editor.insertBlocks([block], lastBlock, "after");
+        }
+    };
+
+    const handleInsertMedia = (kind: MediaKind, url: string) => {
+        const name = nameFromUrl(url);
+        insertBlockAtCursor(
+            kind === "video"
+                ? { type: "video", props: { url, name } }
+                : { type: "audio", props: { url, name } },
+        );
+        setMediaKind(null);
+    };
+
+    const handleInsertYouTube = (video: YouTubeVideo) => {
+        insertBlockAtCursor({
+            type: "youtube",
+            props: { url: video.watchUrl, videoId: video.videoId },
+        });
+        setYoutubeOpen(false);
+    };
+
     return (
         <div className="max-w-6xl mx-auto p-6 space-y-6">
             <div className="flex items-center gap-3 flex-wrap">
@@ -152,13 +183,44 @@ const BlockNotePoc: React.FC<BlockNotePocProps> = ({
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">
-                        Editor — slash menu (/), drag handles, side menu
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                        Paste, drag-n-drop, or use the image block (+) to
-                        upload — JPEG/PNG/GIF/WebP/AVIF/SVG, max 10 MiB.
-                    </p>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="space-y-1">
+                            <CardTitle className="text-lg">
+                                Editor — slash menu (/), drag handles, side menu
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Paste, drag-n-drop, or use the image block (+)
+                                to upload — JPEG/PNG/GIF/WebP/AVIF/SVG, max
+                                10 MiB. Audio and video are inserted by URL.
+                            </p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setMediaKind("video")}
+                            >
+                                <Film className="mr-1 h-4 w-4" />
+                                Video
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setMediaKind("audio")}
+                            >
+                                <Music className="mr-1 h-4 w-4" />
+                                Audio
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setYoutubeOpen(true)}
+                            >
+                                <Youtube className="mr-1 h-4 w-4" />
+                                YouTube
+                            </Button>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <BlockNoteView
@@ -218,6 +280,20 @@ const BlockNotePoc: React.FC<BlockNotePocProps> = ({
                     </CardContent>
                 </Card>
             </div>
+
+            <InsertMediaDialog
+                kind={mediaKind}
+                onOpenChange={(open) => {
+                    if (!open) setMediaKind(null);
+                }}
+                onInsert={handleInsertMedia}
+            />
+
+            <InsertYouTubeDialog
+                open={youtubeOpen}
+                onOpenChange={setYoutubeOpen}
+                onInsert={handleInsertYouTube}
+            />
         </div>
     );
 };

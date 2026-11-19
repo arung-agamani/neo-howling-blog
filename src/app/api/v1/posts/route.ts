@@ -19,6 +19,7 @@ const CreatePostSchema = z.object({
     tags: z.array(z.string()),
     bannerUrl: z.string().optional(),
     blogContent: z.string(),
+    blogContentDelta: z.string().optional(),
 }) satisfies z.ZodType<CreatePostPayload>;
 
 // Diary tags - posts with ALL of these tags are considered diary entries

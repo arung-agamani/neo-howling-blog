@@ -55,6 +55,8 @@ export interface CreatePostPayload {
     tags: string[];
     bannerUrl?: string;
     blogContent: string;
+    /** JSON block document written by the v2 editor. */
+    blogContentDelta?: string;
 }
 
 export async function CreatePost(data: CreatePostPayload) {
@@ -78,6 +80,8 @@ export interface UpdatePostSchema {
     author?: string;
     bannerUrl?: string;
     blogContent?: string;
+    /** JSON block document written by the v2 editor. */
+    blogContentDelta?: string | null;
     description?: string;
     isFeatured?: boolean;
     isPublished?: boolean;
@@ -94,6 +98,13 @@ export async function UpdatePost(id: string, data: UpdatePostSchema) {
 
     if (data.title) {
         updateData.link = slugFromTitle(data.title);
+    }
+
+    // A client that saved HTML without block JSON did not come from the v2
+    // editor (e.g. the v1 Quill editor). Drop the stale block document so the
+    // next load reads the HTML instead of an outdated snapshot.
+    if (data.blogContent !== undefined && data.blogContentDelta === undefined) {
+        updateData.blogContentDelta = null;
     }
 
     const res = await prisma.posts.update({
