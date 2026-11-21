@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import PostBodyEditor from "@/components/editor/PostBodyEditor";
+import TagInput from "@/components/editor/TagInput";
 import { useBottomRowFollow } from "@/components/editor/useBottomRowFollow";
 import type {
     PostBodyEditorChange,
@@ -60,7 +61,7 @@ const EditorPage: React.FC = () => {
 
     const [title, setTitle] = useState("");
     const [excerpt, setExcerpt] = useState("");
-    const [tags, setTags] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
     const [bannerUrl, setBannerUrl] = useState("");
     const [isPublished, setIsPublished] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -82,7 +83,7 @@ const EditorPage: React.FC = () => {
         loadedPostRef.current = post.id;
         setTitle(post.title ?? "");
         setExcerpt(post.description ?? "");
-        setTags((post.tags ?? []).join(", "));
+        setTags(post.tags ?? []);
         setBannerUrl(post.bannerUrl ?? "");
         setIsPublished(Boolean(post.isPublished));
     }, [post]);
@@ -156,10 +157,7 @@ const EditorPage: React.FC = () => {
                     author: currentUser.username,
                     title: title.trim(),
                     description: excerpt.trim(),
-                    tags: tags
-                        .split(",")
-                        .map((tag) => tag.trim())
-                        .filter(Boolean),
+                    tags,
                     bannerUrl: bannerUrl.trim() || undefined,
                     blogContent: snapshot.blogContent,
                     blogContentDelta: snapshot.blogContentDelta,
@@ -471,18 +469,18 @@ const EditorPage: React.FC = () => {
                             <Label htmlFor="settings-tags">
                                 Tags
                             </Label>
-                            <Input
+                            <TagInput
                                 id="settings-tags"
                                 value={tags}
-                                onChange={(event) => {
-                                    setTags(event.target.value);
+                                onChange={(nextTags) => {
+                                    setTags(nextTags);
                                     setDirty(true);
                                 }}
                                 placeholder="react, nextjs, tutorial"
                             />
                             <p className="text-xs text-muted-foreground">
-                                Comma-separated. Used to group and recommend
-                                posts.
+                                Used to group and recommend posts. Existing tags
+                                suggest as you type.
                             </p>
                         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import ThemeColorProvider from "@/components/theme/ThemeColorProvider";
 import "react-toastify/dist/ReactToastify.css";
 import "../../(user)/globals.css";
 
@@ -13,7 +14,10 @@ export default function AdminLayout({
         <html>
             <head></head>
             <body>
-                <SessionProvider>{children}</SessionProvider>
+                <SessionProvider>
+                    <ThemeColorProvider />
+                    {children}
+                </SessionProvider>
             </body>
         </html>
     );

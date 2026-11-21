@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import ConfigManagement from "@/components/admin/settings/ConfigManagement";
 import UploadSettings from "@/components/admin/settings/UploadSettings";
+import ThemeSettings from "@/components/admin/settings/ThemeSettings";
 
 export default function SettingsPage() {
     return (
@@ -25,6 +26,7 @@ export default function SettingsPage() {
                 <TabsList>
                     <TabsTrigger value="config">Configuration</TabsTrigger>
                     <TabsTrigger value="uploads">Editor Uploads</TabsTrigger>
+                    <TabsTrigger value="appearance">Appearance</TabsTrigger>
                     <TabsTrigger value="general" disabled>
                         General Settings
                     </TabsTrigger>
@@ -62,6 +64,23 @@ export default function SettingsPage() {
                         </CardHeader>
                         <CardContent>
                             <UploadSettings />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="appearance" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Appearance</CardTitle>
+                            <CardDescription>
+                                Colours for the admin UI, stored as shadcn CSS
+                                variables. Changes apply to light and dark mode
+                                separately and take effect as soon as they are
+                                saved.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ThemeSettings />
                         </CardContent>
                     </Card>
                 </TabsContent>
