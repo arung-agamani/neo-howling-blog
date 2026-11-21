@@ -25,12 +25,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
 import { useCurrentUser } from "@/hooks/api/useAuth";
 import { postsKeys, usePost } from "@/hooks/api/usePosts";
 
@@ -400,6 +400,26 @@ const EditorPage: React.FC = () => {
                     className="mt-3 w-full border-0 bg-transparent p-0 text-lg text-muted-foreground outline-none placeholder:text-muted-foreground/40"
                 />
 
+                <div className="mt-6">
+                    <Label
+                        htmlFor="post-tags"
+                        className="text-xs uppercase tracking-wider text-muted-foreground"
+                    >
+                        Tags
+                    </Label>
+                    <div className="mt-2">
+                        <TagInput
+                            id="post-tags"
+                            value={tags}
+                            onChange={(nextTags) => {
+                                setTags(nextTags);
+                                setDirty(true);
+                            }}
+                            placeholder="react, nextjs, tutorial"
+                        />
+                    </div>
+                </div>
+
                 <div className="mt-8">
                     <PostBodyEditor
                         ref={bodyRef}
@@ -443,16 +463,16 @@ const EditorPage: React.FC = () => {
                 </footer>
             </main>
 
-            {/* Everything that is not writing lives here. */}
-            <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-                <DialogContent className="sm:max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Post settings</DialogTitle>
-                        <DialogDescription>
+            {/* Post settings slide in from the right, out of the writing path. */}
+            <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <SheetContent side="right" className="sm:max-w-md">
+                    <SheetHeader>
+                        <SheetTitle>Post settings</SheetTitle>
+                        <SheetDescription>
                             These details appear in listings, previews, and
                             metadata. They are optional.
-                        </DialogDescription>
-                    </DialogHeader>
+                        </SheetDescription>
+                    </SheetHeader>
 
                     <div className="space-y-5">
                         <div className="space-y-2">
@@ -462,25 +482,6 @@ const EditorPage: React.FC = () => {
                             </p>
                             <p className="text-xs text-muted-foreground">
                                 Generated from the title when you save.
-                            </p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="settings-tags">
-                                Tags
-                            </Label>
-                            <TagInput
-                                id="settings-tags"
-                                value={tags}
-                                onChange={(nextTags) => {
-                                    setTags(nextTags);
-                                    setDirty(true);
-                                }}
-                                placeholder="react, nextjs, tutorial"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Used to group and recommend posts. Existing tags
-                                suggest as you type.
                             </p>
                         </div>
 
@@ -545,8 +546,8 @@ const EditorPage: React.FC = () => {
                             </Link>
                         </div>
                     </div>
-                </DialogContent>
-            </Dialog>
+                </SheetContent>
+            </Sheet>
         </div>
     );
 };
