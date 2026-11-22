@@ -7,6 +7,7 @@ import {
     Unauthorized,
 } from "@/app/api/responses";
 import { CreatePost, CreatePostPayload } from "@/lib/Post";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,10 @@ const CreatePostSchema = z.object({
 
 // Diary tags - posts with ALL of these tags are considered diary entries
 const DIARY_TAGS = ["log", "diary", "nikki"];
+
+const POST_STATUSES = ["all", "published", "draft", "trash"] as const;
+
+type PostStatus = (typeof POST_STATUSES)[number];
 
 // GET /api/v1/posts (list all posts)
 export async function GET(req: NextRequest) {
@@ -115,51 +120,112 @@ export async function GET(req: NextRequest) {
 
     // Filter parameters
     const includeDiary = searchParams.get("includeDiary") === "true";
+    const statusParam = searchParams.get("status") ?? "all";
+    const status = POST_STATUSES.includes(statusParam as PostStatus)
+        ? (statusParam as PostStatus)
+        : "all";
+    const search = searchParams.get("search")?.trim() ?? "";
+    const tagParam = searchParams.get("tags") ?? "";
+    const selectedTags = tagParam
+        .split(",")
+        .map((tag) => tag.trim().toLowerCase())
+        .filter(Boolean);
 
-    // Build where clause
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const whereClause: any = {};
+    // Public lists hide diary entries unless asked. Admin views pass
+    // includeDiary=true so every post stays manageable.
+    const baseFilter: Prisma.postsWhereInput = includeDiary
+        ? {}
+        : {
+              NOT: {
+                  AND: DIARY_TAGS.map((tag) => ({ tags: { has: tag } })),
+              },
+          };
 
-    // If includeDiary is false, exclude posts that have ALL diary tags
-    if (!includeDiary) {
-        // Exclude posts that have all of ['log', 'diary', 'nikki'] tags
-        whereClause.NOT = {
-            AND: DIARY_TAGS.map((tag) => ({
-                tags: { has: tag },
-            })),
-        };
+    const statusFilter = (value: PostStatus): Prisma.postsWhereInput => {
+        if (value === "trash") return { deleted: true };
+        const filter: Prisma.postsWhereInput = { deleted: { not: true } };
+        if (value === "published") filter.isPublished = true;
+        if (value === "draft") filter.isPublished = { not: true };
+        return filter;
+    };
+
+    const filters: Prisma.postsWhereInput[] = [
+        baseFilter,
+        statusFilter(status),
+    ];
+
+    // Tag filter: posts carrying any of the selected tags (v1 semantics).
+    if (selectedTags.length > 0) {
+        filters.push({ tags: { hasSome: [...new Set(selectedTags)] } });
     }
 
-    // Get total count for pagination metadata
-    const totalCount = await prisma.posts.count({
-        where: whereClause,
-    });
+    if (search) {
+        // Posts store lowercase tag names, so partial tag search is resolved
+        // against the tag collection first and then matched by membership.
+        const matchingTags = await prisma.tags.findMany({
+            where: { name: { contains: search, mode: "insensitive" } },
+            select: { name: true },
+            take: 50,
+        });
+        const tagCandidates = [
+            ...new Set([
+                search.toLowerCase(),
+                ...matchingTags.map((tag) => tag.name.toLowerCase()),
+            ]),
+        ];
 
-    const totalPages = Math.ceil(totalCount / pageSize);
+        filters.push({
+            OR: [
+                { title: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { author: { contains: search, mode: "insensitive" } },
+                { tags: { hasSome: tagCandidates } },
+            ],
+        });
+    }
 
-    // default behavior: return paginated posts
-    const posts = await prisma.posts.findMany({
-        where: whereClause,
-        select: {
-            id: true,
-            title: true,
-            blogContent: false,
-            author: true,
-            datePosted: true,
-            updatedAt: true,
-            description: true,
-            tags: true,
-            bannerUrl: true,
-            isPublished: true,
-            deleted: true,
-            link: true,
-        },
-        orderBy: {
-            datePosted: "desc",
-        },
-        skip,
-        take: pageSize,
-    });
+    const whereClause: Prisma.postsWhereInput = { AND: filters };
+
+    const [posts, totalCount, all, published, draft, trash] =
+        await Promise.all([
+            prisma.posts.findMany({
+                where: whereClause,
+                select: {
+                    id: true,
+                    title: true,
+                    blogContent: false,
+                    author: true,
+                    datePosted: true,
+                    updatedAt: true,
+                    description: true,
+                    tags: true,
+                    bannerUrl: true,
+                    isPublished: true,
+                    deleted: true,
+                    link: true,
+                },
+                orderBy: {
+                    datePosted: "desc",
+                },
+                skip,
+                take: pageSize,
+            }),
+            prisma.posts.count({ where: whereClause }),
+            prisma.posts.count({
+                where: { AND: [baseFilter, statusFilter("all")] },
+            }),
+            prisma.posts.count({
+                where: { AND: [baseFilter, statusFilter("published")] },
+            }),
+            prisma.posts.count({
+                where: { AND: [baseFilter, statusFilter("draft")] },
+            }),
+            prisma.posts.count({
+                where: { AND: [baseFilter, statusFilter("trash")] },
+            }),
+        ]);
+
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
     return NextResponse.json({
         success: true,
@@ -173,6 +239,7 @@ export async function GET(req: NextRequest) {
             hasNextPage: page < totalPages,
             hasPreviousPage: page > 1,
         },
+        counts: { all, published, draft, trash },
     });
 }
 

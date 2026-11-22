@@ -1,5 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, post, put, del } from "@/lib/ky/client";
+import {
+    keepPreviousData,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
+import { get, post, patch, del } from "@/lib/ky/client";
 
 export interface Post {
     id: string;
@@ -17,10 +22,41 @@ export interface Post {
     blogContentDelta?: string | null;
 }
 
+export type PostStatusFilter = "all" | "published" | "draft" | "trash";
+
+export interface PostsCounts {
+    all: number;
+    published: number;
+    draft: number;
+    trash: number;
+}
+
+export interface PostsPagination {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+}
+
 export interface PostsResponse {
     success: boolean;
-    errors: any[];
+    errors: unknown[];
     data: Post[];
+    pagination: PostsPagination;
+    counts: PostsCounts;
+}
+
+export interface PostListParams {
+    page?: number;
+    pageSize?: number;
+    status?: PostStatusFilter;
+    search?: string;
+    /** Posts carrying any of these tags. */
+    tags?: string[];
+    /** Admin views include diary entries; public lists hide them. */
+    includeDiary?: boolean;
 }
 
 export interface CreatePostPayload {
@@ -50,9 +86,21 @@ export const postsKeys = {
 };
 
 // Fetch posts function
-const fetchPosts = async (): Promise<Post[]> => {
-    const response = await get<PostsResponse>("posts");
-    return response.data || [];
+const fetchPosts = async (
+    params: PostListParams = {},
+): Promise<PostsResponse> => {
+    const search = new URLSearchParams();
+    if (params.page) search.set("page", String(params.page));
+    if (params.pageSize) search.set("pageSize", String(params.pageSize));
+    if (params.status) search.set("status", params.status);
+    if (params.search) search.set("search", params.search);
+    if (params.tags && params.tags.length > 0) {
+        search.set("tags", params.tags.join(","));
+    }
+    if (params.includeDiary) search.set("includeDiary", "true");
+
+    const query = search.toString();
+    return await get<PostsResponse>(query ? `posts?${query}` : "posts");
 };
 
 // Fetch single post function
@@ -75,12 +123,12 @@ const createPost = async (payload: CreatePostPayload): Promise<Post> => {
     return response.data;
 };
 
-// Update post function
+// Update post function. The route expects the id and an op discriminator.
 const updatePost = async (payload: UpdatePostPayload): Promise<Post> => {
     const { id, ...updateData } = payload;
-    const response = await put<{ success: boolean; data: Post }>(
+    const response = await patch<{ success: boolean; data: Post }>(
         `posts/${id}`,
-        updateData,
+        { id, op: "update", ...updateData },
     );
     return response.data;
 };
@@ -90,11 +138,14 @@ const deletePost = async (id: string): Promise<void> => {
     await del(`posts/${id}`);
 };
 
-// React Query hook for fetching all posts
-export const usePosts = () => {
+// React Query hook for the post list (server-side filters + pagination)
+export const usePosts = (params: PostListParams = {}) => {
     return useQuery({
-        queryKey: postsKeys.lists(),
-        queryFn: fetchPosts,
+        queryKey: postsKeys.list(params as Record<string, unknown>),
+        queryFn: () => fetchPosts(params),
+        // Keep the current page visible while the next filter/page loads,
+        // instead of dropping to the empty/skeleton state.
+        placeholderData: keepPreviousData,
         staleTime: 3 * 60 * 1000, // 3 minutes
         gcTime: 10 * 60 * 1000, // 10 minutes
         refetchOnWindowFocus: false,
@@ -197,14 +248,82 @@ export const useDeletePost = () => {
     });
 };
 
+// Publish or unpublish a post
+export const useSetPostPublished = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            id,
+            isPublished,
+        }: {
+            id: string;
+            isPublished: boolean;
+        }) => {
+            const response = await patch<{ success: boolean; data: Post }>(
+                `posts/${id}`,
+                { id, op: "publish", isPublished },
+            );
+            return response.data;
+        },
+        onSuccess: (post) => {
+            queryClient.setQueryData(postsKeys.detail(post.id), post);
+            queryClient.invalidateQueries({ queryKey: postsKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+        },
+    });
+};
+
+// Move a post to the trash, or restore it
+export const useSetPostDeleted = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            id,
+            deleted,
+        }: {
+            id: string;
+            deleted: boolean;
+        }) => {
+            const response = await patch<{ success: boolean; data: Post }>(
+                `posts/${id}`,
+                { id, op: "update", deleted },
+            );
+            return response.data;
+        },
+        onSuccess: (post) => {
+            queryClient.setQueryData(postsKeys.detail(post.id), post);
+            queryClient.invalidateQueries({ queryKey: postsKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+        },
+    });
+};
+
+// Permanently remove a trashed post
+export const usePurgePost = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await del(`posts/${id}?hard=true`);
+        },
+        onSuccess: (_, id) => {
+            queryClient.removeQueries({ queryKey: postsKeys.detail(id) });
+            queryClient.invalidateQueries({ queryKey: postsKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+        },
+    });
+};
+
 // Hook for prefetching posts (useful for navigation)
 export const usePrefetchPosts = () => {
     const queryClient = useQueryClient();
 
     return () => {
         queryClient.prefetchQuery({
-            queryKey: postsKeys.lists(),
-            queryFn: fetchPosts,
+            queryKey: postsKeys.list({}),
+            queryFn: () => fetchPosts(),
             staleTime: 3 * 60 * 1000,
         });
     };

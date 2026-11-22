@@ -2,14 +2,18 @@ import React from "react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
+import TagInput from "@/components/editor/TagInput";
 import { PostsFiltersProps } from "./types";
 
 export default function PostsFilters({
     searchTerm,
     filterStatus,
+    selectedTags,
     onSearchChange,
     onFilterChange,
+    onTagsChange,
 }: PostsFiltersProps) {
     return (
         <Card>
@@ -46,7 +50,33 @@ export default function PostsFilters({
                         >
                             Drafts
                         </Button>
+                        <Button
+                            variant={filterStatus === "trash" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => onFilterChange("trash")}
+                        >
+                            Trash
+                        </Button>
                     </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label
+                        htmlFor="posts-tag-filter"
+                        className="text-xs text-muted-foreground"
+                    >
+                        Filter by tags
+                    </Label>
+                    <TagInput
+                        id="posts-tag-filter"
+                        value={selectedTags}
+                        onChange={onTagsChange}
+                        placeholder="react, nextjs"
+                        showHint={false}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Shows posts carrying any selected tag.
+                    </p>
                 </div>
             </CardHeader>
         </Card>

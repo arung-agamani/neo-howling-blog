@@ -25,6 +25,8 @@ interface TagInputProps {
     disabled?: boolean;
     maxTags?: number;
     id?: string;
+    /** Hide the "press Enter or comma" helper (compact filter bars). */
+    showHint?: boolean;
 }
 
 /**
@@ -39,6 +41,7 @@ export default function TagInput({
     disabled = false,
     maxTags,
     id,
+    showHint = true,
 }: TagInputProps) {
     const [input, setInput] = useState("");
     const [open, setOpen] = useState(false);
@@ -264,11 +267,13 @@ export default function TagInput({
                 </ul>
             )}
 
-            <p className="mt-1 text-xs text-muted-foreground">
-                {maxTags
-                    ? `${value.length}/${maxTags} tags · press Enter or comma to add`
-                    : "Press Enter or comma to add a tag"}
-            </p>
+            {showHint && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                    {maxTags
+                        ? `${value.length}/${maxTags} tags · press Enter or comma to add`
+                        : "Press Enter or comma to add a tag"}
+                </p>
+            )}
         </div>
     );
 }

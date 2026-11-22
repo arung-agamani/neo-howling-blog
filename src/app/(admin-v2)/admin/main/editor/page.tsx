@@ -31,19 +31,11 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
+import { slugFromTitle } from "@/utils/slug";
 import { useCurrentUser } from "@/hooks/api/useAuth";
 import { postsKeys, usePost } from "@/hooks/api/usePosts";
 
 const V1_SNIPPET_EDITOR = "/dashboard/main/snippets/edit";
-
-function slugify(value: string): string {
-    return value
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, "")
-        .replace(/[\s_-]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-}
 
 const EditorPage: React.FC = () => {
     const router = useRouter();
@@ -63,6 +55,7 @@ const EditorPage: React.FC = () => {
     const [excerpt, setExcerpt] = useState("");
     const [tags, setTags] = useState<string[]>([]);
     const [bannerUrl, setBannerUrl] = useState("");
+    const [slug, setSlug] = useState("");
     const [isPublished, setIsPublished] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
@@ -77,6 +70,7 @@ const EditorPage: React.FC = () => {
     const statusBarRef = useRef<HTMLElement>(null);
     const titleRef = useRef<HTMLInputElement>(null);
     const loadedPostRef = useRef<string | null>(null);
+    const savedLinkRef = useRef("");
 
     useEffect(() => {
         if (!post || loadedPostRef.current === post.id) return;
@@ -85,6 +79,8 @@ const EditorPage: React.FC = () => {
         setExcerpt(post.description ?? "");
         setTags(post.tags ?? []);
         setBannerUrl(post.bannerUrl ?? "");
+        setSlug(post.link ?? "");
+        savedLinkRef.current = post.link ?? "";
         setIsPublished(Boolean(post.isPublished));
     }, [post]);
 
@@ -151,6 +147,16 @@ const EditorPage: React.FC = () => {
                 return null;
             }
 
+            const normalizedSlug = postId ? slugFromTitle(slug) : "";
+            if (postId && slug.trim() && !normalizedSlug) {
+                toast.error("Enter a valid URL slug");
+                return null;
+            }
+            const linkChanged =
+                Boolean(postId) &&
+                normalizedSlug.length > 0 &&
+                normalizedSlug !== savedLinkRef.current;
+
             setIsSaving(true);
             try {
                 const payload = {
@@ -161,6 +167,7 @@ const EditorPage: React.FC = () => {
                     bannerUrl: bannerUrl.trim() || undefined,
                     blogContent: snapshot.blogContent,
                     blogContentDelta: snapshot.blogContentDelta,
+                    ...(linkChanged ? { link: normalizedSlug } : {}),
                 };
 
                 const endpoint = postId
@@ -181,6 +188,12 @@ const EditorPage: React.FC = () => {
                 if (!response.ok) {
                     toast.error(data.message || "Could not save the post");
                     return null;
+                }
+
+                const savedLink: string | undefined = data.data?.link;
+                if (savedLink) {
+                    setSlug(savedLink);
+                    savedLinkRef.current = savedLink;
                 }
 
                 setDirty(false);
@@ -208,6 +221,7 @@ const EditorPage: React.FC = () => {
             excerpt,
             tags,
             bannerUrl,
+            slug,
             postId,
             router,
             invalidatePosts,
@@ -476,13 +490,54 @@ const EditorPage: React.FC = () => {
 
                     <div className="space-y-5">
                         <div className="space-y-2">
-                            <Label>URL slug</Label>
-                            <p className="rounded-md bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
-                                /post/{slugify(title) || "…"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                Generated from the title when you save.
-                            </p>
+                            <Label htmlFor="settings-slug">URL slug</Label>
+                            {postId ? (
+                                <>
+                                    <div className="flex items-center rounded-md border border-input focus-within:ring-1 focus-within:ring-ring">
+                                        <span className="select-none border-r px-3 py-2 font-mono text-xs text-muted-foreground">
+                                            /post/
+                                        </span>
+                                        <Input
+                                            id="settings-slug"
+                                            value={slug}
+                                            onChange={(event) => {
+                                                setSlug(event.target.value);
+                                                setDirty(true);
+                                            }}
+                                            className="rounded-none border-0 font-mono text-xs shadow-none focus-visible:ring-0"
+                                        />
+                                    </div>
+                                    {slugFromTitle(slug) !== slug && slug.trim() ? (
+                                        <p className="text-xs text-muted-foreground">
+                                            Saved as{" "}
+                                            <code className="font-mono">
+                                                /post/{slugFromTitle(slug)}
+                                            </code>
+                                        </p>
+                                    ) : isPublished &&
+                                      slugFromTitle(slug) !==
+                                          savedLinkRef.current ? (
+                                        <p className="text-xs text-amber-600">
+                                            Changing the URL of a published post
+                                            breaks existing links.
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-muted-foreground">
+                                            Changing this changes the public URL.
+                                        </p>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <p className="rounded-md bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
+                                        /post/{slugFromTitle(title) || "…"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Assigned when you save; editable
+                                        afterwards.
+                                    </p>
+                                </>
+                            )}
                         </div>
 
                         <div className="space-y-2">

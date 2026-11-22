@@ -31,6 +31,7 @@ const _UpdatePostSchema = z.object({
     blogContentDelta: z.string().nullable().optional(),
     description: z.string().optional(),
     title: z.string().optional(),
+    link: z.string().optional(),
     tags: z.array(z.string()).optional(),
     deleted: z.boolean().optional(),
     isFeatured: z.boolean().optional(),
@@ -102,6 +103,7 @@ export async function PATCH(req: NextRequest) {
 
         return NextResponse.json({
             message: "Post updated",
+            data: updateRes,
         });
     } catch (error) {
         console.error(error);

@@ -1,69 +1,55 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Edit, Tag } from "lucide-react";
+import { Eye, Edit, Send, Trash2 } from "lucide-react";
 import { PostsStatsProps } from "./types";
-import { calculatePostStats } from "./utils";
 
-export default function PostsStats({ posts }: PostsStatsProps) {
-    const stats = calculatePostStats(posts);
+export default function PostsStats({ counts, isLoading }: PostsStatsProps) {
+    const cards = [
+        {
+            label: "Total Posts",
+            value: counts.all,
+            icon: Eye,
+            tone: "bg-blue-100 text-blue-600",
+        },
+        {
+            label: "Published",
+            value: counts.published,
+            icon: Send,
+            tone: "bg-green-100 text-green-600",
+        },
+        {
+            label: "Drafts",
+            value: counts.draft,
+            icon: Edit,
+            tone: "bg-yellow-100 text-yellow-600",
+        },
+        {
+            label: "In Trash",
+            value: counts.trash,
+            icon: Trash2,
+            tone: "bg-red-100 text-red-600",
+        },
+    ];
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-                <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <Eye className="w-4 h-4 text-blue-600" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {cards.map(({ label, value, icon: Icon, tone }) => (
+                <Card key={label}>
+                    <CardContent className="p-4">
+                        <div className="flex items-center space-x-2">
+                            <div className={`rounded-lg p-2 ${tone}`}>
+                                <Icon className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">{label}</p>
+                                <p className="text-2xl font-bold tabular-nums">
+                                    {isLoading ? "—" : value}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm font-medium">Total Posts</p>
-                            <p className="text-2xl font-bold">{stats.total}</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                            <Eye className="w-4 h-4 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium">Published</p>
-                            <p className="text-2xl font-bold">{stats.published}</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-yellow-100 rounded-lg">
-                            <Edit className="w-4 h-4 text-yellow-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium">Drafts</p>
-                            <p className="text-2xl font-bold">{stats.drafts}</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                            <Tag className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium">Total Tags</p>
-                            <p className="text-2xl font-bold">{stats.totalTags}</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            ))}
         </div>
     );
 }

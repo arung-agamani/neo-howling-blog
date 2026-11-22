@@ -1,6 +1,7 @@
 import prisma from "@/utils/prisma";
 import { Prisma } from "@prisma/client";
-import { slugFromTitle } from "@/utils/slug";
+import { applyTagDiff, normalizeTags } from "@/services/tagSync";
+import { ensureUniqueLink } from "@/services/postSlug";
 
 export class DeleteError extends Error {
     public msg: string = "Error when deleting post";
@@ -60,23 +61,32 @@ export interface CreatePostPayload {
 }
 
 export async function CreatePost(data: CreatePostPayload) {
-    // Auto-generate link from title if not provided
-    const link = slugFromTitle(data.title);
+    // The slug is assigned once, at creation, and must be unique.
+    const link = await ensureUniqueLink(data.title);
+    const tags = normalizeTags(data.tags);
 
     const createRes = await prisma.posts.create({
         data: {
             ...data,
+            tags,
             link,
             deleted: false,
 
             datePosted: new Date(),
         },
     });
+
+    // New tags must exist in the tag collection or they never appear in
+    // suggestions and their counts stay at zero.
+    await applyTagDiff(createRes.id, [], tags);
+
     return createRes;
 }
 
 export interface UpdatePostSchema {
     title?: string;
+    /** Explicit slug change; omitted means the current slug is kept. */
+    link?: string;
     author?: string;
     bannerUrl?: string;
     blogContent?: string;
@@ -90,14 +100,38 @@ export interface UpdatePostSchema {
 }
 
 export async function UpdatePost(id: string, data: UpdatePostSchema) {
+    const before = await prisma.posts.findUnique({
+        where: { id },
+        select: { tags: true, deleted: true, link: true },
+    });
+
     // Auto-update link if title is being updated
-    const updateData: UpdatePostSchema & { link?: string; updatedAt?: Date } = {
+    const updateData: UpdatePostSchema & {
+        link?: string;
+        updatedAt?: Date;
+        deletedAt?: Date | null;
+    } = {
         ...data,
         updatedAt: new Date(),
     };
 
-    if (data.title) {
-        updateData.link = slugFromTitle(data.title);
+    // Keep the trash timestamp in step with the flag so restore does not
+    // leave a stale deletion date behind.
+    if (data.deleted === true) updateData.deletedAt = new Date();
+    if (data.deleted === false) updateData.deletedAt = null;
+
+    // The slug is stable: editing the title no longer moves the URL. An
+    // explicit `link` changes it deliberately (and is made unique); legacy
+    // rows without a slug get one derived from the title.
+    const explicitLink = data.link?.trim();
+    if (explicitLink) {
+        updateData.link = await ensureUniqueLink(explicitLink, id);
+    } else if (data.title && !before?.link) {
+        updateData.link = await ensureUniqueLink(data.title, id);
+    }
+
+    if (data.tags !== undefined) {
+        updateData.tags = normalizeTags(data.tags);
     }
 
     // A client that saved HTML without block JSON did not come from the v2
@@ -114,6 +148,13 @@ export async function UpdatePost(id: string, data: UpdatePostSchema) {
         data: updateData,
     });
 
+    // Trashed posts do not count toward tag membership, so trashing removes
+    // the post from every tag and restoring adds it back.
+    const beforeTags =
+        before && !before.deleted ? normalizeTags(before.tags) : [];
+    const afterTags = res.deleted ? [] : normalizeTags(res.tags);
+    await applyTagDiff(id, beforeTags, afterTags);
+
     return res;
 }
 
@@ -128,6 +169,11 @@ export async function PublishPost(id: string, publish: boolean) {
 
 export async function DeletePost(id: string) {
     try {
+        const before = await prisma.posts.findUnique({
+            where: { id },
+            select: { tags: true, deleted: true },
+        });
+
         const res = await prisma.posts.update({
             where: { id },
             data: {
@@ -136,6 +182,11 @@ export async function DeletePost(id: string) {
                 updatedAt: new Date(),
             },
         });
+
+        if (before && !before.deleted) {
+            await applyTagDiff(id, normalizeTags(before.tags), []);
+        }
+
         return res;
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -148,9 +199,19 @@ export async function DeletePost(id: string) {
 
 export async function HardDeletePost(id: string) {
     try {
+        const before = await prisma.posts.findUnique({
+            where: { id },
+            select: { tags: true, deleted: true },
+        });
+
         const res = await prisma.posts.delete({
             where: { id },
         });
+
+        if (before && !before.deleted) {
+            await applyTagDiff(id, normalizeTags(before.tags), []);
+        }
+
         return res;
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
