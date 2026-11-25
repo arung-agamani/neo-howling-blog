@@ -8,6 +8,7 @@ export interface DashboardStats {
         id: string;
         title: string;
         description: string;
+        link?: string;
     }>;
     tags: Array<{
         name: string;

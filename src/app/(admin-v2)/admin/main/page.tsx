@@ -64,7 +64,7 @@ export default function Page() {
                 <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                 <div className="flex space-x-2">
                     <Button asChild>
-                        <Link href="/admin/main/posts/new">
+                        <Link href="/admin/main/editor?mode=post">
                             <Plus className="w-4 h-4 mr-2" />
                             New Post
                         </Link>
@@ -174,7 +174,22 @@ export default function Page() {
                                             asChild
                                         >
                                             <Link
-                                                href={`/admin/main/posts/${post.id}`}
+                                                href={
+                                                    post.link
+                                                        ? `/post/${post.link}`
+                                                        : `/admin/main/editor?mode=post&id=${post.id}`
+                                                }
+                                                target={
+                                                    post.link
+                                                        ? "_blank"
+                                                        : undefined
+                                                }
+                                                rel={
+                                                    post.link
+                                                        ? "noreferrer"
+                                                        : undefined
+                                                }
+                                                aria-label={`View ${post.title}`}
                                             >
                                                 <Eye className="w-3 h-3" />
                                             </Link>
@@ -185,7 +200,8 @@ export default function Page() {
                                             asChild
                                         >
                                             <Link
-                                                href={`/admin/main/posts/${post.id}/edit`}
+                                                href={`/admin/main/editor?mode=post&id=${post.id}`}
+                                                aria-label={`Edit ${post.title}`}
                                             >
                                                 <Edit className="w-3 h-3" />
                                             </Link>
@@ -265,7 +281,7 @@ export default function Page() {
                                 className="w-full"
                                 asChild
                             >
-                                <Link href="/admin/main/tags">Manage Tags</Link>
+                                <Link href="/dashboard/main/tags">Manage Tags</Link>
                             </Button>
                         </div>
                     </CardContent>
@@ -300,7 +316,7 @@ export default function Page() {
                                     </div>
                                     <Button variant="outline" size="sm" asChild>
                                         <Link
-                                            href={`/admin/main/posts/${post.id}/edit`}
+                                            href={`/admin/main/editor?mode=post&id=${post.id}`}
                                         >
                                             Add Tags
                                         </Link>
@@ -347,7 +363,7 @@ export default function Page() {
                             className="h-20 flex flex-col"
                             asChild
                         >
-                            <Link href="/admin/main/tags">
+                            <Link href="/dashboard/main/tags">
                                 <Tag className="w-6 h-6 mb-2" />
                                 Manage Tags
                             </Link>
