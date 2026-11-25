@@ -6,7 +6,7 @@ import RedirectWrapper from "./RedirectWrapper";
 import prisma from "@/utils/prisma";
 
 export const metadata: Metadata = {
-    title: "Howling Admin",
+    title: "Sign in | Howling Admin",
     description: "Admin Dashboard for Howling Blog",
 };
 
